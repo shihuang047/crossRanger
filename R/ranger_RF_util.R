@@ -413,7 +413,7 @@ get.auroc <- function(prob, obs, positive_class) {
     levels(f)[idx]<-1
     factor(f)
   }
-  #require(ROCR)
+  require(ROCR)
   obs<-pos_class(obs, positive_class=positive_class)
   pred <- ROCR::prediction(prob[, positive_class], obs)
   auroc  <- ROCR::performance(pred, "auc")@y.values[[1]]
