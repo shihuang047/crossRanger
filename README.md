@@ -1,5 +1,5 @@
 # crossRanger
-* The cross-application and visualization of random forests (ranger) models of compositional microbiome data *
+*The cross-application and visualization of random forests (ranger) models of compositional microbiome data*
 
 ***
 crossRanger = Cross-application of Ranger models.
