@@ -2,9 +2,12 @@
 *The cross-application and visualization of random forests (ranger) models of compositional microbiome data*
 
 ***
+## Introduction
 crossRanger = Cross-application of Ranger models.
 
-This R package provides functions for the Random Forests modeling of multiple microbiome datasets. Specifically, this package allows cross-application and comparison of Random Forest models where the models will be cross-applied, the model performance in both training and testing will be analysis and important features of multiple models will be selected respectively for cross-datasets comparisons and visualization. 
+[ranger](https://github.com/imbs-hl/ranger) is a fast implementation of random forests (Breiman 2001) or recursive partitioning, particularly suited for high dimensional data. Classification, regression, and survival forests are supported. 
+
+This R package provides functions for the Random Forests (ranger) modeling of multiple microbiome datasets. Specifically, this package allows cross-application and comparison of Random Forest models where the models will be cross-applied, the model performance in both training and testing will be analysis and important features of multiple models will be selected respectively for cross-datasets comparisons and visualization. 
 
 ## Authors ##
 Shi Huang, UC San Diego 
