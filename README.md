@@ -3,6 +3,7 @@
 
 ***
 crossRanger = Cross-application of Ranger models.
+
 This R package provides functions for the Random Forests modeling of multiple microbiome datasets. Specifically, this package allows cross-application and comparison of Random Forest models where the model performance can be compared and visualized and important features of multiple models will selected respectively, compared and visualized. 
 
 ## Authors ##
