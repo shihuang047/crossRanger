@@ -10,7 +10,7 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: FALSE
 Imports: 
-  ranger, stats, utils, foreach, doMC, compositions, microbenchmark, Matrix, ggplot2, caTools, ROCR, pROC, caret
+  ranger, stats, utils, foreach, doMC, compositions, Matrix, ggplot2, caTools, ROCR, pROC, caret
 Suggests: 
     testthat
 RoxygenNote: 6.1.1
