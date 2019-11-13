@@ -8,7 +8,7 @@ id_non_spcf_markers(feature_res, positive_class = "disease",
   other_class = "health", p.adj.method = "BH", outdir = "./")
 }
 \arguments{
-\item{feature_res}{the inheritant output from the function of plot.res_list, rf_clf.comp.summ or rf_clf.by_dataset.summ}
+\item{feature_res}{the inheritant output from the function of plot.res_list, rf_clf.comps.summ or rf_clf.by_dataset.summ}
 
 \item{positive_class}{A string indicates one class in the 'c_category' column of metadata.}
 
@@ -36,7 +36,7 @@ df <- data.frame(rbind(t(rmultinom(15, 75, c(.21,.6,.12,.38,.099))),
 df0 <- data.frame(t(rmultinom(60, 300,c(.001,.6,.2,.3,.299)))) # No feature significantly changed in all sub-datasets!
 f=factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
 comp_group="A"
-res <-rf_clf.comp.summ(df, f, comp_group, verbose=FALSE, ntree=500, p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir="./")
+res <-rf_clf.comps.summ(df, f, comp_group, verbose=FALSE, ntree=500, p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir="./")
 feature_res<-res$feature_res
 id_non_spcf_markers(feature_res, positive_class="disease", other_class="health", p.adj.method= "BH", outdir="./")
 }
