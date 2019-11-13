@@ -9,7 +9,7 @@
 # invisible(lapply(p, usePackage))
 
 #' @title rf.out.of.bag
-#' @description Runs standard random forests with out-of-bag error estimation for both classification and regression using \code{ranger}.
+#' @description It runs standard random forests with out-of-bag error estimation for both classification and regression using \code{ranger}.
 #' This is merely a wrapper that extracts relevant info from \code{ranger} output.
 #' @importFrom ranger ranger
 #' @importFrom Matrix Matrix
@@ -37,18 +37,17 @@
 #'             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
 #'             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
 #' y<-factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
+#' y<-factor(c(rep("A", 20), rep("B", 20), rep("C", 20)))
 #' rf.out.of.bag(x, y, imp_pvalues=FALSE)
 #' rf.out.of.bag(x, y, imp_pvalues=TRUE)
-#' x_ <- data.frame(rbind(t(rmultinom(7, 7500, rep(c(.201,.5,.02,.18,.099), 10000))),
-#'             t(rmultinom(8, 7500, rep(c(.201,.4,.12,.18,.099), 10000))),
-#'             t(rmultinom(15, 7500, rep(c(.011,.3,.22,.18,.289), 10000))),
-#'             t(rmultinom(15, 7500, rep(c(.091,.2,.32,.18,.209), 10000))),
-#'             t(rmultinom(15, 7500, rep(c(.001,.1,.42,.18,.299), 10000)))))
+#' x_ <- data.frame(rbind(t(rmultinom(7, 7500, rep(c(.201,.5,.02,.18,.099), 1000))),
+#'             t(rmultinom(8, 750, rep(c(.201,.4,.12,.18,.099), 1000))),
+#'             t(rmultinom(15, 750, rep(c(.011,.3,.22,.18,.289), 1000))),
+#'             t(rmultinom(15, 750, rep(c(.091,.2,.32,.18,.209), 1000))),
+#'             t(rmultinom(15, 750, rep(c(.001,.1,.42,.18,.299), 1000)))))
 #' y_<-factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
-#' system.time(rf.out.of.bag(x_, y_, imp_pvalues=FALSE))
-#' #   user  system elapsed
-#' #100.824   0.263  42.947
-#' system.time(rf.out.of.bag(x, y, imp_pvalues=TRUE))
+#' rf.out.of.bag(x_, y_, imp_pvalues=FALSE)
+#' rf.out.of.bag(x, y_, imp_pvalues=TRUE)
 #' x_ <- data.frame(rbind(t(rmultinom(7000, 75000, c(.201,.5,.02,.18,.099))),
 #'             t(rmultinom(8000, 75000, c(.201,.4,.12,.18,.099))),
 #'             t(rmultinom(15000, 75000, c(.011,.3,.22,.18,.289))),
@@ -109,7 +108,7 @@
     result$importances <- rf.model$variable.importance
     result$importances[colSums(x)==0]<-NA
   }else{
-    result$importances <- ranger::importance_pvalues(rf.model, method = "altmann", formula = y ~., data=data)
+      result$importances <- ranger::importance_pvalues(rf.model, method = "altmann", formula = y ~., data=data) # if sparse_data, there will NOT pvalue output
   }
   result$error.type <- "oob"
   class(result) <- "rf.out.of.bag"
@@ -159,7 +158,7 @@ balanced.folds <- function(y, nfolds=3){
 }
 
 #' @title rf.cross.validation
-#' @description Runs standard random forests with n-folds cross-validation error estimation for both classification and regression using rf.out.of.bag.
+#' @description It runs standard random forests with n-folds cross-validation error estimation for both classification and regression using rf.out.of.bag.
 #' @param x Training data: data.matrix or data.frame.
 #' @param y Data label for each row.
 #' @param ntree The number of trees.
@@ -350,8 +349,13 @@ balanced.folds <- function(y, nfolds=3){
   RMSE <- sqrt(mean((y-pred_y)^2))
   MAE <- mean(sqrt((y-pred_y)^2))
   MAE_perc <- mean(sqrt((y-pred_y)^2)/y)
-  R_squared <- 1 - (sum((y-pred_y)^2) / sum((y-mean(y))^2))
-  Adj_R_squared <- Adj_R_squared(y, pred_y, k = model$num.independent.variables)
+  R2 <- function(y, pred_y){1 - (sum((y-pred_y)^2) / sum((y-mean(y))^2))}
+  R_squared <- R2(y, pred_y)
+  adj.R2<-function(y, pred_y, k){
+    n=length(y);
+    1-(1-R2(y, pred_y)^2)*(n-1)/(n-k-1) # k is # of predictors
+  }
+  Adj_R_squared <- adj.R2(y, pred_y, k = model$num.independent.variables)
   perf<-list()
   perf$MSE<-MSE
   perf$RMSE<-RMSE
@@ -379,8 +383,13 @@ balanced.folds <- function(y, nfolds=3){
   RMSE <- sqrt(mean((y-pred_y)^2))
   MAE <- mean(sqrt((y-pred_y)^2))
   MAE_perc <- mean(sqrt((y-pred_y)^2)/y)
-  R_squared <- 1 - (sum((y-pred_y)^2) / sum((y-mean(y))^2))
-  Adj_R_squared <- Adj_R_squared(y, pred_y, k = ncol(newx))
+  R2 <- function(y, pred_y){1 - (sum((y-pred_y)^2) / sum((y-mean(y))^2))}
+  R_squared <- R2(y, pred_y)
+  adj.R2<-function(y, pred_y, k){
+    n=length(y);
+    1-(1-R2(y, pred_y)^2)*(n-1)/(n-k-1) # k is # of predictors
+  }
+  Adj_R_squared <- adj.R2(y, pred_y, k = ncol(newx))
   perf<-list()
   perf$MSE<-MSE
   perf$RMSE<-RMSE

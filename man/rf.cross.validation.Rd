@@ -24,7 +24,7 @@ rf.cross.validation(x, y, nfolds = 3, ntree = 500, verbose = FALSE,
 Object of class \code{rf.cross.validation} with elements including a \code{ranger} object and mutiple metrics for model evaluations.
 }
 \description{
-Runs standard random forests with n-folds cross-validation error estimation for both classification and regression using rf.out.of.bag.
+It runs standard random forests with n-folds cross-validation error estimation for both classification and regression using rf.out.of.bag.
 }
 \examples{
 

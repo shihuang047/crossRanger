@@ -8,7 +8,7 @@
 #  }
 #  invisible(lapply(p, usePackage))
 #' @importFrom doMC registerDoMC
-#' @importFrom foreach foreach
+#' @importFrom foreach foreach %dopar%
 #' @importFrom parallel detectCores
 #' @importFrom caret confusionMatrix
 
@@ -446,18 +446,18 @@ rf_reg.cross_appl<-function(rf_list, x_list, y_list){
         MSE<-function(y, pred_y){ mean((y-pred_y)^2)}
         RMSE<-function(y, pred_y){ sqrt(mean((y-pred_y)^2))}
         MAE<-function(y, pred_y){ mean(sqrt((y-pred_y)^2))}
-        R_squared<-function(y, pred_y){ 1-(sum((y-pred_y)^2) / sum((y-mean(y))^2)) }
+        R2<-function(y, pred_y){ 1-(sum((y-pred_y)^2) / sum((y-mean(y))^2)) }
         MAE_perc<-function(y, pred_y){ mean(sqrt((y-pred_y)^2)/y)}
-        Adj_R_squared<-function(y, pred_y, k){
+        adj.R2<-function(y, pred_y, k){
           n=length(y);
-          1-(1-R_squared(y, pred_y)^2)*(n-1)/(n-k-1) # k is # of predictors
+          1-(1-R2(y, pred_y)^2)*(n-1)/(n-k-1) # k is # of predictors
         }
         test_MSE<-MSE(newy, pred_newy)
         test_RMSE<-RMSE(newy, pred_newy)
         test_MAE<-MAE(newy, pred_newy)
         test_MAE_perc<-MAE_perc(newy, pred_newy)
-        test_R_squared<-R_squared(newy, pred_newy)
-        test_Adj_R_squared<-Adj_R_squared(newy, pred_newy, k=ncol(newx))
+        test_R_squared<-R2(newy, pred_newy)
+        test_Adj_R_squared<-adj.R2(newy, pred_newy, k=ncol(newx))
         cat("MSE in the cross-applications: ", test_MSE ,"\n")
         cat("RMSE in the cross-applications: ", test_RMSE ,"\n")
         cat("MAE in the cross-applications: ", test_MAE ,"\n")
@@ -540,7 +540,14 @@ rf_clf.comps<-function(df, f, comp_group, verbose=FALSE, clr_transform=TRUE, rf_
   L<-length(all_other_groups)
   nCores <- parallel::detectCores()
   doMC::registerDoMC(nCores)
-  oper<-foreach::foreach(i=1:L, .combine='comb', .multicombine=TRUE, .init=list(list(), list(), list(), list(), list(), list(), list())) %dopar% {
+  # comb function for parallelization using foreach
+  comb <- function(x, ...) {
+    lapply(seq_along(x),
+           function(i) c(x[[i]], lapply(list(...), function(y) y[[i]])))
+  }
+  require('foreach')
+  oper<-foreach::foreach(i=1:L, .combine='comb', .multicombine=TRUE,
+                         .init=list(list(), list(), list(), list(), list(), list(), list())) %dopar% {
     sub_f<-factor(f[which(f==comp_group | f==all_other_groups[i])])
     sub_df<-df[which(f==comp_group | f==all_other_groups[i]), ]
     print(levels(factor(sub_f)))

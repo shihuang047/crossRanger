@@ -22,7 +22,7 @@ rf.out.of.bag(x, y, ntree = 500, verbose = FALSE, sparse = FALSE,
 Object of class \code{rf.out.of.bag} with elements including the ranger object and critical metrics for model evaluation.
 }
 \description{
-Runs standard random forests with out-of-bag error estimation for both classification and regression using \code{ranger}.
+It runs standard random forests with out-of-bag error estimation for both classification and regression using \code{ranger}.
 This is merely a wrapper that extracts relevant info from \code{ranger} output.
 }
 \details{
@@ -38,18 +38,17 @@ x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
 y<-factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
+y<-factor(c(rep("A", 20), rep("B", 20), rep("C", 20)))
 rf.out.of.bag(x, y, imp_pvalues=FALSE)
 rf.out.of.bag(x, y, imp_pvalues=TRUE)
-x_ <- data.frame(rbind(t(rmultinom(7, 7500, rep(c(.201,.5,.02,.18,.099), 10000))),
-            t(rmultinom(8, 7500, rep(c(.201,.4,.12,.18,.099), 10000))),
-            t(rmultinom(15, 7500, rep(c(.011,.3,.22,.18,.289), 10000))),
-            t(rmultinom(15, 7500, rep(c(.091,.2,.32,.18,.209), 10000))),
-            t(rmultinom(15, 7500, rep(c(.001,.1,.42,.18,.299), 10000)))))
+x_ <- data.frame(rbind(t(rmultinom(7, 7500, rep(c(.201,.5,.02,.18,.099), 1000))),
+            t(rmultinom(8, 750, rep(c(.201,.4,.12,.18,.099), 1000))),
+            t(rmultinom(15, 750, rep(c(.011,.3,.22,.18,.289), 1000))),
+            t(rmultinom(15, 750, rep(c(.091,.2,.32,.18,.209), 1000))),
+            t(rmultinom(15, 750, rep(c(.001,.1,.42,.18,.299), 1000)))))
 y_<-factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
-system.time(rf.out.of.bag(x_, y_, imp_pvalues=FALSE))
-#   user  system elapsed
-#100.824   0.263  42.947
-system.time(rf.out.of.bag(x, y, imp_pvalues=TRUE))
+rf.out.of.bag(x_, y_, imp_pvalues=FALSE)
+rf.out.of.bag(x, y_, imp_pvalues=TRUE)
 x_ <- data.frame(rbind(t(rmultinom(7000, 75000, c(.201,.5,.02,.18,.099))),
             t(rmultinom(8000, 75000, c(.201,.4,.12,.18,.099))),
             t(rmultinom(15000, 75000, c(.011,.3,.22,.18,.289))),

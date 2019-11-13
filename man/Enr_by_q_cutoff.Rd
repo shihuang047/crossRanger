@@ -29,5 +29,4 @@ x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
 test_output<-mttest(x, y, p.adj.method="bonferroni", paired=FALSE)
 desc_stats_by_group_df<-desc_stats_by_group(x, y, clr_transform=FALSE)
 Enr_by_q_cutoff(test_output, desc_stats_by_group_df, q_cutoff=0.05)
-
 }

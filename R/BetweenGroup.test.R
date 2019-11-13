@@ -1,4 +1,4 @@
-#' @importFrom foreach foreach
+#' @importFrom foreach foreach %dopar%
 #' @importFrom parallel detectCores
 #' @importFrom doMC registerDoMC
 #' @importFrom stats sd var t.test wilcox.test bartlett.test oneway.test kruskal.test p.adjust
@@ -137,6 +137,11 @@ mttest<-function(x, y, p.adj.method="bonferroni", paired=FALSE){
   test_output<-matrix(NA,ncol=4,nrow=ncol(x))
   rownames(test_output)<-colnames(x)
   colnames(test_output)<- c("T.test_p","Wilcoxon.test_p","T.test_p.adj","Wilcoxon.test_p.adj")
+  # comb function for parallelization using foreach
+  comb <- function(x, ...) {
+    lapply(seq_along(x),
+           function(i) c(x[[i]], lapply(list(...), function(y) y[[i]])))
+  }
   oper<-foreach::foreach(i=1:ncol(x), .combine='comb', .multicombine=TRUE, .init=list(c(), c())) %dopar% {
     if(stats::var(x[, i])==0){
         test_out1<-test_out2<-1
@@ -251,7 +256,7 @@ desc_stats_by_group<-function(x, y, clr_transform=FALSE, positive_class=NA){
 #' test_output<-mttest(x, y, p.adj.method="bonferroni", paired=FALSE)
 #' desc_stats_by_group_df<-desc_stats_by_group(x, y, clr_transform=FALSE)
 #' Enr_by_q_cutoff(test_output, desc_stats_by_group_df, q_cutoff=0.05)
-#'
+#' @export
 Enr_by_q_cutoff<-function(test_output, desc_stats_by_group_df, positive_class=NA, q_cutoff=0.05){
   positive_class<-ifelse(is.na(positive_class), levels(factor(y))[1], positive_class)
   require("plyr")
