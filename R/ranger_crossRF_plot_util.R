@@ -253,7 +253,7 @@ rf_clf.by_datasets.summ<-function(df, metadata, s_category, c_category, positive
 }
 
 
-#' @title rf_clf.comp.summ
+#' @title rf_clf.comps.summ
 #' @description Runs standard random forests with oob estimation for classification of
 #' one level VS all other levels of one category in the datasets.
 #' The output includes a summary of rf models in the sub datasets,
@@ -274,9 +274,9 @@ rf_clf.by_datasets.summ<-function(df, metadata, s_category, c_category, positive
 #' df <- data.frame(t(rmultinom(60, 300,c(.001,.6,.2,.3,.299))))
 #' f=factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
 #' comp_group="A"
-#' rf_clf.comp.summ(df, f, comp_group, verbose=FALSE, ntree=500, p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir="./")
+#' rf_clf.comps.summ(df, f, comp_group, verbose=FALSE, ntree=500, p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir="./")
 #'
-rf_clf.comp.summ<-function(df, f, comp_group, clr_transform=TRUE, nfolds=3, verbose=FALSE, ntree=5000,
+rf_clf.comps.summ<-function(df, f, comp_group, clr_transform=TRUE, nfolds=3, verbose=FALSE, ntree=5000,
                            p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir="./"){
   clf_comps_list<-rf_clf.comps(df, f, comp_group, verbose=verbose, ntree=ntree, clr_transform=clr_transform)
   stopifnot(all(names(clf_comps_list) %in% c("x_list", "y_list", "datasets","rf_model_list","sample_size","rf_AUC","feature_imps_list")==TRUE))
@@ -294,7 +294,7 @@ rf_clf.comp.summ<-function(df, f, comp_group, clr_transform=TRUE, nfolds=3, verb
 
 #' @title id_non_spcf_markers
 #' @description Non-specific features across datasets (at least present in two of datasets): Last update: 20190130
-#' @param feature_res the inheritant output from the function of plot.res_list, rf_clf.comp.summ or rf_clf.by_dataset.summ
+#' @param feature_res the inheritant output from the function of plot.res_list, rf_clf.comps.summ or rf_clf.by_dataset.summ
 #' @param level1 A string indicates the class of the factor, default is 'disease'
 #' @param level2 A string indicates the class of the factor, default is 'health'
 #' @param positive_class A string indicates one class in the 'c_category' column of metadata.
@@ -311,7 +311,7 @@ rf_clf.comp.summ<-function(df, f, comp_group, clr_transform=TRUE, nfolds=3, verb
 #' df0 <- data.frame(t(rmultinom(60, 300,c(.001,.6,.2,.3,.299)))) # No feature significantly changed in all sub-datasets!
 #' f=factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
 #' comp_group="A"
-#' res <-rf_clf.comp.summ(df, f, comp_group, verbose=FALSE, ntree=500, p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir="./")
+#' res <-rf_clf.comps.summ(df, f, comp_group, verbose=FALSE, ntree=500, p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir="./")
 #' feature_res<-res$feature_res
 #' id_non_spcf_markers(feature_res, positive_class="disease", other_class="health", p.adj.method= "BH", outdir="./")
 #' @author Shi Huang
