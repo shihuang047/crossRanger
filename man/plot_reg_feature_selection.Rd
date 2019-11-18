@@ -12,12 +12,12 @@ plot_reg_feature_selection(x, y, rf_reg_model, metric = "MAE",
 
 \item{y}{The numeric values for labeling data.}
 
+\item{rf_reg_model}{The rf regression model from \code{rf.out.of.bag}}
+
 \item{metric}{The regression performance metric applied.
 This must be one of "MAE", "RMSE", "MSE", "MAE_perc".}
 
 \item{outdir}{The output directory.}
-
-\item{rf_model}{The rf regression model from \code{rf.out.of.bag}}
 }
 \description{
 Plot the regression performance against the reduced number of features used in the modeling.

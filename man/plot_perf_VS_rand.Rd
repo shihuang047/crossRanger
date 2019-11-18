@@ -36,8 +36,9 @@ x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
 y<- 1:60
 rf_model<-rf.out.of.bag(x, y)
-plot_perf_VS_rand(y=y, predicted_y=rf_model$predicted, prefix="train",
-permutation=100, metric="MAE", target_field="age")
+p<-plot_perf_VS_rand(y=y, predicted_y=rf_model$predicted, prefix="train",
+permutation=100, metric="MAE", target_field="age", n_features=5)
+p
 }
 \author{
 Shi Huang

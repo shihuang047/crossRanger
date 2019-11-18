@@ -167,18 +167,18 @@ plot.clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferr
 #' plot.reg_res_list(reg_res_list)
 #' @author Shi Huang
 #' @export
-plot.reg_res_list<-function(res_list, outdir=NULL){
-  datasets<-res_list$datasets
-  sample_size<-res_list$sample_size
-  rf_MSE<-res_list$rf_MSE
-  rf_RMSE<-res_list$rf_RMSE
-  rf_MAE<-res_list$rf_MAE
-  rf_MAE_perc<-res_list$rf_MAE_perc
-  rf_R_squared<-res_list$rf_R_squared
-  rf_Adj_R_squared<-res_list$rf_Adj_R_squared
-  feature_imps_list<-res_list$feature_imps_list
+plot.reg_res_list<-function(res_reg_list, outdir=NULL){
+  datasets<-reg_res_list$datasets
+  sample_size<-reg_res_list$sample_size
+  rf_MSE<-reg_res_list$rf_MSE
+  rf_RMSE<-reg_res_list$rf_RMSE
+  rf_MAE<-reg_res_list$rf_MAE
+  rf_MAE_perc<-reg_res_list$rf_MAE_perc
+  rf_R_squared<-reg_res_list$rf_R_squared
+  rf_Adj_R_squared<-reg_res_list$rf_Adj_R_squared
+  feature_imps_list<-reg_res_list$feature_imps_list
   # prevelance of features in subdatasets
-  prev_df<-do.call(cbind, lapply(res_list$x_list, function(x) apply(x, 2, function(a) sum(a==0)/length(a))))
+  prev_df<-do.call(cbind, lapply(reg_res_list$x_list, function(x) apply(x, 2, function(a) sum(a==0)/length(a))))
   # ggplot
   summ<-data.frame(datasets=datasets, sample_size=sample_size,
                    MSE=rf_MSE, RMSE=rf_RMSE, MAE=rf_MAE, MAE_perc=rf_MAE_perc,
@@ -311,7 +311,6 @@ rf_clf.comps.summ<-function(df, f, comp_group, clr_transform=TRUE, nfolds=3, ver
 #' @param positive_class A string indicates one class in the 'c_category' column of metadata.
 #' @param other_class A string indicates the other class in the factor, such as 'health'.
 #' @param p.adj.method The p-value correction method, default is "bonferroni".
-#' @param q_cutoff The cutoff of q values for features, the default value is 0.05.
 #' @param outdir The outputh directory, default is "./".
 #' @return ...
 #' @seealso ranger

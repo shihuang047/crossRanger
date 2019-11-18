@@ -17,8 +17,6 @@ id_non_spcf_markers(feature_res, positive_class = "disease",
 \item{p.adj.method}{The p-value correction method, default is "bonferroni".}
 
 \item{outdir}{The outputh directory, default is "./".}
-
-\item{q_cutoff}{The cutoff of q values for features, the default value is 0.05.}
 }
 \value{
 ...

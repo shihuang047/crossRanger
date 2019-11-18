@@ -253,7 +253,7 @@ balanced.folds <- function(y, nfolds=3){
 
     }
     result$nfolds <- nfolds
-    result$params <- list(...)
+    result$params <- list(ntree=ntree, nfolds=nfolds)
     result$error.type <- "cv"
     class(result) <- "rf.cross.validation"
     return(result)

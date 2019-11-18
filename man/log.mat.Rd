@@ -7,9 +7,9 @@
 \method{log}{mat}(mat, base = 2)
 }
 \arguments{
-\item{x}{A data.martrix or data.frame including multiple numeric vectors.}
+\item{base}{The base in the log-transformation.}
 
-\item{paired}{A logical indicating if paired between-group comparison is desired.}
+\item{x}{A data.martrix or data.frame including multiple numeric vectors.}
 }
 \description{
 Log transformation of a data matrix.

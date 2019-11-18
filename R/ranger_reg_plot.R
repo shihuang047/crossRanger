@@ -96,8 +96,9 @@ plot_residuals <- function(y, predicted_y, prefix="train", target_field="value",
 #'             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
 #' y<- 1:60
 #' rf_model<-rf.out.of.bag(x, y)
-#' plot_perf_VS_rand(y=y, predicted_y=rf_model$predicted, prefix="train",
-#' permutation=100, metric="MAE", target_field="age")
+#' p<-plot_perf_VS_rand(y=y, predicted_y=rf_model$predicted, prefix="train",
+#' permutation=100, metric="MAE", target_field="age", n_features=5)
+#' p
 #' @author Shi Huang
 #' @export
 plot_perf_VS_rand<-function(y, predicted_y, prefix="train", target_field,
@@ -117,7 +118,8 @@ plot_perf_VS_rand<-function(y, predicted_y, prefix="train", target_field,
     annotate(geom="text", x=perf_value, y=20, label=as.character(round(perf_value, 2)), color="red", hjust = 0)
   theme_bw()
   if(!is.null(outdir)){
-    ggsave(filename=paste(outdir, prefix, ".", target_field, ".", metric, "_vs_rand.histogram.pdf",sep=""), plot=p, height=4, width=4)
+    ggsave(filename=paste(outdir, prefix, ".", target_field, ".", metric,
+                          "_vs_rand.histogram.pdf",sep=""), plot=p, height=4, width=4)
   }
   invisible(p)
 }
@@ -178,7 +180,7 @@ plot_train_vs_test<-function(train_y, predicted_train_y, test_y, predicted_test_
 #' @description Plot the regression performance against the reduced number of features used in the modeling.
 #' @param x The data frame or data matrix for model training.
 #' @param y The numeric values for labeling data.
-#' @param rf_model The rf regression model from \code{rf.out.of.bag}
+#' @param rf_reg_model The rf regression model from \code{rf.out.of.bag}
 #' @param metric The regression performance metric applied.
 #' This must be one of "MAE", "RMSE", "MSE", "MAE_perc".
 #' @param outdir The output directory.
@@ -291,6 +293,7 @@ calc_rel_predicted<-function(train_y, predicted_train_y, test_y=NULL, predicted_
 #' @title plot_rel_predicted
 #' @description Calculate the relative predicted values to the spline fit in the training data.
 #' @param relTrain_data The output dataframe of \code{calc_rel_predicted}.
+#' @param prefix The prefix of a train dataset.
 #' @param target_field A string indicating the target field in the metadata for regression.
 #' @param outdir The output directory.
 #' @examples

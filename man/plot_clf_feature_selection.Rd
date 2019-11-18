@@ -10,13 +10,15 @@ plot_clf_feature_selection(x, y, rf_clf_model, metric = "AUROC",
 \arguments{
 \item{x}{The data frame or data matrix for model training.}
 
-\item{y}{The numeric values for labeling data.}
+\item{y}{A factor related to the responsive vector for training data.}
 
 \item{rf_clf_model}{The rf classification model from \code{rf.out.of.bag}}
 
 \item{metric}{The classification performance metric applied.
 If binary classification, this must be one of "AUROC", "Accuracy", "Kappa", "F1".
 If multi-class classification, this must be one of "Accuracy", "Kappa".}
+
+\item{positive_class}{A class of the y.}
 
 \item{outdir}{The output directory.}
 }

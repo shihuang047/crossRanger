@@ -10,6 +10,8 @@ plot_rel_predicted(relTrain_data, prefix = "train",
 \arguments{
 \item{relTrain_data}{The output dataframe of \code{calc_rel_predicted}.}
 
+\item{prefix}{The prefix of a train dataset.}
+
 \item{target_field}{A string indicating the target field in the metadata for regression.}
 
 \item{outdir}{The output directory.}

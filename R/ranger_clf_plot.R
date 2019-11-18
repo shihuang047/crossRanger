@@ -101,8 +101,9 @@ plot_clf_probabilities<-function(y, rf_clf_model, positive_class=NA, prefix="tra
 #' @title plot_clf_feature_selection
 #' @description Plot the classification performance against the gradually reduced number of features used in the modeling.
 #' @param x The data frame or data matrix for model training.
-#' @param y The numeric values for labeling data.
+#' @param y A factor related to the responsive vector for training data.
 #' @param rf_clf_model The rf classification model from \code{rf.out.of.bag}
+#' @param positive_class A class of the y.
 #' @param metric The classification performance metric applied.
 #' If binary classification, this must be one of "AUROC", "Accuracy", "Kappa", "F1".
 #' If multi-class classification, this must be one of "Accuracy", "Kappa".

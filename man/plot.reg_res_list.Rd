@@ -4,7 +4,7 @@
 \alias{plot.reg_res_list}
 \title{plot.reg_res_list}
 \usage{
-\method{plot}{reg_res_list}(res_list, outdir = NULL)
+\method{plot}{reg_res_list}(res_reg_list, outdir = NULL)
 }
 \arguments{
 \item{outdir}{The output directory.}

@@ -94,7 +94,7 @@ BetweenGroup.test <-function(x, y, clr_transform=FALSE, p.adj.method="bonferroni
 #' @title log.mat
 #' @description Log transformation of a data matrix.
 #' @param x A data.martrix or data.frame including multiple numeric vectors.
-#' @param paired A logical indicating if paired between-group comparison is desired.
+#' @param base The base in the log-transformation.
 #' @examples
 #' x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
 #'             t(rmultinom(8, 75, c(.201,.4,.12,.18,.099))),
