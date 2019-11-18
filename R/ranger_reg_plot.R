@@ -81,6 +81,7 @@ plot_residuals <- function(y, predicted_y, prefix="train", target_field="value",
 #' @description Plot the residuals of observed and predicted values from a ranger model.
 #' @param y The numeric values for labeling data.
 #' @param predicted_y The predicted values for y.
+#' @param n_features The number of features in the training data.
 #' @param prefix The prefix for the dataset in the training or testing.
 #' @param target_field A string indicating the target field of the metadata for regression.
 #' @param metric The regression performance metric applied, including MAE, RMSE, MSE, R_squared, Adj_R_squared.
@@ -100,13 +101,14 @@ plot_residuals <- function(y, predicted_y, prefix="train", target_field="value",
 #' @author Shi Huang
 #' @export
 plot_perf_VS_rand<-function(y, predicted_y, prefix="train", target_field,
-                            metric="MAE", permutation=100, outdir=NULL){
-  rand_perf <- function(y, permutation.=permutation, metric.=metric){
+                            metric="MAE", permutation=100, n_features, outdir=NULL){
+  rand_perf <- function(y, permutation.=permutation, metric.=metric,
+                        n_features.=n_features){
     set.seed(123)
     rand_y_mat <-replicate(permutation, sample(y, replace = FALSE))
-    apply(rand_y_mat, 2, function(x) get.reg.performance(x, y)[[metric.]])
+    apply(rand_y_mat, 2, function(x) get.reg.performance(x, y, n_features)[[metric.]])
   }
-  perf_value<-get.reg.performance(predicted_y, y)[[metric]]
+  perf_value<-get.reg.performance(predicted_y, y, n_features)[[metric]]
   perf_values<-data.frame(perf_value, rand_perf_values=rand_perf(y))
   p<-ggplot(perf_values, aes(x=rand_perf_values)) + geom_histogram(alpha=0.5) +
     #xlim(c(1, 20))+

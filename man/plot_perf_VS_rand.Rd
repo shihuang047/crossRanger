@@ -5,7 +5,7 @@
 \title{plot_perf_VS_rand}
 \usage{
 plot_perf_VS_rand(y, predicted_y, prefix = "train", target_field,
-  metric = "MAE", permutation = 100, outdir = NULL)
+  metric = "MAE", permutation = 100, n_features, outdir = NULL)
 }
 \arguments{
 \item{y}{The numeric values for labeling data.}
@@ -19,6 +19,8 @@ plot_perf_VS_rand(y, predicted_y, prefix = "train", target_field,
 \item{metric}{The regression performance metric applied, including MAE, RMSE, MSE, R_squared, Adj_R_squared.}
 
 \item{permutation}{The permutation times for a random guess of regression performance.}
+
+\item{n_features}{The number of features in the training data.}
 
 \item{outdir}{The output directory.}
 }
