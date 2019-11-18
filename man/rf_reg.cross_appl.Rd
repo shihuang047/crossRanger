@@ -7,15 +7,11 @@
 rf_reg.cross_appl(rf_list, x_list, y_list)
 }
 \arguments{
-\item{rf_model_list}{A list of rf.models generated from the function rf.out.of.bag.}
+\item{rf_list}{A list of rf.model objects from \code{rf.out.of.bag}.}
 
-\item{df}{Training data: a data.frame.}
+\item{x_list}{A list of training datasets usually in the format of data.frame.}
 
-\item{metadata}{Sample metadata with at least two columns.}
-
-\item{s_category}{A string indicates the category in the sample metadata: a ‘factor’ defines the sample grouping for data spliting.}
-
-\item{c_category}{A indicates the category in the sample metadata: a 'numeric' sample label for rf regression in each of splited datasets.}
+\item{y_list}{A list of responsive vector for regression in the training datasets.}
 }
 \value{
 ...
@@ -23,7 +19,7 @@ rf_reg.cross_appl(rf_list, x_list, y_list)
 \description{
 Based on pre-computed rf models regressing \code{c_category} in each the sub-datasets splited by the \code{s_category},
 perform cross-datasets application of the rf models. The inputs are precalculated
-rf regression models, and the outputs include accuracy, auc and Kappa statistics.
+rf regression models, x_list and y_list.
 }
 \examples{
 df <- data.frame(rbind(t(rmultinom(7, 75, c(.21,.6,.12,.38,.099))),

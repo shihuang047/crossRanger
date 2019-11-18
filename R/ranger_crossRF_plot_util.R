@@ -1,13 +1,14 @@
 #' @importFrom corrplot corrplot
 #' @importFrom stats cor
+#' @importFrom utils write.table
 #' @importFrom plyr ldply
-#' @importFrom ggplot2 ggplot ggsave ylab xlab geom_boxplot geom_point geom_jitter position_jitter geom_bar coord_flip theme_bw geom_hline scale_y_continuous facet_grid scale_color_manual element_line element_rect element_blank
+#' @import ggplot2
 #' @importFrom gridExtra arrangeGrob
 #' @importFrom reshape2 melt
 
 #' @title corr_datasets_by_imps
 #' @description The correlation of importance scores between datasets
-#' @param reg_res/clf_res a list, the output of the function \code{rf_reg.by_datasets} or \code{rf_clf.by_datasets}
+#' @param feature_imps_list a list of feature importance scores from the output of \code{rf_reg.by_datasets} or \code{rf_clf.by_datasets}
 #' @param ranked if transform importance scores into rank for correlation analysis
 #' @param plot if plot the correlation matrix
 #' @seealso ranger rf_clf.by_datasets rf_reg.by_datasets
@@ -72,7 +73,7 @@ corr_datasets_by_imps<-function(feature_imps_list, ranked=TRUE, plot=FALSE){
 #' plot.clf_res_list(clf_res_list)
 #' @author Shi Huang
 #' @export
-plot.clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir="./"){
+plot.clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir=NULL){
   datasets<-clf_res_list$datasets
   sample_size<-clf_res_list$sample_size
   rf_AUC<-clf_res_list$rf_AUC
@@ -166,7 +167,7 @@ plot.clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferr
 #' plot.reg_res_list(reg_res_list)
 #' @author Shi Huang
 #' @export
-plot.reg_res_list<-function(res_list, outdir="./"){
+plot.reg_res_list<-function(res_list, outdir=NULL){
   datasets<-res_list$datasets
   sample_size<-res_list$sample_size
   rf_MSE<-res_list$rf_MSE
@@ -230,19 +231,26 @@ plot.reg_res_list<-function(res_list, outdir="./"){
 #' @param nfolds The number of folds in the cross validation.
 #' @param p.adj.method The p-value correction method, default is "bonferroni".
 #' @param verbose Show computation status and estimated runtime.
-#' @param imp_pvalues If compute both importance score and pvalue for each feature.
-#' @param q_cutoff The cutoff of p values for features, the default value is 0.05.
+#' @param rf_imp_pvalues If compute both importance score and pvalue for each feature.
+#' @param p_cutoff The cutoff of p values for features, the default value is 0.05.
 #' @param q_cutoff The cutoff of q values for features, the default value is 0.05.
 #' @param outdir The output directory, the default is "./".
 #' @return A list includes a summary of rf models in the sub datasets,
 #' all important statistics for each of features, and plots.
 #' @seealso ranger rf_clf.by_datasets
 #' @export
-rf_clf.by_datasets.summ<-function(df, metadata, s_category, c_category, positive_class=NA, nfolds=3, verbose=FALSE, ntree=5000,
-                                  p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir="./"){
-  res_list<-rf_clf.by_datasets(df, metadata, s_category, c_category, positive_class, nfolds, verbose, ntree)
-  stopifnot(all(names(res_list) %in% c("datasets","rf_model_list","sample_size","rf_AUC","feature_imps_list")==TRUE))
-  plot_res_list<-plot.res_list(res_list, p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir=outdir)
+rf_clf.by_datasets.summ<-function(df, metadata, s_category, c_category, positive_class=NA,
+                                  rf_imp_pvalues=FALSE, nfolds=3, verbose=FALSE, ntree=500,
+                                  p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05,
+                                  outdir=NULL){
+  res_list<-rf_clf.by_datasets(df, metadata, s_category, c_category, positive_class,
+                               rf_imp_pvalues, nfolds, verbose, ntree)
+  expected_list_names<-c("x_list", "y_list","datasets","rf_model_list",
+                         "sample_size","rf_AUC","feature_imps_list")
+  stopifnot(all(names(res_list) %in% expected_list_names==TRUE))
+  plot_res_list<-plot.clf_res_list(res_list, p_cutoff=0.05,
+                                   p.adj.method = "bonferroni", q_cutoff=0.05,
+                                   outdir=outdir)
   result<-list()
   result$rf_models<-res_list$rf_model_list
   result$summ<-plot_res_list$summ
@@ -261,11 +269,13 @@ rf_clf.by_datasets.summ<-function(df, metadata, s_category, c_category, positive
 #' @param df Training data: a data.frame.
 #' @param f A factor in the metadata with at least two levels (groups).
 #' @param comp_group A string indicates the group in the f
-#' @param positive_class A string indicates one class in the 'c_category' column of metadata.
+#' @param clr_transform A string indicates one class in the 'c_category' column of metadata.
 #' @param ntree The number of trees.
 #' @param nfolds The number of folds in the cross validation.
 #' @param p.adj.method The p-value correction method, default is "bonferroni".
 #' @param q_cutoff The cutoff of q values for features, the default value is 0.05.
+#' @param p_cutoff The cutoff of p values for features, the default value is 0.05.
+#' @param verbose A boolean value indicates if showing computation status and estimated runtime.
 #' @param outdir The outputh directory, default is "./".
 #' @return A list includes a summary of rf models in the sub datasets,
 #' all important statistics for each of features, and plots.
@@ -274,13 +284,16 @@ rf_clf.by_datasets.summ<-function(df, metadata, s_category, c_category, positive
 #' df <- data.frame(t(rmultinom(60, 300,c(.001,.6,.2,.3,.299))))
 #' f=factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
 #' comp_group="A"
-#' rf_clf.comps.summ(df, f, comp_group, verbose=FALSE, ntree=500, p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir="./")
+#' rf_clf.comps.summ(df, f, comp_group, verbose=FALSE, ntree=500, p_cutoff=0.05,
+#'                   p.adj.method = "bonferroni", q_cutoff=0.05, outdir=NULL)
 #'
 rf_clf.comps.summ<-function(df, f, comp_group, clr_transform=TRUE, nfolds=3, verbose=FALSE, ntree=5000,
-                           p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir="./"){
+                           p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir=NULL){
   clf_comps_list<-rf_clf.comps(df, f, comp_group, verbose=verbose, ntree=ntree, clr_transform=clr_transform)
-  stopifnot(all(names(clf_comps_list) %in% c("x_list", "y_list", "datasets","rf_model_list","sample_size","rf_AUC","feature_imps_list")==TRUE))
-  plot_res_list<-plot.clf_res_list(clf_res_list=clf_comps_list, p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir=outdir)
+  expected_list_names<-c("x_list", "y_list", "datasets","rf_model_list","sample_size","rf_AUC","feature_imps_list")
+  stopifnot(all(names(clf_comps_list) %in% expected_list_names==TRUE))
+  plot_res_list<-plot.clf_res_list(clf_res_list=clf_comps_list, p_cutoff=0.05,
+                                   p.adj.method = "bonferroni", q_cutoff=0.05, outdir=outdir)
   result<-list()
   result$rf_models<-clf_comps_list$rf_model_list
   result$summ<-plot_res_list$summ
@@ -295,9 +308,8 @@ rf_clf.comps.summ<-function(df, f, comp_group, clr_transform=TRUE, nfolds=3, ver
 #' @title id_non_spcf_markers
 #' @description Non-specific features across datasets (at least present in two of datasets): Last update: 20190130
 #' @param feature_res the inheritant output from the function of plot.res_list, rf_clf.comps.summ or rf_clf.by_dataset.summ
-#' @param level1 A string indicates the class of the factor, default is 'disease'
-#' @param level2 A string indicates the class of the factor, default is 'health'
 #' @param positive_class A string indicates one class in the 'c_category' column of metadata.
+#' @param other_class A string indicates the other class in the factor, such as 'health'.
 #' @param p.adj.method The p-value correction method, default is "bonferroni".
 #' @param q_cutoff The cutoff of q values for features, the default value is 0.05.
 #' @param outdir The outputh directory, default is "./".
@@ -308,15 +320,20 @@ rf_clf.comps.summ<-function(df, f, comp_group, clr_transform=TRUE, nfolds=3, ver
 #'             t(rmultinom(15, 75, c(.011,.6,.22,.28,.289))),
 #'             t(rmultinom(15, 75, c(.091,.6,.32,.18,.209))),
 #'             t(rmultinom(15, 75, c(.001,.6,.42,.58,.299)))))
-#' df0 <- data.frame(t(rmultinom(60, 300,c(.001,.6,.2,.3,.299)))) # No feature significantly changed in all sub-datasets!
+#' # A dataset with no feature significantly changed in all sub-datasets!
+#' df0 <- data.frame(t(rmultinom(60, 300,c(.001,.6,.2,.3,.299))))
 #' f=factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
 #' comp_group="A"
-#' res <-rf_clf.comps.summ(df, f, comp_group, verbose=FALSE, ntree=500, p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir="./")
+#' res <-rf_clf.comps.summ(df, f, comp_group, verbose=FALSE, ntree=500,
+#'                         p_cutoff=0.05, p.adj.method = "bonferroni",
+#'                         q_cutoff=0.05, outdir=NULL)
 #' feature_res<-res$feature_res
-#' id_non_spcf_markers(feature_res, positive_class="disease", other_class="health", p.adj.method= "BH", outdir="./")
+#' id_non_spcf_markers(feature_res, positive_class="disease",
+#'                     other_class="health", p.adj.method= "BH", outdir=NULL)
 #' @author Shi Huang
 #' @export
-id_non_spcf_markers <- function(feature_res, positive_class="disease", other_class="health", p.adj.method = "BH", outdir="./"){
+id_non_spcf_markers <- function(feature_res, positive_class="disease",
+                                other_class="health", p.adj.method = "BH", outdir=NULL){
   feature_res<-feature_res[order(feature_res$dataset, feature_res$feature), ]
   if(all(feature_res$Enr=='Neutral')) stop("No feature significantly changed in any sub-datasets!")
   Enr_dataset_df<-do.call(rbind, tapply(feature_res$Enr, feature_res$feature, summary))
@@ -339,8 +356,11 @@ id_non_spcf_markers <- function(feature_res, positive_class="disease", other_cla
                          ifelse(any(x[3]==0 && x[2]==0), "non_marker", "spcf"))))
   ))
   #---- calculate the overlap fraction of non-specific markers in each of datasets
-  tmp<-data.frame(feature_res, shared_global=as.character(shared_global), non_spcf_global=as.character(non_spcf_global), non_spcf_disease_global=as.character(non_spcf_disease_global),
-                  non_spcf_local=as.character(non_spcf_global), non_spcf_disease_local=as.character(non_spcf_disease_global),
+  tmp<-data.frame(feature_res, shared_global=as.character(shared_global),
+                  non_spcf_global=as.character(non_spcf_global),
+                  non_spcf_disease_global=as.character(non_spcf_disease_global),
+                  non_spcf_local=as.character(non_spcf_global),
+                  non_spcf_disease_local=as.character(non_spcf_disease_global),
                   stringsAsFactors =F)
   tmp[which(tmp[, "Enr"]=="Neutral"),  c("non_spcf_local", "non_spcf_disease_local")]<-"non_marker"
   count_spcf<-do.call(rbind, tapply(tmp$non_spcf_local, tmp$dataset, function(x)
@@ -354,7 +374,8 @@ id_non_spcf_markers <- function(feature_res, positive_class="disease", other_cla
   zero_count <- tapply(tmp$mean_all, tmp$dataset, function(x) sum(x==0))
   count_spcf[, 4]<-count_spcf[, 4]-zero_count
   fac_spcf<-sweep(count_spcf, 1, rowSums(count_spcf), "/")
-  colnames(fac_spcf)<-colnames(count_spcf)<-c("All_shared_markers","Non_specific_markers", "Specific_markers", "Others")
+  colnames(fac_spcf)<-colnames(count_spcf)<-c("All_shared_markers","Non_specific_markers",
+                                              "Specific_markers", "Others")
   # remove the columns with total zero values
   fac_spcf<-fac_spcf[, which(!apply(fac_spcf, 2, function(x) all(x==0)))]
   count_spcf<-count_spcf[, which(!apply(count_spcf, 2, function(x) all(x==0)))]
@@ -378,7 +399,8 @@ id_non_spcf_markers <- function(feature_res, positive_class="disease", other_cla
     coord_flip()+
     #ylim(0, 1)+
     theme_bw()
-  ggsave(filename=paste(outdir,"Markers_fraction_overlap_with_non_specific_",p.adj.method,".pdf",sep=""),plot=p_summ, width=6, height=4)
+  ggsave(filename=paste(outdir,"Markers_fraction_overlap_with_non_specific_",p.adj.method,".pdf",sep=""),
+         plot=p_summ, width=6, height=4)
   #---- summary of the abundance and occurence rate of
   #---- non-specific disease, non-specific health, non-specific mixed and non markers
   #---- across all patients in all datasets
@@ -389,14 +411,16 @@ id_non_spcf_markers <- function(feature_res, positive_class="disease", other_cla
     xlab("")+ ylab("log10(mean abundance)")+
     coord_flip()+
     theme_bw()
-  ggsave(filename=paste(outdir,"Markers_specific_VS_mean_",p.adj.method,".pdf",sep=""),plot=p_spcf_abd, width=5, height=3)
+  ggsave(filename=paste(outdir,"Markers_specific_VS_mean_",p.adj.method,".pdf",sep=""),
+         plot=p_spcf_abd, width=5, height=3)
   p_spcf_OccRate<-ggplot(feature_res_spcf, aes(x=non_spcf_disease_global, y=OccRate_all))  +
     geom_boxplot(outlier.shape = NA) +
     geom_jitter(position=position_jitter(width = 0.2) ,size=1, alpha=0.4) + #jitter
     xlab("")+ ylab("Ubiquity")+
     coord_flip()+
     theme_bw()
-  ggsave(filename=paste(outdir,"Markers_specific_VS_ubiquity_",p.adj.method, ".pdf",sep=""),plot=p_spcf_OccRate, width=5, height=3)
+  ggsave(filename=paste(outdir,"Markers_specific_VS_ubiquity_",p.adj.method, ".pdf",sep=""),
+         plot=p_spcf_OccRate, width=5, height=3)
 
   result<-list()
   result$fac_spcf<-fac_spcf
@@ -406,6 +430,5 @@ id_non_spcf_markers <- function(feature_res, positive_class="disease", other_cla
   result$plot_spcf_abd<-p_spcf_abd
   result$plot_spcf_OccRate<-p_spcf_OccRate
   return(result)
-
 }
 

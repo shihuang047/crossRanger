@@ -7,11 +7,11 @@
 corr_datasets_by_imps(feature_imps_list, ranked = TRUE, plot = FALSE)
 }
 \arguments{
+\item{feature_imps_list}{a list of feature importance scores from the output of \code{rf_reg.by_datasets} or \code{rf_clf.by_datasets}}
+
 \item{ranked}{if transform importance scores into rank for correlation analysis}
 
 \item{plot}{if plot the correlation matrix}
-
-\item{reg_res/clf_res}{a list, the output of the function \code{rf_reg.by_datasets} or \code{rf_clf.by_datasets}}
 }
 \description{
 The correlation of importance scores between datasets

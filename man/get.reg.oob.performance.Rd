@@ -9,7 +9,7 @@ get.reg.oob.performance(model, y)
 \arguments{
 \item{model}{A object of class \code{rf.out.of.bag} with elements.}
 
-\item{y}{The dependent variable in training data.}
+\item{y}{The responsive variable for regression in training data.}
 }
 \value{
 \code{perf}

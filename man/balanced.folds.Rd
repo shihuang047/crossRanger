@@ -7,7 +7,7 @@
 balanced.folds(y, nfolds = 3)
 }
 \arguments{
-\item{y}{Data label for each row.}
+\item{y}{A response vector. If a factor, classification is assumed, otherwise regression is assumed.}
 
 \item{nfolds}{The number of folds in the cross validation.}
 }

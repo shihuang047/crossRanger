@@ -15,15 +15,17 @@ rf_clf.comps(df, f, comp_group, verbose = FALSE, clr_transform = TRUE,
 
 \item{comp_group}{A string indicates the group in the f}
 
+\item{verbose}{A boolean value indicating if show computation status and estimated runtime.}
+
+\item{clr_transform}{A boolean value indicating if the clr-transformation applied.}
+
+\item{rf_imp_values}{A boolean value indicating if compute both importance score and pvalue for each feature.}
+
 \item{ntree}{The number of trees.}
 
 \item{p.adj.method}{The p-value correction method, default is "bonferroni".}
 
 \item{q_cutoff}{The cutoff of q values for features, the default value is 0.05.}
-
-\item{positive_class}{A string indicates one class in the 'c_category' column of metadata.}
-
-\item{nfolds}{The number of folds in the cross validation.}
 }
 \value{
 ...
@@ -43,7 +45,8 @@ df <- data.frame(rbind(t(rmultinom(7, 75, c(.21,.6,.12,.38,.099))),
             t(rmultinom(15, 75, c(.001,.6,.42,.58,.299)))))
 f=factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
 comp_group="A"
-comps_res<-rf_clf.comps(df, f, comp_group, verbose=FALSE, ntree=500, p.adj.method = "bonferroni", q_cutoff=0.05)
+comps_res<-rf_clf.comps(df, f, comp_group, verbose=FALSE, ntree=500,
+                        p.adj.method = "bonferroni", q_cutoff=0.05)
 comps_res
 }
 \seealso{

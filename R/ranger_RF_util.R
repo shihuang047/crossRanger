@@ -1,23 +1,15 @@
-# Loading libraries
-# p <- c("ade4","caret","reshape2","MASS","ranger","plyr",  "foreach", "doMC", "ALEPlot", "vegan", "compositions",
-#        "ggplot2","squash","RColorBrewer","pheatmap","pROC","ROCR","caTools")
-# usePackage <- function(p) {
-#     if (!is.element(p, installed.packages()[,1]))
-#         install.packages(p, dep = TRUE, repos = "http://cran.us.r-project.org")
-#     suppressWarnings(suppressMessages(invisible(require(p, character.only = TRUE))))
-# }
-# invisible(lapply(p, usePackage))
+#' @importFrom stats model.matrix predict quantile sd
+#' @importFrom Matrix Matrix
+#' @importFrom ranger ranger
 
 #' @title rf.out.of.bag
 #' @description It runs standard random forests with out-of-bag error estimation for both classification and regression using \code{ranger}.
 #' This is merely a wrapper that extracts relevant info from \code{ranger} output.
-#' @importFrom ranger ranger
-#' @importFrom Matrix Matrix
-#' @importFrom stats model.matrix predict quantile sd
 #' @param x Training data: data.matrix or data.frame.
-#' @param y Data label for each row.
+#' @param y A response vector. If a factor, classification is assumed, otherwise regression is assumed.
 #' @param ntree The number of trees.
-#' @param verbose Show computation status and estimated runtime.
+#' @param sparse A boolean value indicates if the input matrix transformed into sparse matrix for rf modeling.
+#' @param verbose A boolean value indicates if showing computation status and estimated runtime.
 #' @param imp_pvalues If compute both importance score and pvalue for each feature.
 #' @return Object of class \code{rf.out.of.bag} with elements including the ranger object and critical metrics for model evaluation.
 #'
@@ -64,7 +56,7 @@
 #' rf.out.of.bag(x, y, imp_pvalues=TRUE)
 #' @author Shi Huang
 #' @export
-"rf.out.of.bag" <-function(x, y, ntree=500, verbose=FALSE, sparse = FALSE, imp_pvalues=FALSE, ...){
+"rf.out.of.bag" <-function(x, y, ntree=500, verbose=FALSE, sparse = FALSE, imp_pvalues=FALSE){
   set.seed(123)
   data<-data.frame(y, x)
   require(Matrix)
@@ -117,8 +109,7 @@
 
 #' @title balanced.folds
 #' @description Get balanced folds where each fold has close to overall class ratio
-#' @importFrom stats quantile
-#' @param y Data label for each row.
+#' @param y A response vector. If a factor, classification is assumed, otherwise regression is assumed.
 #' @param nfolds The number of folds in the cross validation.
 #' @return folds
 #' @examples
@@ -160,10 +151,11 @@ balanced.folds <- function(y, nfolds=3){
 #' @title rf.cross.validation
 #' @description It runs standard random forests with n-folds cross-validation error estimation for both classification and regression using rf.out.of.bag.
 #' @param x Training data: data.matrix or data.frame.
-#' @param y Data label for each row.
+#' @param y A response vector. If a factor, classification is assumed, otherwise regression is assumed.
 #' @param ntree The number of trees.
 #' @param nfolds The number of folds in the cross validation. If nfolds > length(y) or nfolds==-1, uses leave-one-out cross-validation.
-#' @param verbose Show computation status and estimated runtime.
+#' @param sparse A boolean value indicates if the input matrix transformed into sparse matrix for rf modeling.
+#' @param verbose A boolean value indicates if showing computation status and estimated runtime.
 #' @param imp_pvalues If compute both importance score and pvalue for each feature.
 #' @return Object of class \code{rf.cross.validation} with elements including a \code{ranger} object and mutiple metrics for model evaluations.
 #' @seealso ranger
@@ -185,7 +177,7 @@ balanced.folds <- function(y, nfolds=3){
 #' rf.cross.validation(x, y, nfolds=5, imp_pvalues=TRUE)
 #' @author Shi Huang
 #' @export
-"rf.cross.validation" <- function(x, y, nfolds=3, ntree=500, verbose=FALSE, sparse = FALSE, imp_pvalues=FALSE, ...){
+"rf.cross.validation" <- function(x, y, nfolds=3, ntree=500, verbose=FALSE, sparse = FALSE, imp_pvalues=FALSE){
     if(nfolds==-1) nfolds <- length(y)
     folds <- balanced.folds(y, nfolds=nfolds)
     result <- list()
@@ -267,8 +259,6 @@ balanced.folds <- function(y, nfolds=3){
     return(result)
 }
 
-
-
 #' @title get.oob.probability.from.forest
 #' @description Get probability of each class using only out-of-bag predictions from RF
 #' @param model A object of random forest out-of-bag model.
@@ -334,16 +324,16 @@ balanced.folds <- function(y, nfolds=3){
   return(invisible(probs))
 }
 
-#' @title get.reg.oob.performance
-#' @description Get oob performance from forests for training data. Last update: Apr. 7, 2019
-#' @param model A object of class \code{rf.out.of.bag} with elements.
-#' @param y The dependent variable in training data.
-#' @return \code{perf}
+#' @title get.reg.performance
+#' @description Get regression performance
+#' @param pred_y The predicted y in the numeric format.
+#' @param y A response vector for regression.
+#' @param n_features The number of features.
+#' @return A list of regression performance metrics.
 #' @author Shi Huang
 #' @export
-
-"get.reg.oob.performance" <- function(model, y){
-  pred_y<-as.numeric(model$predictions)
+"get.reg.performance" <- function(pred_y, y, n_features){
+  pred_y<-as.numeric(pred_y)
   y<-as.numeric(y)
   MSE <- mean((y-pred_y)^2)
   RMSE <- sqrt(mean((y-pred_y)^2))
@@ -355,7 +345,7 @@ balanced.folds <- function(y, nfolds=3){
     n=length(y);
     1-(1-R2(y, pred_y)^2)*(n-1)/(n-k-1) # k is # of predictors
   }
-  Adj_R_squared <- adj.R2(y, pred_y, k = model$num.independent.variables)
+  Adj_R_squared <- adj.R2(y, pred_y, k = n_features)
   perf<-list()
   perf$MSE<-MSE
   perf$RMSE<-RMSE
@@ -363,6 +353,20 @@ balanced.folds <- function(y, nfolds=3){
   perf$MAE_perc<-MAE_perc
   perf$R_squared<-R_squared
   perf$Adj_R_squared<-Adj_R_squared
+  return(invisible(perf))
+}
+
+#' @title get.reg.oob.performance
+#' @description Get oob performance from forests for training data. Last update: Apr. 7, 2019
+#' @param model A object of class \code{rf.out.of.bag} with elements.
+#' @param y The responsive variable for regression in training data.
+#' @return \code{perf}
+#' @author Shi Huang
+#' @export
+"get.reg.oob.performance" <- function(model, y){
+  pred_y<-as.numeric(model$predictions)
+  y<-as.numeric(y)
+  perf<-get.reg.performance(pred_y, y, n_features=model$num.independent.variables)
   return(invisible(perf))
 }
 
@@ -379,24 +383,7 @@ balanced.folds <- function(y, nfolds=3){
   rf.pred <- predict(model, data.frame(newx))
   pred_y <- as.numeric(rf.pred$predictions)
   y <- as.numeric(newy)
-  MSE <- mean((y-pred_y)^2)
-  RMSE <- sqrt(mean((y-pred_y)^2))
-  MAE <- mean(sqrt((y-pred_y)^2))
-  MAE_perc <- mean(sqrt((y-pred_y)^2)/y)
-  R2 <- function(y, pred_y){1 - (sum((y-pred_y)^2) / sum((y-mean(y))^2))}
-  R_squared <- R2(y, pred_y)
-  adj.R2<-function(y, pred_y, k){
-    n=length(y);
-    1-(1-R2(y, pred_y)^2)*(n-1)/(n-k-1) # k is # of predictors
-  }
-  Adj_R_squared <- adj.R2(y, pred_y, k = ncol(newx))
-  perf<-list()
-  perf$MSE<-MSE
-  perf$RMSE<-RMSE
-  perf$MAE<-MAE
-  perf$MAE_perc<-MAE_perc
-  perf$R_squared<-R_squared
-  perf$Adj_R_squared<-Adj_R_squared
+  perf<-get.reg.performance(pred_y, y, n_features=ncol(newx))
   return(invisible(perf))
 }
 
@@ -405,8 +392,8 @@ balanced.folds <- function(y, nfolds=3){
 #' @param obs A binary factor vector indicates observed values.
 #' @param prob A two-column numeric matrix of the same # of rows as the length of observed values,
 #'             containing the predicted value of each observation.
-#' @importFrom stats model.matrix predict quantile sd
-#' @return \code{auroc}
+#' @param positive_class A class of the obs factor.
+#' @return The auroc value.
 #' @examples
 #' obs<-factor(c(rep("A", 31), rep("B", 29)))
 #' pred <- c(runif(30, 0.5, 0.9), runif(30, 0, 0.6))
@@ -426,7 +413,6 @@ get.auroc <- function(prob, obs, positive_class) {
   obs<-pos_class(obs, positive_class=positive_class)
   pred <- ROCR::prediction(prob[, positive_class], obs)
   auroc  <- ROCR::performance(pred, "auc")@y.values[[1]]
-  auroc
   return(auroc)
 }
 
@@ -474,7 +460,7 @@ get.auprc <- function(obs, prob, positive_class) {
 
 #' @title get.mislabel.scores
 #' @description Get mislabelled scores of samples
-#' @param y Data label for each row.
+#' @param y A response vector. If a factor, classification is assumed, otherwise regression is assumed.
 #' @param y.prob The probability output from the RF model.
 #' @return mislabelled scores
 #' @examples
@@ -499,101 +485,4 @@ get.auprc <- function(obs, prob, positive_class) {
   rownames(result) <- rownames(y.prob)
   colnames(result) <- c('P(alleged label)','P(second best)','P(alleged label)-P(second best)')
   return(result)
-}
-
-
-#' @title save.rf_clf.results
-#' @description Prints random forests results file
-#' @importFrom  utils write.table
-"save.rf_clf.results" <- function(result, feature.ids, rf.opts){
-    save.rf_clf.results.summary(result, rf.opts, outdir=rf.opts$outdir)
-    save.rf_clf.results.probabilities(result, outdir=rf.opts$outdir)
-    save.rf_clf.results.mislabeling(result, outdir=rf.opts$outdir)
-    save.rf_clf.results.importances(result, feature.ids, outdir=rf.opts$outdir)
-    save.rf_clf.results.confusion.matrix(result, outdir=rf.opts$outdir)
-}
-
-#' @title save.rf_clf.results.summary
-#' @description Print "summary" file
-#' @importFrom  utils write.table
-"save.rf_clf.results.summary" <- function(result, rf.opts, filename='train.summary.xls', outdir='.'){
-    filepath <- sprintf('%s/%s',outdir,filename)
-    err <- mean(result$errs)
-    err.sd <- sd(result$errs)
-    y<-result$y
-    baseline.err <- 1-max(table(y))/length(y)
-    filepath <- sprintf('%s/%s',outdir,filename)
-    sink(filepath)
-    cat(sprintf('Model\tRandom Forest\n'))
-    cat(sprintf('Error type\t%s\n',result$error.type))
-    if(result$error.type == 'oob'){
-        cat(sprintf('Estimated error\t%.5f\n',err))
-    } else {
-        cat(sprintf('Estimated error (mean +/- s.d.)\t%.5f +/- %.5f\n',err,err.sd))
-    }
-    cat(sprintf('Baseline error (for random guessing)\t%.5f\n',baseline.err))
-    cat(sprintf('Ratio baseline error to observed error\t%.5f\n',baseline.err / err))
-    cat(sprintf('Number of trees\t%d\n',result$params$ntree))
-    sink(NULL)
-}
-
-#' @title save.rf_clf.results.probabilities
-#' @description Print "probabilities" file
-#' @importFrom  utils write.table
-"save.rf_clf.results.probabilities" <- function(result, filename='train.cv_probabilities.xls', outdir='.'){
-    filepath <- sprintf('%s/%s',outdir,filename)
-    sink(filepath)
-    cat('SampleID\t')
-    write.table(result$probabilities,sep='\t',quote=F)
-    sink(NULL)
-}
-
-#' @title save.rf_clf.results.mislabeling
-#' @description Print "mislabeling" file
-#' @importFrom  utils write.table
-"save.rf_clf.results.mislabeling" <- function(result, filename='train.mislabeling.xls', outdir='.'){
-    filepath <- sprintf('%s/%s',outdir,filename)
-    sink(filepath)
-    cat('SampleID\t')
-    write.table(get.mislabel.scores(result$y,result$probabilities),sep='\t',quote=F)
-    sink(NULL)
-}
-
-#' @title save.rf_clf.results.importances
-#' @description Print "feature_importance_scores" file
-#' @importFrom  utils write.table
-"save.rf_clf.results.importances" <- function(result, feature.ids, filename='train.feature_importance_scores.xls', outdir='.'){
-    filepath <- sprintf('%s/%s',outdir,filename)
-    if(is.null(dim(result$importances))){
-        imp <- result$importances
-        imp.sd <- rep(NA,length(imp))
-    } else {
-        imp <- rowMeans(result$importances)
-        imp.sd <- apply(result$importances, 1, sd)
-    }
-    output.table <- cbind(imp, imp.sd)
-    rownames(output.table) <- feature.ids
-    output.table <- output.table[sort(imp,dec=T,index=T)$ix,]
-    colnames(output.table) <- c('Mean_decrease_in_accuracy','Standard_deviation')
-
-    sink(filepath)
-    cat('Feature_id\t')
-    write.table(output.table,sep='\t',quote=F)
-    sink(NULL)
-}
-
-#' @title save.rf_clf.results.confusion.matrix
-#' @description Print "confusion matrix" file
-#' @importFrom  utils write.table
-"save.rf_clf.results.confusion.matrix" <- function(result, filename='train.confusion_matrix.xls', outdir='.'){
-    filepath <- sprintf('%s/%s',outdir,filename)
-    # add class error column to each row
-    x <- result$confusion.matrix
-    class.errors <- rowSums(x * (1-diag(nrow(x)))) / rowSums(x)
-    output <- cbind(result$confusion.matrix, class.errors)
-    colnames(output)[ncol(output)] <- "Class error"
-    sink(filepath)
-    cat('True\\Predicted\t')
-    write.table(output,quote=F,sep='\t')
-    sink(NULL)
 }

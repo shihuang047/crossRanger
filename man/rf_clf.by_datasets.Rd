@@ -16,17 +16,23 @@ rf_clf.by_datasets(df, metadata, s_category, c_category,
 
 \item{s_category}{A string indicates the category in the sample metadata: a ‘factor’ defines the sample grouping for data spliting.}
 
-\item{c_category}{A indicates the category in the sample metadata: a 'factor' used as sample label for rf classification in each of splited datasets.}
+\item{c_category}{A indicates the category in the sample metadata as a responsive vector: if a 'factor', rf classification is performed in each of splited datasets.}
 
 \item{positive_class}{A string indicates one class in the 'c_category' column of metadata.}
 
+\item{rf_imp_pvalues}{A boolean value indicating if compute both importance score and pvalue for each feature.}
+
+\item{clr_transform}{A boolean value indicating if the clr-transformation applied.}
+
 \item{nfolds}{The number of folds in the cross validation.}
 
-\item{verbose}{Show computation status and estimated runtime.}
+\item{verbose}{A boolean value indicating if show computation status and estimated runtime.}
 
 \item{ntree}{The number of trees.}
 
-\item{imp_pvalues}{If compute both importance score and pvalue for each feature.}
+\item{p.adj.method}{The p-value correction method, default is "bonferroni".}
+
+\item{q_cutoff}{The cutoff of q values for features, the default value is 0.05.}
 }
 \value{
 ...
@@ -49,7 +55,8 @@ metadata<-data.frame(f_s=factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep(
                                   rep("C", 7), rep("H", 8), rep("C", 7), rep("H", 8))),
                      f_d=factor(rep(c(rep("a", 5), rep("b", 5), rep("c", 5)), 4)))
 rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c', positive_class="C")
-rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c', positive_class="C", rf_imp_pvalues=TRUE)
+rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c',
+                   positive_class="C", rf_imp_pvalues=TRUE)
 rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_d')
 rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_d', rf_imp_pvalues=TRUE)
 }

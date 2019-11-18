@@ -18,13 +18,11 @@ rf_reg.by_datasets(df, metadata, s_category, c_category, nfolds = 3,
 
 \item{nfolds}{The number of folds in the cross validation.}
 
+\item{rf_imp_pvalues}{A boolean value indicate if compute both importance score and pvalue for each feature.}
+
 \item{verbose}{Show computation status and estimated runtime.}
 
 \item{ntree}{The number of trees.}
-
-\item{positive_class}{A string indicates one class in the 'c_category' column of metadata.}
-
-\item{imp_pvalues}{If compute both importance score and pvalue for each feature.}
 }
 \value{
 ...

@@ -11,9 +11,11 @@ get.auroc(prob, obs, positive_class)
 containing the predicted value of each observation.}
 
 \item{obs}{A binary factor vector indicates observed values.}
+
+\item{positive_class}{A class of the obs factor.}
 }
 \value{
-\code{auroc}
+The auroc value.
 }
 \description{
 calculates the area under the ROC curve

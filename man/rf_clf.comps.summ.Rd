@@ -6,7 +6,7 @@
 \usage{
 rf_clf.comps.summ(df, f, comp_group, clr_transform = TRUE, nfolds = 3,
   verbose = FALSE, ntree = 5000, p_cutoff = 0.05,
-  p.adj.method = "bonferroni", q_cutoff = 0.05, outdir = "./")
+  p.adj.method = "bonferroni", q_cutoff = 0.05, outdir = NULL)
 }
 \arguments{
 \item{df}{Training data: a data.frame.}
@@ -15,17 +15,21 @@ rf_clf.comps.summ(df, f, comp_group, clr_transform = TRUE, nfolds = 3,
 
 \item{comp_group}{A string indicates the group in the f}
 
+\item{clr_transform}{A string indicates one class in the 'c_category' column of metadata.}
+
 \item{nfolds}{The number of folds in the cross validation.}
 
+\item{verbose}{A boolean value indicates if showing computation status and estimated runtime.}
+
 \item{ntree}{The number of trees.}
+
+\item{p_cutoff}{The cutoff of p values for features, the default value is 0.05.}
 
 \item{p.adj.method}{The p-value correction method, default is "bonferroni".}
 
 \item{q_cutoff}{The cutoff of q values for features, the default value is 0.05.}
 
 \item{outdir}{The outputh directory, default is "./".}
-
-\item{positive_class}{A string indicates one class in the 'c_category' column of metadata.}
 }
 \value{
 A list includes a summary of rf models in the sub datasets,
@@ -41,7 +45,8 @@ all important statistics for each of features, and plots.
 df <- data.frame(t(rmultinom(60, 300,c(.001,.6,.2,.3,.299))))
 f=factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
 comp_group="A"
-rf_clf.comps.summ(df, f, comp_group, verbose=FALSE, ntree=500, p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir="./")
+rf_clf.comps.summ(df, f, comp_group, verbose=FALSE, ntree=500, p_cutoff=0.05,
+                  p.adj.method = "bonferroni", q_cutoff=0.05, outdir=NULL)
 
 }
 \seealso{

@@ -1,12 +1,3 @@
-# Loading libraries
-#  p <- c("ade4","caret","reshape2","MASS","ranger","plyr", "foreach", "doMC", "ALEPlot", "vegan", "compositions",
-#         "microbenchmark", "lattice","gplots","ggplot2","squash","pheatmap","pROC","ROCR","caTools")
-#  usePackage <- function(p) {
-#    if (!is.element(p, installed.packages()[,1]))
-#      install.packages(p, dep = TRUE, repos = "http://cran.us.r-project.org")
-#    suppressWarnings(suppressMessages(invisible(require(p, character.only = TRUE))))
-#  }
-#  invisible(lapply(p, usePackage))
 #' @importFrom doMC registerDoMC
 #' @importFrom foreach foreach %dopar%
 #' @importFrom parallel detectCores
@@ -15,10 +6,11 @@
 
 #' @title rf_clf.pairwise
 #' @description Perform pairwise rf classfication for a data matrix between all pairs of group levels
-#' @param x a data matrix or data.frame
-#' @param i the order of one level
-#' @param j the order of the other level
-#' @param f factor
+#' @param df A data matrix or data.frame
+#' @param f A factor with more than two levels.
+#' @param nfolds The number of folds in the cross validation.
+#' @param ntree The number of trees.
+#' @param verbose The boolean value indicating if the computation status and estimated runtime shown.
 #' @return A summary table containing the performance of Random Forest classification models
 #' @seealso ranger
 #' @examples
@@ -29,6 +21,7 @@
 #' @author Shi Huang
 #' @export
 rf_clf.pairwise <- function (df, f, nfolds=3, ntree=5000, verbose=FALSE) {
+  ## TODO: check the class of inputs
   rf_compare_levels <- function(df, f, i=1, j=2, nfolds=3, ntree=500, verbose=FALSE) {
     df_ij <- df[which(as.integer(f) == i | as.integer(f) == j), ]
     f_ij <- factor(f[which(as.integer(f) == i | as.integer(f) == j)])
@@ -74,16 +67,18 @@ rf_clf.pairwise <- function (df, f, nfolds=3, ntree=5000, verbose=FALSE) {
 #' c_category in each the sub-datasets splited by the s_category,
 #' and apply the model to all the other datasets. The output includes
 #' accuracy, auc and Kappa statistics.
-#'
 #' @param df Training data: a data.frame.
 #' @param metadata Sample metadata with at least two columns.
 #' @param s_category A string indicates the category in the sample metadata: a ‘factor’ defines the sample grouping for data spliting.
-#' @param c_category A indicates the category in the sample metadata: a 'factor' used as sample label for rf classification in each of splited datasets.
+#' @param c_category A indicates the category in the sample metadata as a responsive vector: if a 'factor', rf classification is performed in each of splited datasets.
 #' @param positive_class A string indicates one class in the 'c_category' column of metadata.
-#' @param ntree The number of trees.
 #' @param nfolds The number of folds in the cross validation.
-#' @param verbose Show computation status and estimated runtime.
-#' @param imp_pvalues If compute both importance score and pvalue for each feature.
+#' @param clr_transform A boolean value indicating if the clr-transformation applied.
+#' @param rf_imp_pvalues A boolean value indicating if compute both importance score and pvalue for each feature.
+#' @param verbose A boolean value indicating if show computation status and estimated runtime.
+#' @param ntree The number of trees.
+#' @param p.adj.method The p-value correction method, default is "bonferroni".
+#' @param q_cutoff The cutoff of q values for features, the default value is 0.05.
 #' @return ...
 #' @seealso ranger
 #' @examples
@@ -98,13 +93,16 @@ rf_clf.pairwise <- function (df, f, nfolds=3, ntree=5000, verbose=FALSE) {
 #'                                   rep("C", 7), rep("H", 8), rep("C", 7), rep("H", 8))),
 #'                      f_d=factor(rep(c(rep("a", 5), rep("b", 5), rep("c", 5)), 4)))
 #' rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c', positive_class="C")
-#' rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c', positive_class="C", rf_imp_pvalues=TRUE)
+#' rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c',
+#'                    positive_class="C", rf_imp_pvalues=TRUE)
 #' rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_d')
 #' rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_d', rf_imp_pvalues=TRUE)
 #' @author Shi Huang
 #' @export
-rf_clf.by_datasets<-function(df, metadata, s_category, c_category, positive_class=NA, rf_imp_pvalues=FALSE, clr_transform=TRUE, nfolds=3, verbose=FALSE, ntree=500,
+rf_clf.by_datasets<-function(df, metadata, s_category, c_category, positive_class=NA,
+                             rf_imp_pvalues=FALSE, clr_transform=TRUE, nfolds=3, verbose=FALSE, ntree=500,
                              p.adj.method = "BH", q_cutoff=0.05){
+  ## TODO: check the class of inputs
   y_list<-split(metadata[, c_category], metadata[, s_category])
   x_list<-split(df, metadata[, s_category])
   datasets<-levels(factor(metadata[, s_category]))
@@ -159,11 +157,10 @@ rf_clf.by_datasets<-function(df, metadata, s_category, c_category, positive_clas
 #' @param metadata Sample metadata with at least two columns.
 #' @param s_category A string indicates the category in the sample metadata: a ‘factor’ defines the sample grouping for data spliting.
 #' @param c_category A indicates the category in the sample metadata: a 'factor' used as sample label for rf classification in each of splited datasets.
-#' @param positive_class A string indicates one class in the 'c_category' column of metadata.
+#' @param rf_imp_pvalues A boolean value indicate if compute both importance score and pvalue for each feature.
 #' @param ntree The number of trees.
 #' @param nfolds The number of folds in the cross validation.
 #' @param verbose Show computation status and estimated runtime.
-#' @param imp_pvalues If compute both importance score and pvalue for each feature.
 #' @return ...
 #' @seealso ranger
 #' @examples
@@ -183,7 +180,9 @@ rf_clf.by_datasets<-function(df, metadata, s_category, c_category, positive_clas
 #' reg_res
 #' @author Shi Huang
 #' @export
-rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=3, rf_imp_pvalues=FALSE, verbose=FALSE, ntree=500){
+rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=3,
+                             rf_imp_pvalues=FALSE, verbose=FALSE, ntree=500){
+  ## TODO: check the class of inputs
   #as.numeric.factor <- function(y) {as.numeric(levels(y))[y]}
   y<-metadata[, c_category]
   if(is.factor(metadata[, c_category])) y<-as.numeric(as.character(y))
@@ -248,9 +247,9 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=3, rf_
 #' @description Based on pre-computed rf models classifying 'c_category' in each the sub-datasets splited by the 's_category',
 #' perform cross-datasets application of the rf models. The inputs are precalculated
 #' rf models, and the outputs include accuracy, auc and Kappa statistics.
-#' @param rf_model_list A list of rf.models generated from the function rf.out.of.bag.
-#' @param x_list A list of training data: data.frame.
-#' @param y_list A list of y.
+#' @param rf_model_list A list of rf.model objects from \code{rf.out.of.bag}.
+#' @param x_list A list of training datasets usually in the format of data.frame.
+#' @param y_list A list of responsive vector for regression in the training datasets.
 #' @param positive_class A string indicates one common class in each of elements in the y_list.
 #' @return A object of class rf_clf.cross_appl including a list of performance summary and predicted values of all predictions
 #' @seealso ranger
@@ -283,6 +282,7 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=3, rf_
 #' @author Shi Huang
 #' @export
 rf_clf.cross_appl<-function(rf_model_list, x_list, y_list, positive_class=NA){
+  ## TODO: check the class of inputs
   L<-length(rf_model_list)
   positive_class<-ifelse(is.na(positive_class), levels(factor(y_list[[1]]))[1], positive_class)
   try(if(!identical(L, length(x_list), length(y_list))) stop("The length of x list, y list and rf model list should be identical."))
@@ -366,12 +366,10 @@ rf_clf.cross_appl<-function(rf_model_list, x_list, y_list, positive_class=NA){
 #' @title rf_reg.cross_appl
 #' @description Based on pre-computed rf models regressing \code{c_category} in each the sub-datasets splited by the \code{s_category},
 #' perform cross-datasets application of the rf models. The inputs are precalculated
-#' rf regression models, and the outputs include accuracy, auc and Kappa statistics.
-#' @param rf_model_list A list of rf.models generated from the function rf.out.of.bag.
-#' @param df Training data: a data.frame.
-#' @param metadata Sample metadata with at least two columns.
-#' @param s_category A string indicates the category in the sample metadata: a ‘factor’ defines the sample grouping for data spliting.
-#' @param c_category A indicates the category in the sample metadata: a 'numeric' sample label for rf regression in each of splited datasets.
+#' rf regression models, x_list and y_list.
+#' @param rf_list A list of rf.model objects from \code{rf.out.of.bag}.
+#' @param x_list A list of training datasets usually in the format of data.frame.
+#' @param y_list A list of responsive vector for regression in the training datasets.
 #' @return ...
 #'
 #' @seealso ranger
@@ -391,6 +389,7 @@ rf_clf.cross_appl<-function(rf_model_list, x_list, y_list, positive_class=NA){
 #' @author Shi Huang
 #' @export
 rf_reg.cross_appl<-function(rf_list, x_list, y_list){
+  ## TODO: check the class of inputs
   L<-length(rf_list$rf_model_list)
   try(if(!identical(L, length(x_list), length(y_list))) stop("The length of x list, y list and rf model list should be identical."))
   try(if(all(unlist(lapply(y_list, mode))!="numeric")) stop("All elements in the y list should be numeric for regression."))
@@ -487,7 +486,7 @@ rf_reg.cross_appl<-function(rf_list, x_list, y_list){
 #' @param f A factor in the metadata with at least two levels (groups).
 #' @param comp_group A string indicates the group in the f
 #' @return A object of list with elements: a list of data.frame and a list of factor
-#' @author
+#' @author Shi Huang
 #'
 generate.comps_datalist<-function(df, f, comp_group){
   all_other_groups<-levels(f)[which(levels(f)!=comp_group)]
@@ -514,9 +513,10 @@ generate.comps_datalist<-function(df, f, comp_group){
 #' @param df Training data: a data.frame.
 #' @param f A factor in the metadata with at least two levels (groups).
 #' @param comp_group A string indicates the group in the f
-#' @param positive_class A string indicates one class in the 'c_category' column of metadata.
+#' @param clr_transform A boolean value indicating if the clr-transformation applied.
+#' @param rf_imp_values A boolean value indicating if compute both importance score and pvalue for each feature.
+#' @param verbose A boolean value indicating if show computation status and estimated runtime.
 #' @param ntree The number of trees.
-#' @param nfolds The number of folds in the cross validation.
 #' @param p.adj.method The p-value correction method, default is "bonferroni".
 #' @param q_cutoff The cutoff of q values for features, the default value is 0.05.
 #' @return ...
@@ -530,12 +530,14 @@ generate.comps_datalist<-function(df, f, comp_group){
 #'             t(rmultinom(15, 75, c(.001,.6,.42,.58,.299)))))
 #' f=factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
 #' comp_group="A"
-#' comps_res<-rf_clf.comps(df, f, comp_group, verbose=FALSE, ntree=500, p.adj.method = "bonferroni", q_cutoff=0.05)
+#' comps_res<-rf_clf.comps(df, f, comp_group, verbose=FALSE, ntree=500,
+#'                         p.adj.method = "bonferroni", q_cutoff=0.05)
 #' comps_res
 #' @author Shi Huang
 #' @export
-rf_clf.comps<-function(df, f, comp_group, verbose=FALSE, clr_transform=TRUE, rf_imp_values=FALSE,
-                       ntree=500, p.adj.method = "bonferroni", q_cutoff=0.05){
+rf_clf.comps<-function(df, f, comp_group, verbose=FALSE, clr_transform=TRUE,
+                       rf_imp_values=FALSE,ntree=500, p.adj.method = "bonferroni",
+                       q_cutoff=0.05){
   all_other_groups<-levels(f)[which(levels(f)!=comp_group)]
   L<-length(all_other_groups)
   nCores <- parallel::detectCores()

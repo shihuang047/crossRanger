@@ -5,9 +5,9 @@
 \title{rf_clf.by_datasets.summ}
 \usage{
 rf_clf.by_datasets.summ(df, metadata, s_category, c_category,
-  positive_class = NA, nfolds = 3, verbose = FALSE, ntree = 5000,
-  p_cutoff = 0.05, p.adj.method = "bonferroni", q_cutoff = 0.05,
-  outdir = "./")
+  positive_class = NA, rf_imp_pvalues = FALSE, nfolds = 3,
+  verbose = FALSE, ntree = 500, p_cutoff = 0.05,
+  p.adj.method = "bonferroni", q_cutoff = 0.05, outdir = NULL)
 }
 \arguments{
 \item{df}{Training data: a data.frame.}
@@ -20,21 +20,21 @@ rf_clf.by_datasets.summ(df, metadata, s_category, c_category,
 
 \item{positive_class}{A string indicates one class in the 'c_category' column of metadata.}
 
+\item{rf_imp_pvalues}{If compute both importance score and pvalue for each feature.}
+
 \item{nfolds}{The number of folds in the cross validation.}
 
 \item{verbose}{Show computation status and estimated runtime.}
 
 \item{ntree}{The number of trees.}
 
+\item{p_cutoff}{The cutoff of p values for features, the default value is 0.05.}
+
 \item{p.adj.method}{The p-value correction method, default is "bonferroni".}
 
-\item{q_cutoff}{The cutoff of p values for features, the default value is 0.05.}
+\item{q_cutoff}{The cutoff of q values for features, the default value is 0.05.}
 
 \item{outdir}{The output directory, the default is "./".}
-
-\item{imp_pvalues}{If compute both importance score and pvalue for each feature.}
-
-\item{q_cutoff}{The cutoff of q values for features, the default value is 0.05.}
 }
 \value{
 A list includes a summary of rf models in the sub datasets,

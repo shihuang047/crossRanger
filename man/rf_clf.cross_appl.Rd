@@ -7,11 +7,11 @@
 rf_clf.cross_appl(rf_model_list, x_list, y_list, positive_class = NA)
 }
 \arguments{
-\item{rf_model_list}{A list of rf.models generated from the function rf.out.of.bag.}
+\item{rf_model_list}{A list of rf.model objects from \code{rf.out.of.bag}.}
 
-\item{x_list}{A list of training data: data.frame.}
+\item{x_list}{A list of training datasets usually in the format of data.frame.}
 
-\item{y_list}{A list of y.}
+\item{y_list}{A list of responsive vector for regression in the training datasets.}
 
 \item{positive_class}{A string indicates one common class in each of elements in the y_list.}
 }

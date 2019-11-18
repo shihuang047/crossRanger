@@ -5,16 +5,18 @@
 \title{rf.out.of.bag}
 \usage{
 rf.out.of.bag(x, y, ntree = 500, verbose = FALSE, sparse = FALSE,
-  imp_pvalues = FALSE, ...)
+  imp_pvalues = FALSE)
 }
 \arguments{
 \item{x}{Training data: data.matrix or data.frame.}
 
-\item{y}{Data label for each row.}
+\item{y}{A response vector. If a factor, classification is assumed, otherwise regression is assumed.}
 
 \item{ntree}{The number of trees.}
 
-\item{verbose}{Show computation status and estimated runtime.}
+\item{verbose}{A boolean value indicates if showing computation status and estimated runtime.}
+
+\item{sparse}{A boolean value indicates if the input matrix transformed into sparse matrix for rf modeling.}
 
 \item{imp_pvalues}{If compute both importance score and pvalue for each feature.}
 }

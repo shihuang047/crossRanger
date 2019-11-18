@@ -7,7 +7,7 @@
 get.mislabel.scores(y, y.prob)
 }
 \arguments{
-\item{y}{Data label for each row.}
+\item{y}{A response vector. If a factor, classification is assumed, otherwise regression is assumed.}
 
 \item{y.prob}{The probability output from the RF model.}
 }

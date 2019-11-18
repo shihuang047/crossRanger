@@ -7,13 +7,15 @@
 rf_clf.pairwise(df, f, nfolds = 3, ntree = 5000, verbose = FALSE)
 }
 \arguments{
-\item{f}{factor}
+\item{df}{A data matrix or data.frame}
 
-\item{x}{a data matrix or data.frame}
+\item{f}{A factor with more than two levels.}
 
-\item{i}{the order of one level}
+\item{nfolds}{The number of folds in the cross validation.}
 
-\item{j}{the order of the other level}
+\item{ntree}{The number of trees.}
+
+\item{verbose}{The boolean value indicating if the computation status and estimated runtime shown.}
 }
 \value{
 A summary table containing the performance of Random Forest classification models
