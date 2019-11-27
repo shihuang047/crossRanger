@@ -12,6 +12,20 @@ This R package provides functions for the Random Forests (ranger) modeling of mu
 ## Authors ##
 Shi Huang, UC San Diego 
 
+## Examples ##
+
+```r{
+set.seed(123)
+x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
+            t(rmultinom(8, 75, c(.201,.4,.12,.18,.099))),
+            t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
+            t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
+            t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
+y<-factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
+y<-factor(c(rep("A", 20), rep("B", 20), rep("C", 20)))
+rf.out.of.bag(x, y, imp_pvalues=FALSE)
+}```
+
 ## References ##
 * Breiman, L. (2001). Random forests. Mach Learn, 45:5-32. https://doi.org/10.1023/A:1010933404324.
 * Wright, M. N. & Ziegler, A. (2017). ranger: A fast implementation of random forests for high dimensional data in C++ and R. J Stat Softw 77:1-17. https://doi.org/10.18637/jss.v077.i01.
