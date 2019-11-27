@@ -13,17 +13,24 @@ This R package provides functions for the Random Forests (ranger) modeling of mu
 Shi Huang, UC San Diego 
 
 ## Examples ##
-
+* ranger modeling on one responsive variable
 ``` r
 set.seed(123)
-x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
+df <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
             t(rmultinom(8, 75, c(.201,.4,.12,.18,.099))),
             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
-y<-factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
-y<-factor(c(rep("A", 20), rep("B", 20), rep("C", 20)))
-rf.out.of.bag(x, y, imp_pvalues=FALSE)
+metadata<-data.frame(f_s=factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15))),
+                     f_c=factor(c(rep("C", 7), rep("H", 8), rep("C", 7), rep("H", 8),
+                                  rep("C", 7), rep("H", 8), rep("C", 7), rep("H", 8))),
+                     f_d=factor(rep(c(rep("a", 5), rep("b", 5), rep("c", 5)), 4)))
+rf.out.of.bag(x=df, y=metadata$f_s, imp_pvalues=FALSE)
+```
+* stratified ranger modeling on one responsive variable
+``` r
+rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c', positive_class="C")
+
 ```
 
 ## References ##
