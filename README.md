@@ -41,6 +41,7 @@ cross_rf<-rf_clf.cross_appl(rf_model_list=res_list$rf_model_list,
                             x_list=res_list$x_list, 
                             y_list=res_list$y_list, positive_class="C")
 cross_rf$perf_summ
+# the output
 Train_data Test_data   Validation_type  Accuracy       AUC       Kappa Sensitivity Specificity Pos_Pred_Value Neg_Pred_Value
 1           A         A   self_validation 0.9333333 1.0000000  0.86725664   1.0000000       0.875      0.8750000      1.0000000
 2           A         B cross_application 0.4666667 0.3303571  0.00000000   1.0000000       0.000      0.4666667            NaN
