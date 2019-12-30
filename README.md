@@ -103,3 +103,8 @@ devtools::install_github('shihuang047/crossRanger')
 ## Bugs/Feature requests ##
 I appreciate bug reports and feature requests. Please post to the github issue tracker [here](https://github.com/shihuang047/crossRanger/issues). 
 
+## Acknowledgements
+
+ This work is supported by IBM Research AI through the AI Horizons Network. For
+ more information visit the [IBM AI Horizons Network website](https://www.research.ibm.com/artificial-intelligence/horizons-network/).
+
