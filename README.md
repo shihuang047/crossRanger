@@ -12,6 +12,14 @@ This R package provides functions for the Random Forests (ranger) modeling of mu
 ## Authors ##
 Shi Huang, UC San Diego 
 
+## Installation ##
+
+The development version is maintained on GitHub and can be downloaded as follows:
+``` r 
+## install.packages('devtools') # if devtools not installed
+devtools::install_github('shihuang047/crossRanger')
+```
+
 ## Examples ##
 * compositional microbiome data simulation
 ``` r
@@ -90,15 +98,6 @@ Each exported function in the package has been documented and we have also writt
 ``` r
 vignette('crossRanger--intro', package='crossRanger')
 ```
-
-## Installation ##
-
-The development version is maintained on GitHub and can be downloaded as follows:
-``` r 
-## install.packages('devtools') # if devtools not installed
-devtools::install_github('shihuang047/crossRanger')
-```
-
 
 ## Bugs/Feature requests ##
 I appreciate bug reports and feature requests. Please post to the github issue tracker [here](https://github.com/shihuang047/crossRanger/issues). 
