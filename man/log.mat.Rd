@@ -7,9 +7,9 @@
 \method{log}{mat}(mat, base = 2)
 }
 \arguments{
-\item{base}{The base in the log-transformation.}
+\item{mat}{A data.martrix or data.frame including multiple numeric vectors.}
 
-\item{x}{A data.martrix or data.frame including multiple numeric vectors.}
+\item{base}{The base in the log-transformation.}
 }
 \description{
 Log transformation of a data matrix.

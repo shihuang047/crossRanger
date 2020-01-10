@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1573235259196.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "44B95523",
+    "lastKnownWriteTime" : 1574049967,
+    "last_content_update" : 1574049967494,
+    "path" : "~/crossRanger/R/ranger_RF_util.R",
+    "project_path" : "R/ranger_RF_util.R",
+    "properties" : {
+        "cursorPosition" : "339,33",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
