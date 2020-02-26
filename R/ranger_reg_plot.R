@@ -182,7 +182,7 @@ plot_train_vs_test<-function(train_y, predicted_train_y, test_y, predicted_test_
 #' @param y The numeric values for labeling data.
 #' @param rf_reg_model The rf regression model from \code{rf.out.of.bag}
 #' @param metric The regression performance metric applied.
-#' This must be one of "MAE", "RMSE", "MSE", "MAE_perc".
+#' This must be one of "MAE", "RMSE", "MSE", "MAPE".
 #' @param outdir The output directory.
 #' @examples
 #' set.seed(123)
@@ -203,7 +203,7 @@ plot_reg_feature_selection <- function(x, y, rf_reg_model, metric="MAE", outdir=
   n_features<-c(2, 4, 8, 16, 32, 64, 128, 256, 512, 1024)
   n_features<-n_features[1:which.min(abs(n_features-n_total_features))]
   top_n_perf<-matrix(NA, ncol=5, nrow=length(n_features)+1)
-  colnames(top_n_perf)<-c("n_features", "MSE", "RMSE", "MAE", "MAE_perc")
+  colnames(top_n_perf)<-c("n_features", "MSE", "RMSE", "MAE", "MAPE")
   rownames(top_n_perf)<-top_n_perf[,1]<-c(n_features, max_n)
   for(i in 1:length(n_features)){
     idx<-which(rf_imp_rank<=n_features[i])
@@ -215,9 +215,9 @@ plot_reg_feature_selection <- function(x, y, rf_reg_model, metric="MAE", outdir=
     top_n_perf[i, 2]<-top_n_rf$MSE
     top_n_perf[i, 3]<-top_n_rf$RMSE
     top_n_perf[i, 4]<-top_n_rf$MAE
-    top_n_perf[i, 5]<-top_n_rf$MAE_perc
+    top_n_perf[i, 5]<-top_n_rf$MAPE
   }
-  top_n_perf[length(n_features), ]<-c(max_n, rf_reg_model$MSE, rf_reg_model$RMSE, rf_reg_model$MAE, rf_reg_model$MAE_perc)
+  top_n_perf[length(n_features), ]<-c(max_n, rf_reg_model$MSE, rf_reg_model$RMSE, rf_reg_model$MAE, rf_reg_model$MAPE)
   top_n_perf<-data.frame(top_n_perf)
   breaks<-top_n_perf$n_features
   p<-ggplot(top_n_perf, aes(x=n_features, y=get(metric))) +

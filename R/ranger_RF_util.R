@@ -85,23 +85,18 @@
   }else{
     result$predicted <- rf.model$predictions
     reg_perf<-get.reg.oob.performance(rf.model, y)
-    result$MSE <- reg_perf$MSE
-    result$RMSE <- reg_perf$RMSE
-    result$MAE <- reg_perf$MAE
-    result$MAE_perc <- reg_perf$MAE_perc
-    result$R_squared <- reg_perf$R_squared
-    result$Adj_R_squared <- reg_perf$Adj_R_squared
+    result<-append(result, reg_perf)
     cat("Mean squared residuals: ", reg_perf$MSE, "\n")
     cat("Mean absolute error: ", reg_perf$MAE, "\n")
     cat("pseudo R-squared (%explained variance): ", reg_perf$R_squared, "\n")
   }
-  result$params <- list(ntree=ntree)
   if(imp_pvalues==FALSE){
     result$importances <- rf.model$variable.importance
     result$importances[colSums(x)==0]<-NA
   }else{
       result$importances <- ranger::importance_pvalues(rf.model, method = "altmann", formula = y ~., data=data) # if sparse_data, there will NOT pvalue output
   }
+  result$params <- list(ntree=ntree)
   result$error.type <- "oob"
   class(result) <- "rf.out.of.bag"
   return(result)
@@ -181,21 +176,20 @@ balanced.folds <- function(y, nfolds=3){
     if(nfolds==-1) nfolds <- length(y)
     folds <- balanced.folds(y, nfolds=nfolds)
     result <- list()
+    result$rf.model<-list()
     if(is.factor(y)){
       result$y <- as.factor(y)
-      result$errs <- numeric(length(unique(folds)))
+      result$predicted <- y
       result$probabilities <- matrix(0, nrow=length(result$y), ncol=length(levels(result$y)))
       rownames(result$probabilities) <- rownames(x)
       colnames(result$probabilities) <- levels(result$y)
+      result$confusion.matrix<-t(sapply(levels(y), function(level) table(y[y==level])))
+      result$errs <- numeric(length(unique(folds)))
     }else{
       result$y <- y
-      result$MSE <- numeric(length(unique(folds)))
-      result$MAE <- numeric(length(unique(folds)))
-      result$R_squared <- numeric(length(unique(folds)))
+      result$predicted <- y
     }
-    result$models<-list()
-    result$predicted <- result$y
-    result$importances <- matrix(0, nrow=ncol(x), ncol=nfolds)
+
     if(imp_pvalues==TRUE){ result$importance_pvalues <- matrix(0, nrow=ncol(x), ncol=nfolds) }
     # K-fold cross-validation
     for(fold in sort(unique(folds))){
@@ -206,13 +200,12 @@ balanced.folds <- function(y, nfolds=3){
         require(Matrix)
         if(sparse){
           sparse_data <- Matrix::Matrix(data.matrix(data), sparse = TRUE)
-          result$models[[fold]]<- model <- ranger::ranger(dependent.variable.name="y", data=sparse_data, classification=ifelse(is.factor(y_tr), TRUE, FALSE),
+          result$rf.model[[fold]]<- model <- ranger::ranger(dependent.variable.name="y", data=sparse_data, classification=ifelse(is.factor(y_tr), TRUE, FALSE),
                                                           keep.inbag=TRUE, importance='permutation', verbose=verbose, num.trees=ntree)
         }else{
-          result$models[[fold]]<- model <- ranger::ranger(y~., data=data, keep.inbag=TRUE, importance='permutation',
+          result$rf.model[[fold]]<- model <- ranger::ranger(y~., data=data, keep.inbag=TRUE, importance='permutation',
                                                          classification=ifelse(is.factor(y_tr), TRUE, FALSE), num.trees=ntree, verbose=verbose)
         }
-
         newx <- x[foldix,]
         if(length(foldix)==1) newx <- matrix(newx, nrow=1)
         predicted_foldix<-predict(model, newx)$predictions
@@ -235,26 +228,30 @@ balanced.folds <- function(y, nfolds=3){
           reg_perf<-get.reg.predict.performance(model, newx, newy=result$y[foldix])
           result$MSE[fold] <- reg_perf$MSE
           result$RMSE[fold] <- reg_perf$RMSE
+          result$nRMSE[fold] <- reg_perf$nRMSE
           result$MAE[fold] <- reg_perf$MAE
-          result$MAE_perc[fold] <- reg_perf$MAE_perc
+          result$MAPE[fold] <- reg_perf$MAPE
+          result$MASE[fold] <- reg_perf$MASE
           result$R_squared[fold] <- reg_perf$R_squared
           result$Adj_R_squared[fold] <- reg_perf$Adj_R_squared
           cat("Mean squared residuals: ", reg_perf$MSE, "\n")
           cat("Mean absolute error: ", reg_perf$MAE, "\n")
           cat("pseudo R-squared (%explained variance): ", reg_perf$R_squared, "\n")
         }
-        if(imp_pvalues==FALSE){
-          result$importances[,fold] <- model$variable.importance
-          }else{
-          imp<-ranger::importance_pvalues(model, method = "altmann", formula = y ~., data=data)
-          result$importances[,fold] <- imp[, 1]
-          result$importance_pvalues[,fold] <- imp[, 2]
-        }
-
     }
-    result$nfolds <- nfolds
+    result$importances <- matrix(0, nrow=ncol(x), ncol=nfolds)
+    for(fold in sort(unique(folds))){
+    if(imp_pvalues==FALSE){
+      result$importances[,fold] <- result$rf.model[[fold]]$variable.importance
+    }else{
+      imp<-ranger::importance_pvalues(result$rf.model[[fold]], method = "altmann", formula = y ~., data=data)
+      result$importances[,fold] <- imp[, 1]
+      result$importance_pvalues[,fold] <- imp[, 2]
+    }
+    }
     result$params <- list(ntree=ntree, nfolds=nfolds)
     result$error.type <- "cv"
+    result$nfolds <- nfolds
     class(result) <- "rf.cross.validation"
     return(result)
 }
@@ -332,25 +329,35 @@ balanced.folds <- function(y, nfolds=3){
 #' @return A list of regression performance metrics.
 #' @author Shi Huang
 #' @export
-"get.reg.performance" <- function(pred_y, y, n_features){
+"get.reg.performance" <- function(pred_y, y, n_features=NA){
   pred_y<-as.numeric(pred_y)
   y<-as.numeric(y)
+  diff_y<-diff(range(y))
+  mean_y<-mean(y)
   MSE <- mean((y-pred_y)^2)
   RMSE <- sqrt(mean((y-pred_y)^2))
+  nRMSE <- RMSE/mean_y # <https://en.wikipedia.org/wiki/Root-mean-square_deviation#Normalized_root-mean-square_deviation>
   MAE <- mean(sqrt((y-pred_y)^2))
-  MAE_perc <- mean(sqrt((y-pred_y)^2)/y)
+  MAPE <- mean(sqrt((y-pred_y)^2)/y) # <https://en.wikipedia.org/wiki/Mean_absolute_percentage_error>
+  MASE <- mean(sqrt((y-pred_y)^2))/mean(sqrt((diff(y))^2)) # <https://en.wikipedia.org/wiki/Mean_absolute_scaled_error>
   R2 <- function(y, pred_y){1 - (sum((y-pred_y)^2) / sum((y-mean(y))^2))}
   R_squared <- R2(y, pred_y)
   adj.R2<-function(y, pred_y, k){
     n=length(y);
     1-(1-R2(y, pred_y)^2)*(n-1)/(n-k-1) # k is # of predictors
   }
-  Adj_R_squared <- adj.R2(y, pred_y, k = n_features)
+  if(!is.na(n_features)){
+    Adj_R_squared <- adj.R2(y, pred_y, k = n_features)
+  }else{
+    Adj_R_squared <- NA
+  }
   perf<-list()
   perf$MSE<-MSE
   perf$RMSE<-RMSE
+  perf$nRMSE<-nRMSE
   perf$MAE<-MAE
-  perf$MAE_perc<-MAE_perc
+  perf$MAPE<-MAPE
+  perf$MASE<-MASE
   perf$R_squared<-R_squared
   perf$Adj_R_squared<-Adj_R_squared
   return(invisible(perf))

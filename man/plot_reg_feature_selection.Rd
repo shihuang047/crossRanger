@@ -15,7 +15,7 @@ plot_reg_feature_selection(x, y, rf_reg_model, metric = "MAE",
 \item{rf_reg_model}{The rf regression model from \code{rf.out.of.bag}}
 
 \item{metric}{The regression performance metric applied.
-This must be one of "MAE", "RMSE", "MSE", "MAE_perc".}
+This must be one of "MAE", "RMSE", "MSE", "MAPE".}
 
 \item{outdir}{The output directory.}
 }

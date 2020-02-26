@@ -173,7 +173,7 @@ plot_reg_res_list<-function(reg_res_list, outdir=NULL){
   rf_MSE<-reg_res_list$rf_MSE
   rf_RMSE<-reg_res_list$rf_RMSE
   rf_MAE<-reg_res_list$rf_MAE
-  rf_MAE_perc<-reg_res_list$rf_MAE_perc
+  rf_MAPE<-reg_res_list$rf_MAPE
   rf_R_squared<-reg_res_list$rf_R_squared
   rf_Adj_R_squared<-reg_res_list$rf_Adj_R_squared
   feature_imps_list<-reg_res_list$feature_imps_list
@@ -181,7 +181,7 @@ plot_reg_res_list<-function(reg_res_list, outdir=NULL){
   prev_df<-do.call(cbind, lapply(reg_res_list$x_list, function(x) apply(x, 2, function(a) sum(a==0)/length(a))))
   # ggplot
   summ<-data.frame(datasets=datasets, sample_size=sample_size,
-                   MSE=rf_MSE, RMSE=rf_RMSE, MAE=rf_MAE, MAE_perc=rf_MAE_perc,
+                   MSE=rf_MSE, RMSE=rf_RMSE, MAE=rf_MAE, MAPE=rf_MAPE,
                    R_squared=rf_R_squared, Adj_R_squared=rf_Adj_R_squared)
   names(summ)[1:2]<-c("Data_sets", "Sample_size")
   #summ_m<-reshape2::melt(summ)

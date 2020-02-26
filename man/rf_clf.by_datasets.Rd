@@ -54,7 +54,8 @@ metadata<-data.frame(f_s=factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep(
                      f_c=factor(c(rep("C", 7), rep("H", 8), rep("C", 7), rep("H", 8),
                                   rep("C", 7), rep("H", 8), rep("C", 7), rep("H", 8))),
                      f_d=factor(rep(c(rep("a", 5), rep("b", 5), rep("c", 5)), 4)))
-rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c', positive_class="C")
+system.time(rf_clf.by_datasets(df, metadata, s_category='f_s',
+            c_category='f_c', positive_class="C"))
 rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c',
                    positive_class="C", rf_imp_pvalues=TRUE)
 rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_d')

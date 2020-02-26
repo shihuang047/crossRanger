@@ -92,7 +92,8 @@ rf_clf.pairwise <- function (df, f, nfolds=3, ntree=5000, verbose=FALSE) {
 #'                      f_c=factor(c(rep("C", 7), rep("H", 8), rep("C", 7), rep("H", 8),
 #'                                   rep("C", 7), rep("H", 8), rep("C", 7), rep("H", 8))),
 #'                      f_d=factor(rep(c(rep("a", 5), rep("b", 5), rep("c", 5)), 4)))
-#' rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c', positive_class="C")
+#' system.time(rf_clf.by_datasets(df, metadata, s_category='f_s',
+#'             c_category='f_c', positive_class="C"))
 #' rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c',
 #'                    positive_class="C", rf_imp_pvalues=TRUE)
 #' rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_d')
@@ -193,7 +194,7 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=3,
     stop("# of samples in x and length of y should match to each other within all datasets!") )
   datasets<-levels(factor(metadata[, s_category]))
   L<-length(y_list)
-  # 1. sample size of all datasets
+  # sample size of all datasets
   sample_size<-as.numeric(table(metadata[, s_category]))
   nCores <- parallel::detectCores()
   doMC::registerDoMC(nCores)
@@ -202,43 +203,50 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=3,
     lapply(seq_along(x),
            function(i) c(x[[i]], lapply(list(...), function(y) y[[i]])))
   }
+  if(nfolds==3){
+    oper_len=14
+    out_list<-list(list())[rep(1, oper_len)]
+    oper_names<-c("rf.model", "y", "predicted", "MSE", "RMSE", "nRMSE",
+                  "MAE", "MAPE", "MASE", "R_squared", "Adj_R_squared",
+                  "importances", "params", "error.type")
+  }else if(nfolds!=3){
+                  oper_len=15
+                  out_list<-list(list())[rep(1, oper_len)]
+                  oper_names<-c("rf.model", "y", "predicted", "MSE", "RMSE", "nRMSE",
+                                "MAE", "MAPE", "MASE", "R_squared", "Adj_R_squared",
+                                "importances", "params", "error.type", "nfolds")}
   oper<-foreach::foreach(i=1:L, .combine='comb', .multicombine=TRUE,
-                .init=list(list(), list(), list(), list(),
-                           list(), list(), list(), list(), list())) %dopar% {
-                             # 2. AUC of random forest model
+                .init=out_list) %dopar% {
                              if(nfolds==3){
-                               oob<-rf.out.of.bag(x_list[[i]], y_list[[i]], verbose=verbose, ntree=ntree, imp_pvalues = rf_imp_pvalues)
-                               rf_imps=oob$importances
-                               rf_model<-oob$rf.model
+                               oob<-rf.out.of.bag(x_list[[i]], y_list[[i]],
+                                                  verbose=verbose, ntree=ntree,
+                                                  imp_pvalues = rf_imp_pvalues)
                              }else{
-                               oob<-rf.cross.validation(x_list[[i]], y_list[[i]], nfolds=nfolds, verbose=verbose, ntree=ntree, imp_pvalues = rf_imp_pvalues)
-                               rf_model<-oob$models
-                               rf_imps=rowMeans(oob$importances)
+                               oob<-rf.cross.validation(x_list[[i]], y_list[[i]], nfolds=nfolds,
+                                                        verbose=verbose, ntree=ntree,
+                                                        imp_pvalues = rf_imp_pvalues)
                              }
-                             MSE=oob$MSE
-                             RMSE=oob$RMSE
-                             MAE=oob$MAE
-                             MAE_perc=oob$MAE_perc
-                             R_squared=oob$R_squared
-                             Adj_R_squared=oob$Adj_R_squared
-                             predicted=oob$predicted
-                             list(rf_model=rf_model, predicted=predicted, MSE=MSE, RMSE=RMSE,
-                                  MAE=MAE, MAE_perc=MAE_perc, R_squared=R_squared, Adj_R_squared=Adj_R_squared, feature_imps=rf_imps)
-                           }
+                  oob
+                }
+  names(oper)<-oper_names
   result<-list()
   result$x_list<-x_list
   result$y_list<-y_list
   result$datasets<-datasets
   result$sample_size<-sample_size
-  result$rf_model_list<-oper[[1]]; names(result$rf_model_list)<-result$datasets
-  result$rf_predicted<-oper[[2]]; names(result$rf_predicted)<-result$datasets
-  result$feature_imps_list<-oper[[9]]; names(result$feature_imps_list)<-result$datasets
-  result$rf_MSE<-unlist(oper[[3]])
-  result$rf_RMSE<-unlist(oper[[4]])
-  result$rf_MAE<-unlist(oper[[5]])
-  result$rf_MAE_perc<-unlist(oper[[6]])
-  result$rf_R_squared<-unlist(oper[[7]])
-  result$rf_Adj_R_squared<-unlist(oper[[8]])
+  result$rf_model_list<-oper$rf.model; names(result$rf_model_list)<-result$datasets
+  result$rf_predicted<-oper$predicted; names(result$rf_predicted)<-result$datasets
+  result$feature_imps_list<-oper$importances
+  if(class(oob)=="rf.cross.validation") result$feature_imps_list<-lapply(result$feature_imps_list, rowMeans)
+  names(result$feature_imps_list)<-result$datasets
+  result$rf_MSE<-unlist(oper$MSE)
+  result$rf_RMSE<-unlist(oper$RMSE)
+  result$rf_nRMSE<-unlist(oper$nRMSE)
+  result$rf_MAE<-unlist(oper$MAE)
+  result$rf_MAPE<-unlist(oper$MAPE)
+  result$rf_MASE<-unlist(oper$MASE)
+  result$rf_R_squared<-unlist(oper$R_squared)
+  result$rf_Adj_R_squared<-unlist(oper$Adj_R_squared)
   class(result)<-"rf_reg.by_datasets"
   return(result)
 }
@@ -395,7 +403,7 @@ rf_reg.cross_appl<-function(rf_list, x_list, y_list){
   try(if(all(unlist(lapply(y_list, mode))!="numeric")) stop("All elements in the y list should be numeric for regression."))
   perf_summ<-data.frame(matrix(NA, ncol=14, nrow=L*L))
   colnames(perf_summ)<-c("Train_data", "Test_data", "Validation_type", "Sample_size", "Min_acutal_value", "Max_acutal_value", "Min_predicted_value", "Max_predicted_value",
-                         "MSE", "RMSE", "MAE", "MAE_perc", "R_squared", "Adj_R_squared")
+                         "MSE", "RMSE", "MAE", "MAPE", "R_squared", "Adj_R_squared")
   predicted<-list()
   for(i in 1:L){
     y<-y_list[[i]]
@@ -412,13 +420,13 @@ rf_reg.cross_appl<-function(rf_list, x_list, y_list){
     train_MSE<-rf_list$rf_MSE[[i]]
     train_RMSE<-rf_list$rf_RMSE[[i]]
     train_MAE<-rf_list$rf_MAE[[i]]
-    train_MAE_perc<-rf_list$rf_MAE_perc[[i]]
+    train_MAPE<-rf_list$rf_MAPE[[i]]
     train_R_squared<-rf_list$rf_R_squared[[i]]
     train_Adj_R_squared<-rf_list$rf_Adj_R_squared[[i]]
     cat("MSE in the self-validation: ", train_MSE ,"\n")
     cat("RMSE in the self-validation: ", train_RMSE ,"\n")
     cat("MAE in the self-validation: ", train_MAE ,"\n")
-    cat("MAE percentage in the self-validation: ", train_MAE_perc ,"\n")
+    cat("MAE percentage in the self-validation: ", train_MAPE ,"\n")
     cat("R squared in the self-validation: ", train_R_squared ,"\n")
     cat("Adjusted R squared in the self-validation: ", train_Adj_R_squared ,"\n")
     D<-1:L
@@ -426,7 +434,7 @@ rf_reg.cross_appl<-function(rf_list, x_list, y_list){
     a=1+(i-1)*L
     perf_summ[a, 1:3]<-c(names(x_list)[i], names(x_list)[i], "self_validation")
     perf_summ[a, 4:14]<-c(train_sample_size, train_y_min, train_y_max, train_pred_y_min, train_pred_y_max,
-                          train_MSE, train_RMSE, train_MAE, train_MAE_perc, train_R_squared, train_Adj_R_squared)
+                          train_MSE, train_RMSE, train_MAE, train_MAPE, train_R_squared, train_Adj_R_squared)
     predicted[[a]]<-data.frame(test_y=y, pred_y=oob$predictions)
     names(predicted)[a]<-paste(names(x_list)[i], names(x_list)[i], sep="__VS__")
     loop_num<-1
@@ -446,7 +454,7 @@ rf_reg.cross_appl<-function(rf_list, x_list, y_list){
         RMSE<-function(y, pred_y){ sqrt(mean((y-pred_y)^2))}
         MAE<-function(y, pred_y){ mean(sqrt((y-pred_y)^2))}
         R2<-function(y, pred_y){ 1-(sum((y-pred_y)^2) / sum((y-mean(y))^2)) }
-        MAE_perc<-function(y, pred_y){ mean(sqrt((y-pred_y)^2)/y)}
+        MAPE<-function(y, pred_y){ mean(sqrt((y-pred_y)^2)/y)}
         adj.R2<-function(y, pred_y, k){
           n=length(y);
           1-(1-R2(y, pred_y)^2)*(n-1)/(n-k-1) # k is # of predictors
@@ -454,18 +462,18 @@ rf_reg.cross_appl<-function(rf_list, x_list, y_list){
         test_MSE<-MSE(newy, pred_newy)
         test_RMSE<-RMSE(newy, pred_newy)
         test_MAE<-MAE(newy, pred_newy)
-        test_MAE_perc<-MAE_perc(newy, pred_newy)
+        test_MAPE<-MAPE(newy, pred_newy)
         test_R_squared<-R2(newy, pred_newy)
         test_Adj_R_squared<-adj.R2(newy, pred_newy, k=ncol(newx))
         cat("MSE in the cross-applications: ", test_MSE ,"\n")
         cat("RMSE in the cross-applications: ", test_RMSE ,"\n")
         cat("MAE in the cross-applications: ", test_MAE ,"\n")
-        cat("MAE percentage in the cross-applications: ", test_MAE_perc ,"\n")
+        cat("MAE percentage in the cross-applications: ", test_MAPE ,"\n")
         cat("R squared in the cross-application: ", test_R_squared ,"\n")
         cat("Adjusted R squared in the cross-application: ", test_Adj_R_squared ,"\n")
         perf_summ[a+loop_num, 1:3]<-c(names(x_list)[i], names(x_list)[j], "cross_application")
         perf_summ[a+loop_num, 4:14]<-c(test_sample_size, test_y_min, test_y_max, test_pred_y_min, test_pred_y_max,
-                                       test_MSE, test_RMSE, test_MAE, test_MAE_perc, test_R_squared, test_Adj_R_squared)
+                                       test_MSE, test_RMSE, test_MAE, test_MAPE, test_R_squared, test_Adj_R_squared)
         predicted[[a+loop_num]]<-data.frame(test_y=newy, pred_y=pred_newy)
         names(predicted)[a+loop_num]<-paste(names(x_list)[i], names(x_list)[j], sep="__VS__")
         loop_num<-loop_num+1

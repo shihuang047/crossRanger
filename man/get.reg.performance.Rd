@@ -4,7 +4,7 @@
 \alias{get.reg.performance}
 \title{get.reg.performance}
 \usage{
-get.reg.performance(pred_y, y, n_features)
+get.reg.performance(pred_y, y, n_features = NA)
 }
 \arguments{
 \item{pred_y}{The predicted y in the numeric format.}

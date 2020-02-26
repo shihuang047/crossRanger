@@ -6,3 +6,4 @@
 # Apple-OS-styled files
 *.DS_Store
 *.nc
+.Rproj.user
