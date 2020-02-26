@@ -156,20 +156,20 @@ plot_train_vs_test<-function(train_y, predicted_train_y, test_y, predicted_test_
   pred<-data.frame(data=data_name,rbind(train.pred,test.pred))
   pred$data<-factor(pred$data,levels=c(train_prefix,test_prefix),ordered=TRUE)
   l<-levels(pred$data); l_sorted<-sort(levels(pred$data))
-  Mycolor <- c("#D55E00", "#0072B2")
-  if(identical(order(l), order(l_sorted))){Mycolor=Mycolor }else{Mycolor=rev(Mycolor)}
+  #Mycolor <- c("#D55E00", "#0072B2")
+  #if(identical(order(l), order(l_sorted))){Mycolor=Mycolor }else{Mycolor=rev(Mycolor)}
   p<-ggplot(pred,aes(x=value,y=predicted_value))+
     ylab(paste("Predicted ",train_target_field,sep=""))+
     xlab(paste("Observed ",train_target_field,sep=""))+
     geom_point(aes(color=data), alpha=0.1)+
     geom_smooth(aes(color=data), method="loess",span=1)+
-    scale_color_manual(values = Mycolor)+
+    #scale_color_manual(values = Mycolor)+
     theme_bw() +
     facet_wrap(~data)+
     theme(legend.position="none")
   #coord_flip()+
   if(!is.null(outdir)){
-  ggsave(filename=paste(outdir, train_prefix,"-",test_prefix,".",test_target_field, ".train_test_ggplot.pdf",sep=""),plot=p, height=4, width=8)
+  ggsave(filename=paste(outdir, train_prefix,"-",test_prefix,".",test_target_field, ".train_test_ggplot.pdf",sep=""),plot=p, height=3, width=6)
   sink(paste(outdir, train_prefix,"-",test_prefix,".",test_target_field, ".train_test_results.xls",sep=""));
   cat("\t");write.table(pred, quote=FALSE,sep="\t");sink()
   }
