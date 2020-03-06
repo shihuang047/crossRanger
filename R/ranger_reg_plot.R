@@ -262,8 +262,8 @@ plot_reg_feature_selection <- function(x, y, rf_reg_model, metric="MAE", outdir=
 #' test_y<- 1:45
 #' train_rf_model<-rf.out.of.bag(train_x, train_y)
 #' predicted_test_y<-predict(train_rf_model$rf.model, test_x)$predictions
-#' calc_rel_predicted(train_y, train_rf_model$predicted)
-#' calc_rel_predicted(train_y, train_rf_model$predicted,
+#' calc_rel_predicted(train_y, predicted_train_y=train_rf_model$predicted)
+#' calc_rel_predicted(train_y, predicted_train_y=train_rf_model$predicted,
 #'                    test_y, predicted_test_y,
 #'                    test_target_field="test_y")
 #' @author Shi Huang
@@ -273,7 +273,8 @@ calc_rel_predicted<-function(train_y, predicted_train_y, test_y=NULL, predicted_
                              train_target_field="y", test_target_field=NULL, outdir=NULL){
   spl_train <- smooth.spline(train_y, predicted_train_y)
   train_relTrain <- residuals(spl_train); names(train_relTrain)<-names(train_y)
-  relTrain_data<-train_relTrain_data <- data.frame(y=train_y, predicted_y=predicted_train_y, rel_predicted_y=train_relTrain)
+  train_fiitedTrain <- fitted(spl_train); names(train_fittedTrain)<-names(train_y)
+  relTrain_data<-train_relTrain_data <- data.frame(y=train_y, predicted_y=predicted_train_y, rel_predicted_y=train_relTrain, fitted_predicted_y=train_fittedTrain)
     sink(paste(outdir, train_prefix,".Relative_",train_target_field,".results.xls",sep=""));cat("\t");write.table(relTrain_data,quote=FALSE,sep="\t");sink()
 
   if(!is.null(test_y) & !is.null(predicted_test_y)){
@@ -285,7 +286,6 @@ calc_rel_predicted<-function(train_y, predicted_train_y, test_y=NULL, predicted_
     sink(paste(outdir, train_prefix,"-",test_prefix,".Relative_",train_target_field,".results.xls",sep=""));
     cat("\t");
     write.table(relTrain_data,quote=FALSE,sep="\t");sink()
-
   }
     return(relTrain_data)
 }
