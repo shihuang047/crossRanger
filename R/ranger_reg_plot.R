@@ -10,6 +10,7 @@
 #' @description Plot a scatterplot of observed and predicted values from a ranger model.
 #' @param y The numeric values for labeling data.
 #' @param predicted_y The predicted values for y.
+#' @param SampleIDs The sample ids in the data table.
 #' @param prefix The prefix for the dataset in the training or testing.
 #' @param target_field A string indicating the target field of metadata for regression.
 #' @param span Controls the amount of smoothing for the default loess smoother in the scatterplot.
@@ -27,8 +28,13 @@
 #' plot_obs_VS_pred(y, predicted_y=rf_model$predicted, prefix="train", target_field="age")
 #' @author Shi Huang
 #' @export
-plot_obs_VS_pred <- function(y, predicted_y, prefix="train", target_field="value", span=1, outdir=NULL){
+plot_obs_VS_pred <- function(y, predicted_y, SampleIDs=NULL, prefix="train", target_field="value", span=1, outdir=NULL){
   df<-data.frame(y, predicted_y)
+  if(nrow(df)==length(SampleIDs)){
+    df<-data.frame(SampleIDs, df)
+  }else if(length(SampleIDs)>0 & nrow(df)!=length(SampleIDs)){
+    stop("Please make sure that sample IDs match with y or predicted y.")
+  }
   p<-ggplot(df, aes(x=y, y=predicted_y))+
     ylab(paste("Predicted ",target_field,sep=""))+
     xlab(paste("Observed ",target_field,sep=""))+
@@ -38,7 +44,8 @@ plot_obs_VS_pred <- function(y, predicted_y, prefix="train", target_field="value
   #coord_flip()+
   if(!is.null(outdir)){
     ggsave(filename=paste(outdir, prefix, ".", target_field, ".obs_vs_pred.scatterplot.pdf",sep=""), plot=p, height=4, width=4)
-    sink(paste(outdir, prefix, ".", target_field, ".obs_vs_pred.results.xls",sep=""));cat("\t");write.table(df, quote=FALSE,sep="\t");sink()
+    sink(paste(outdir, prefix, ".", target_field, ".obs_vs_pred.results.xls",sep=""));cat("\t")
+    write.table(df, quote=FALSE,sep="\t", row.names = FALSE);sink(NULL)
   }
   invisible(p)
 }
@@ -46,6 +53,7 @@ plot_obs_VS_pred <- function(y, predicted_y, prefix="train", target_field="value
 #' @description Plot the residuals of observed and predicted values from a ranger model.
 #' @param y The numeric values for labeling data.
 #' @param predicted_y The predicted values for y.
+#' @param SampleIDs The sample ids in the data table.
 #' @param prefix The prefix for the dataset in the training or testing.
 #' @param target_field A string indicating the target field of the metadata for regression.
 #' @param outdir The output directory.
@@ -61,8 +69,13 @@ plot_obs_VS_pred <- function(y, predicted_y, prefix="train", target_field="value
 #' plot_residuals(y, predicted_y=rf_model$predicted, prefix="train", target_field="age")
 #' @author Shi Huang
 #' @export
-plot_residuals <- function(y, predicted_y, prefix="train", target_field="value", outdir=NULL){
+plot_residuals <- function(y, predicted_y, SampleIDs=NULL, prefix="train", target_field="value", outdir=NULL){
   df<-data.frame(y, predicted_y, rsdl=y-predicted_y)
+  if(nrow(df)==length(SampleIDs)){
+    df<-data.frame(SampleIDs, df)
+  }else if(length(SampleIDs)>0 & nrow(df)!=length(SampleIDs)){
+    stop("Please make sure that sample IDs match with y or predicted y.")
+  }
   p<-ggplot(df, aes(x=y, y=rsdl))+
     ylab(paste("Residuals of prediceted ",target_field,sep=""))+
     xlab(paste("Observed ",target_field,sep=""))+
@@ -72,7 +85,9 @@ plot_residuals <- function(y, predicted_y, prefix="train", target_field="value",
     theme_bw()
   if(!is.null(outdir)){
   ggsave(filename=paste(outdir, prefix, ".", target_field, ".obs_vs_residuals_of_pred.scatterplot.pdf",sep=""), plot=p, height=4, width=4)
-  sink(paste(outdir, prefix, ".", target_field, ".obs_vs_pred.results.xls",sep=""));cat("\t");write.table(df, quote=FALSE,sep="\t");sink()
+  sink(paste(outdir, prefix, ".", target_field, ".obs_vs_pred.results.xls",sep=""))
+  cat("\t")
+  write.table(df, quote=FALSE,sep="\t", row.names = FALSE);sink(NULL)
   }
   invisible(p)
 }
@@ -128,8 +143,10 @@ plot_perf_VS_rand<-function(y, predicted_y, prefix="train", target_field,
 #' @description Plot the residuals of observed and predicted values from a ranger model.
 #' @param train_y The numeric labels for training data.
 #' @param predicted_train_y The predicted values for training data.
+#' @param train_SampleIDs The sample ids in the train data.
 #' @param test_y The numeric labels for testing data.
 #' @param predicted_test_y The predicted values for test data.
+#' @param test_SampleIDs The sample ids in the test data.
 #' @param train_prefix The prefix for the dataset in the training data.
 #' @param test_prefix The prefix for the dataset in the testing data.
 #' @param train_target_field A string indicating the target field of the training metadata for regression.
@@ -148,10 +165,20 @@ plot_perf_VS_rand<-function(y, predicted_y, prefix="train", target_field,
 #' permutation=100, metric="MAE", target_field="age")
 #' @author Shi Huang
 #' @export
-plot_train_vs_test<-function(train_y, predicted_train_y, test_y, predicted_test_y,
+plot_train_vs_test<-function(train_y, predicted_train_y, test_y, predicted_test_y, train_SampleIDs=NULL, test_SampleIDs=NULL,
                              train_prefix="train", test_prefix="test", train_target_field, test_target_field, outdir=NULL){
   train.pred<-data.frame(value=train_y,predicted_value=predicted_train_y)
+  if(nrow(train.pred)==length(train_SampleIDs)){
+    train.pred<-data.frame(SampleIDs=train_SampleIDs, train.pred)
+  }else if(length(train_SampleIDs)>0 & nrow(train.pred)!=length(train_SampleIDs)){
+    stop("Please make sure that sample IDs match with y or predicted y in the train data.")
+  }
   test.pred<-data.frame(value=test_y,predicted_value=predicted_test_y)
+  if(nrow(test.pred)==length(test_SampleIDs)){
+    test.pred<-data.frame(SampleIDs=test_SampleIDs, test.pred)
+  }else if(length(test_SampleIDs)>0 & nrow(test.pred)!=length(test_SampleIDs)){
+    stop("Please make sure that sample IDs match with y or predicted y in the test data.")
+  }
   data_name<-c(rep(train_prefix,nrow(train.pred)),rep(test_prefix,nrow(test.pred)))
   pred<-data.frame(data=data_name,rbind(train.pred,test.pred))
   pred$data<-factor(pred$data,levels=c(train_prefix,test_prefix),ordered=TRUE)
@@ -171,7 +198,7 @@ plot_train_vs_test<-function(train_y, predicted_train_y, test_y, predicted_test_
   if(!is.null(outdir)){
   ggsave(filename=paste(outdir, train_prefix,"-",test_prefix,".",test_target_field, ".train_test_ggplot.pdf",sep=""),plot=p, height=3, width=6)
   sink(paste(outdir, train_prefix,"-",test_prefix,".",test_target_field, ".train_test_results.xls",sep=""));
-  cat("\t");write.table(pred, quote=FALSE,sep="\t");sink()
+  cat("\t");write.table(pred, quote=FALSE,sep="\t", row.names = FALSE);sink(NULL)
   }
   invisible(p)
 }
@@ -196,7 +223,7 @@ plot_train_vs_test<-function(train_y, predicted_train_y, test_y, predicted_test_
 #' plot_reg_feature_selection(x, y, rf_reg_model, metric="MAE", outdir=NULL)
 #' @author Shi Huang
 #' @export
-plot_reg_feature_selection <- function(x, y, rf_reg_model, metric="MAE", outdir=NULL){
+plot_reg_feature_selection <- function(x, y, rf_reg_model, metric="MAE", unit="unit", outdir=NULL){
   rf_imp_rank<-rank(-(rf_reg_model$importances)) #rf_all$importances
   max_n<-max(rf_imp_rank, na.rm = TRUE)
   n_total_features<-ncol(x)
@@ -222,7 +249,7 @@ plot_reg_feature_selection <- function(x, y, rf_reg_model, metric="MAE", outdir=
   breaks<-top_n_perf$n_features
   p<-ggplot(top_n_perf, aes(x=n_features, y=get(metric))) +
     xlab("# of features used")+
-    ylab(paste(metric, " (yrs)", sep=""))+
+    ylab(paste(metric, " (", unit ,")", sep=""))+
     scale_x_continuous(trans = "log",breaks=breaks)+
     geom_point() + geom_line()+
     theme_bw()+
@@ -240,8 +267,10 @@ plot_reg_feature_selection <- function(x, y, rf_reg_model, metric="MAE", outdir=
 #' @description Calculate the relative predicted values to the spline fit.
 #' @param train_y The numeric labels for training data.
 #' @param predicted_train_y The predicted values for training data.
+#' @param train_SampleIDs The sample ids in the train data.
 #' @param test_y The numeric labels for testing data.
 #' @param predicted_test_y The predicted values for test data.
+#' @param test_SampleIDs The sample ids in the test data.
 #' @param train_prefix The prefix for the dataset in the training data.
 #' @param test_prefix The prefix for the dataset in the testing data.
 #' @param train_target_field A string indicating the target field of the training metadata for regression.
@@ -268,24 +297,38 @@ plot_reg_feature_selection <- function(x, y, rf_reg_model, metric="MAE", outdir=
 #'                    test_target_field="test_y")
 #' @author Shi Huang
 #' @export
-calc_rel_predicted<-function(train_y, predicted_train_y, test_y=NULL, predicted_test_y=NULL,
+calc_rel_predicted<-function(train_y, predicted_train_y, train_SampleIDs=NULL,
+                             test_y=NULL, predicted_test_y=NULL, test_SampleIDs=NULL,
                              train_prefix="train", test_prefix="test",
                              train_target_field="y", test_target_field=NULL, outdir=NULL){
   spl_train <- smooth.spline(train_y, predicted_train_y)
   train_relTrain <- residuals(spl_train); names(train_relTrain)<-names(train_y)
-  train_fiitedTrain <- fitted(spl_train); names(train_fittedTrain)<-names(train_y)
-  relTrain_data<-train_relTrain_data <- data.frame(y=train_y, predicted_y=predicted_train_y, rel_predicted_y=train_relTrain, fitted_predicted_y=train_fittedTrain)
-    sink(paste(outdir, train_prefix,".Relative_",train_target_field,".results.xls",sep=""));cat("\t");write.table(relTrain_data,quote=FALSE,sep="\t");sink()
+  train_fittedTrain <- fitted(spl_train); names(train_fittedTrain)<-names(train_y)
+  relTrain_data<-train_relTrain_data <- data.frame(y=train_y, predicted_y=predicted_train_y,
+                                                   rel_predicted_y=train_relTrain,
+                                                   fitted_predicted_y=train_fittedTrain)
+  if(nrow(relTrain_data)==length(train_SampleIDs)){
+    relTrain_data<-data.frame(SampleIDs=train_SampleIDs, relTrain_data)
+  }else if(length(train_SampleIDs)>0 & nrow(relTrain_data)!=length(train_SampleIDs)){
+    stop("Please make sure that sample IDs match with y or predicted y in the train data.")
+  }
+  sink(paste(outdir, train_prefix,".Relative_",train_target_field,".results.xls",sep=""));cat("\t");
+  write.table(relTrain_data,quote=FALSE,sep="\t", row.names = FALSE);sink(NULL)
 
-  if(!is.null(test_y) & !is.null(predicted_test_y)){
+  if(!is.null(test_y) & !is.null(predicted_test_y & !is.null(test_SampleIDs))){
     test_relTrain <- predicted_test_y - predict(spl_train, test_y)$y
     test_relTrain_data <- data.frame(y=test_y, predicted_y=predicted_test_y, rel_predicted_y=test_relTrain)
+    if(nrow(test_relTrain_data)==length(test_SampleIDs)){
+      test_relTrain_data<-data.frame(SampleIDs=test_SampleIDs, test_relTrain_data)
+    }else if(length(test_SampleIDs)>0 & nrow(test_relTrain_data)!=length(test_SampleIDs)){
+      stop("Please make sure that sample IDs match with y or predicted y in the test data.")
+    }
     relTrain_data<-rbind(train_relTrain_data, test_relTrain_data)
     DataSet <- factor(c(rep(train_prefix,length(train_relTrain)), rep(test_prefix,length(test_relTrain)) ))
     relTrain_data<-data.frame(relTrain_data, DataSet)
     sink(paste(outdir, train_prefix,"-",test_prefix,".Relative_",train_target_field,".results.xls",sep=""));
     cat("\t");
-    write.table(relTrain_data,quote=FALSE,sep="\t");sink()
+    write.table(relTrain_data,quote=FALSE,sep="\t", row.names = FALSE);sink(NULL)
   }
     return(relTrain_data)
 }
