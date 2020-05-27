@@ -5,6 +5,7 @@
 \title{plot_train_vs_test}
 \usage{
 plot_train_vs_test(train_y, predicted_train_y, test_y, predicted_test_y,
+  train_SampleIDs = NULL, test_SampleIDs = NULL,
   train_prefix = "train", test_prefix = "test", train_target_field,
   test_target_field, outdir = NULL)
 }
@@ -16,6 +17,10 @@ plot_train_vs_test(train_y, predicted_train_y, test_y, predicted_test_y,
 \item{test_y}{The numeric labels for testing data.}
 
 \item{predicted_test_y}{The predicted values for test data.}
+
+\item{train_SampleIDs}{The sample ids in the train data.}
+
+\item{test_SampleIDs}{The sample ids in the test data.}
 
 \item{train_prefix}{The prefix for the dataset in the training data.}
 

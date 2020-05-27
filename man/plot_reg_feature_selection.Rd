@@ -5,7 +5,7 @@
 \title{plot_reg_feature_selection}
 \usage{
 plot_reg_feature_selection(x, y, rf_reg_model, metric = "MAE",
-  outdir = NULL)
+  unit = "unit", outdir = NULL)
 }
 \arguments{
 \item{x}{The data frame or data matrix for model training.}
@@ -16,6 +16,8 @@ plot_reg_feature_selection(x, y, rf_reg_model, metric = "MAE",
 
 \item{metric}{The regression performance metric applied.
 This must be one of "MAE", "RMSE", "MSE", "MAPE".}
+
+\item{unit}{The unit of numeric metadata variables that can be printed in the output figure.}
 
 \item{outdir}{The output directory.}
 }

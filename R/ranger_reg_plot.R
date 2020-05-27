@@ -1,4 +1,4 @@
-#' @importFrom stats cor wilcox.test residuals smooth.spline
+#' @importFrom stats cor wilcox.test residuals smooth.spline fitted
 #' @importFrom plyr ldply
 #' @import ggplot2
 #' @importFrom gridExtra arrangeGrob
@@ -207,6 +207,7 @@ plot_train_vs_test<-function(train_y, predicted_train_y, test_y, predicted_test_
 #' @description Plot the regression performance against the reduced number of features used in the modeling.
 #' @param x The data frame or data matrix for model training.
 #' @param y The numeric values for labeling data.
+#' @param unit The unit of numeric metadata variables that can be printed in the output figure.
 #' @param rf_reg_model The rf regression model from \code{rf.out.of.bag}
 #' @param metric The regression performance metric applied.
 #' This must be one of "MAE", "RMSE", "MSE", "MAPE".
@@ -292,9 +293,9 @@ plot_reg_feature_selection <- function(x, y, rf_reg_model, metric="MAE", unit="u
 #' train_rf_model<-rf.out.of.bag(train_x, train_y)
 #' predicted_test_y<-predict(train_rf_model$rf.model, test_x)$predictions
 #' calc_rel_predicted(train_y, predicted_train_y=train_rf_model$predicted)
-#' calc_rel_predicted(train_y, predicted_train_y=train_rf_model$predicted,
-#'                    test_y, predicted_test_y,
-#'                    test_target_field="test_y")
+#' calc_rel_predicted(train_y, predicted_train_y=train_rf_model$predicted, train_SampleIDs=NULL,
+#'                    test_y, predicted_test_y, test_SampleIDs=NULL,
+#'                    train_target_field="y",  test_target_field="test_y", outdir=NULL)
 #' @author Shi Huang
 #' @export
 calc_rel_predicted<-function(train_y, predicted_train_y, train_SampleIDs=NULL,
@@ -302,25 +303,28 @@ calc_rel_predicted<-function(train_y, predicted_train_y, train_SampleIDs=NULL,
                              train_prefix="train", test_prefix="test",
                              train_target_field="y", test_target_field=NULL, outdir=NULL){
   spl_train <- smooth.spline(train_y, predicted_train_y)
-  train_relTrain <- residuals(spl_train); names(train_relTrain)<-names(train_y)
-  train_fittedTrain <- fitted(spl_train); names(train_fittedTrain)<-names(train_y)
+  train_relTrain <- residuals(spl_train)
+  train_fittedTrain <- fitted(spl_train)
   relTrain_data<-train_relTrain_data <- data.frame(y=train_y, predicted_y=predicted_train_y,
                                                    rel_predicted_y=train_relTrain,
                                                    fitted_predicted_y=train_fittedTrain)
   if(nrow(relTrain_data)==length(train_SampleIDs)){
     relTrain_data<-data.frame(SampleIDs=train_SampleIDs, relTrain_data)
-  }else if(length(train_SampleIDs)>0 & nrow(relTrain_data)!=length(train_SampleIDs)){
+  }else if(!is.null(train_SampleIDs)){
     stop("Please make sure that sample IDs match with y or predicted y in the train data.")
   }
   sink(paste(outdir, train_prefix,".Relative_",train_target_field,".results.xls",sep=""));cat("\t");
   write.table(relTrain_data,quote=FALSE,sep="\t", row.names = FALSE);sink(NULL)
 
-  if(!is.null(test_y) & !is.null(predicted_test_y & !is.null(test_SampleIDs))){
-    test_relTrain <- predicted_test_y - predict(spl_train, test_y)$y
-    test_relTrain_data <- data.frame(y=test_y, predicted_y=predicted_test_y, rel_predicted_y=test_relTrain)
+  if(!is.null(test_y) & !is.null(predicted_test_y)){
+    test_fitted<-predict(spl_train, test_y)$y
+    test_relTrain <- predicted_test_y - test_fitted
+    test_relTrain_data <- data.frame(y=test_y, predicted_y=predicted_test_y,
+                                     rel_predicted_y=test_relTrain,
+                                     fitted_predicted_y=test_fitted)
     if(nrow(test_relTrain_data)==length(test_SampleIDs)){
       test_relTrain_data<-data.frame(SampleIDs=test_SampleIDs, test_relTrain_data)
-    }else if(length(test_SampleIDs)>0 & nrow(test_relTrain_data)!=length(test_SampleIDs)){
+    }else if(!is.null(test_SampleIDs)){
       stop("Please make sure that sample IDs match with y or predicted y in the test data.")
     }
     relTrain_data<-rbind(train_relTrain_data, test_relTrain_data)

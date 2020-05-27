@@ -4,19 +4,23 @@
 \alias{calc_rel_predicted}
 \title{calc_rel_predicted}
 \usage{
-calc_rel_predicted(train_y, predicted_train_y, test_y = NULL,
-  predicted_test_y = NULL, train_prefix = "train",
-  test_prefix = "test", train_target_field = "y",
-  test_target_field = NULL, outdir = NULL)
+calc_rel_predicted(train_y, predicted_train_y, train_SampleIDs = NULL,
+  test_y = NULL, predicted_test_y = NULL, test_SampleIDs = NULL,
+  train_prefix = "train", test_prefix = "test",
+  train_target_field = "y", test_target_field = NULL, outdir = NULL)
 }
 \arguments{
 \item{train_y}{The numeric labels for training data.}
 
 \item{predicted_train_y}{The predicted values for training data.}
 
+\item{train_SampleIDs}{The sample ids in the train data.}
+
 \item{test_y}{The numeric labels for testing data.}
 
 \item{predicted_test_y}{The predicted values for test data.}
+
+\item{test_SampleIDs}{The sample ids in the test data.}
 
 \item{train_prefix}{The prefix for the dataset in the training data.}
 
@@ -46,10 +50,10 @@ test_x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
 test_y<- 1:45
 train_rf_model<-rf.out.of.bag(train_x, train_y)
 predicted_test_y<-predict(train_rf_model$rf.model, test_x)$predictions
-calc_rel_predicted(train_y, train_rf_model$predicted)
-calc_rel_predicted(train_y, train_rf_model$predicted,
-                   test_y, predicted_test_y,
-                   test_target_field="test_y")
+calc_rel_predicted(train_y, predicted_train_y=train_rf_model$predicted)
+calc_rel_predicted(train_y, predicted_train_y=train_rf_model$predicted, train_SampleIDs=NULL,
+                   test_y, predicted_test_y, test_SampleIDs=NULL,
+                   train_target_field="y",  test_target_field="test_y", outdir=NULL)
 }
 \author{
 Shi Huang

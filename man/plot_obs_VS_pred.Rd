@@ -4,13 +4,15 @@
 \alias{plot_obs_VS_pred}
 \title{plot_obs_VS_pred}
 \usage{
-plot_obs_VS_pred(y, predicted_y, prefix = "train",
+plot_obs_VS_pred(y, predicted_y, SampleIDs = NULL, prefix = "train",
   target_field = "value", span = 1, outdir = NULL)
 }
 \arguments{
 \item{y}{The numeric values for labeling data.}
 
 \item{predicted_y}{The predicted values for y.}
+
+\item{SampleIDs}{The sample ids in the data table.}
 
 \item{prefix}{The prefix for the dataset in the training or testing.}
 

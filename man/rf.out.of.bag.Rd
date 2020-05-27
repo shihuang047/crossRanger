@@ -51,14 +51,6 @@ x_ <- data.frame(rbind(t(rmultinom(7, 7500, rep(c(.201,.5,.02,.18,.099), 1000)))
 y_<-factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
 rf.out.of.bag(x_, y_, imp_pvalues=FALSE)
 rf.out.of.bag(x, y_, imp_pvalues=TRUE)
-x_ <- data.frame(rbind(t(rmultinom(7000, 75000, c(.201,.5,.02,.18,.099))),
-            t(rmultinom(8000, 75000, c(.201,.4,.12,.18,.099))),
-            t(rmultinom(15000, 75000, c(.011,.3,.22,.18,.289))),
-            t(rmultinom(15000, 75000, c(.091,.2,.32,.18,.209))),
-            t(rmultinom(15000, 75000, c(.001,.1,.42,.18,.299)))))
-y_ <- factor(c(rep("A", 15000), rep("B", 15000), rep("C", 15000), rep("D", 15000)))
-system.time(rf.out.of.bag(x_, y_, imp_pvalues=FALSE))
-system.time(rf.out.of.bag(x_, y_, imp_pvalues=TRUE))
 y0<-factor(c(rep("old", 30), rep("young", 30)))
 rf.out.of.bag(x, y0, imp_pvalues=FALSE)
 rf.out.of.bag(x, y0, imp_pvalues=TRUE)
