@@ -8,13 +8,13 @@ crossRanger = Cross-application of Ranger models.
 [ranger](https://github.com/imbs-hl/ranger) is a fast implementation of random forests (Breiman 2001) or recursive partitioning, particularly suited for high dimensional data. Classification, regression, and survival forests are supported. To meet the meta-analysis requirements we further use `ranger` as a core RF implementation function to develop this package for microbiome-centric analyses. 
 
 This R package basically provides a variety of functions for the Random Forests (RF) analyses  within a single and multiple microbiome datasets. Specifically, this package allows 
-* RF classification or regression on a single covariate for a single microbiome dataset 
-* RF classification or regression on a single covariate stratified by other covariate for a single microbiome dataset
-* RF classification or regression on a single covariate for multiple microbiome datasets
-* the prediction performance comparisons of multiple RF models
-* application of mutiple RF models to each other and output the prediction performance (such as application of a RF regression model on aging on the female to male cohort and vice versa)
-* output the univariate associations in microbiome with a single covariate (such as Wilcoxon rank-sum test on the clr-transformed abundance of each microbial feature in microbiome data)
-* visualize the results above and produce publication-quality figures
+* RF classification or regression on a single covariate for a single microbiome dataset
+* RF classification or regression on a single covariate (such as diseased status or age) stratified by another covariate (such as sex or body sites) for a single microbiome dataset
+* RF classification or regression on a single covariate for multiple microbiome datasets (such as microbiome studies focused on the same phenotype)
+* the prediction performance comparisons of multiple RF models (including AUROC, accuracy etc. for classification models; MAE, MSE, RMSE, MAPE, R squared etc. for regression models)
+* the application of multiple RF models to each other and output the prediction performance (such as application of an RF regression model on aging on the female to male cohort and vice versa)
+* to output the univariate associations in the microbiome with a single covariate (e.g Wilcoxon rank-sum test on the clr-transformed relative abundance of each microbial feature in microbiome data)
+* to visualize the results above and produce publication-quality figures
 
 ## Authors ##
 Shi Huang, UC San Diego 
