@@ -1,5 +1,5 @@
 # crossRanger
-*The cross-application and visualization of random forests (RF) models of compositional microbiome data*
+*The cross-application and visualization of random forests (RF) models of microbiome data*
 
 ***
 ## Introduction
