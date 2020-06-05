@@ -28,7 +28,7 @@ devtools::install_github('shihuang047/crossRanger')
 ```
 
 ## Examples ##
-* compositional microbiome data simulation
+* Compositional microbiome data simulation using multinomial distribution
 ``` r
 set.seed(123)
 df <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
@@ -41,16 +41,16 @@ metadata<-data.frame(f_s=factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep(
                                   rep("C", 7), rep("H", 8), rep("C", 7), rep("H", 8))),
                      f_d=factor(rep(c(rep("a", 5), rep("b", 5), rep("c", 5)), 4)))
 ```
-* ranger modeling on one responsive variable
+* RF modeling on one responsive variable
 ``` r
 rf.out.of.bag(x=df, y=metadata$f_s, imp_pvalues=FALSE)
 ```
-* stratified ranger modeling on one responsive variable
+* RF modeling on one responsive variable stratified by another covariate
 ``` r
 res_list<-rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c', positive_class="C")
 summary(res_list)
 ```
-* the cross-application of ranger models on the same responsive variable
+* Apply RF models on the same responsive variable to other stratified ones
 ``` r 
 cross_rf<-rf_clf.cross_appl(rf_model_list=res_list$rf_model_list, 
                             x_list=res_list$x_list, 
