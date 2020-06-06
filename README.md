@@ -7,7 +7,7 @@ crossRanger = Cross-application of Ranger models.
 
 [ranger](https://github.com/imbs-hl/ranger) is a fast implementation of random forests (Breiman 2001) or recursive partitioning, particularly suited for high dimensional data. Classification, regression, and survival forests are supported. To meet the meta-analysis requirements we further use `ranger` as a core RF implementation function to develop this package for microbiome-centric analyses. 
 
-This R package basically provides a variety of functions for the RF analyses  within a single and multiple microbiome datasets. Specifically, this package allows 
+This R package basically provides a variety of functions for the RF analyses  within a single or across multiple microbiome datasets. Specifically, this package allows 
 * RF classification or regression on a single covariate for a single microbiome dataset
 * RF classification or regression on a single covariate (such as diseased status or age) stratified by another covariate (such as sex or body sites) for a single microbiome dataset
 * RF classification or regression on a single covariate for multiple microbiome datasets (such as microbiome studies focused on the same phenotype)
