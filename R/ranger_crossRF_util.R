@@ -237,7 +237,7 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=3,
   result$rf_model_list<-oper$rf.model; names(result$rf_model_list)<-result$datasets
   result$rf_predicted<-oper$predicted; names(result$rf_predicted)<-result$datasets
   result$feature_imps_list<-oper$importances
-  if(class(oob)=="rf.cross.validation") result$feature_imps_list<-lapply(result$feature_imps_list, rowMeans)
+  if(nfolds!=3) result$feature_imps_list<-lapply(result$feature_imps_list, rowMeans)
   names(result$feature_imps_list)<-result$datasets
   result$rf_MSE<-unlist(oper$MSE)
   result$rf_RMSE<-unlist(oper$RMSE)
