@@ -28,7 +28,7 @@
 #' @author Shi Huang
 #' @export
 plot_clf_pROC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outdir=NULL){
-  if(nlevels(y)!=2 | nlevels(pred_y)!=2) stop("pROC only support for ROC analysis in the binary classification!")
+  if(nlevels(y)!=2) stop("pROC only support for ROC analysis in the binary classification!")
   positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
   predictor<-rf_clf_model$probabilities[, positive_class]
   if(!is.null(outdir)){
