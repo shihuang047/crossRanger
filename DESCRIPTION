@@ -10,7 +10,7 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: FALSE
 Imports: 
-  ranger, stats, utils, foreach, doMC, compositions, grDevices,
+  ranger, stats, utils, foreach, doMC, compositions, grDevices, PRROC,
   Matrix, ggplot2, caTools, ROCR, pROC, caret, corrplot, gridExtra, plyr, reshape2
 Suggests: 
     testthat

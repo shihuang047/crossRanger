@@ -3,6 +3,7 @@
 #' @importFrom graphics plot text
 #' @importFrom utils data write.table
 #' @import ggplot2
+#' @import PRROC
 #' @importFrom gridExtra arrangeGrob
 #' @importFrom reshape2 melt
 
@@ -24,17 +25,17 @@
 #' y<-factor(c(rep("A", 30), rep("C", 30)))
 #' rf_clf_model<-rf.out.of.bag(x, y)
 #' positive_class="A"
-#' plot_clf_pROC(y, rf_clf_model)
+#' plot_clf_pROC(y, rf_clf_model, outdir='./')
 #' @author Shi Huang
 #' @export
 plot_clf_pROC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outdir=NULL){
   if(nlevels(y)!=2) stop("pROC only support for ROC analysis in the binary classification!")
   positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
   predictor<-rf_clf_model$probabilities[, positive_class]
-  if(!is.null(outdir)){
-  pdf(paste(outdir, prefix, ".rf_clf_pROC.ci.pdf",sep=""), width=4, height=4)
   rocobj <- pROC::plot.roc(y, predictor, main="", percent=TRUE,ci=TRUE) # print the AUC (will contain the CI)
   ciobj <- pROC::ci.se(rocobj, specificities=seq(0, 100, 5)) # over a select set of specificities
+  if(!is.null(outdir)){
+  pdf(paste(outdir, prefix, ".rf_clf_pROC.ci.pdf",sep=""), width=4, height=4)
   plot(ciobj, type="shape", col="#1c61b6AA", print.auc=TRUE) # plot as a blue shape
   text(70,25, paste0(levels(y), collapse = " VS "), pos=4)
   text(70,15, paste("AUC = ",formatC(rocobj$auc,digits=2,format="f"),sep=""),pos=4)
@@ -48,6 +49,82 @@ plot_clf_pROC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outd
   result$ciobj<-ciobj
   invisible(result)
 }
+#' @title plot_PRC
+#' @param y A factor of classes to be used as the true results
+#' @param rf_clf_model A list object of a random forest model.
+# @param predictor A numeric or ordered vector of the same length than response, containing the predicted value of each observation.
+#' @param positive_class an optional character string for the factor level that corresponds to a "positive" result (if that makes sense for your data).
+#' If there are only two factor levels, the first level will be used as the "positive" result.
+#' @param prefix The prefix of data set.
+#' @param outdir The output directory.
+#' @examples
+#' set.seed(123)
+#' x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
+#'             t(rmultinom(8, 75, c(.201,.4,.12,.18,.099))),
+#'             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
+#'             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
+#'             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
+#' y<-factor(c(rep("A", 30), rep("C", 30)))
+#' rf_clf_model<-rf.out.of.bag(x, y)
+#' positive_class="A"
+#' plot_clf_PRC(y, rf_clf_model, outdir='./')
+#' @author Shi Huang
+#' @export
+plot_clf_PRC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outdir=NULL){
+  require('PRROC')
+  if(nlevels(y)!=2) stop("PPROC only support for PRC analysis in the binary classification!")
+  positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
+  predictor<-rf_clf_model$probabilities[, positive_class]
+  df<-data.frame(y, predictor)
+  prob_pos<-df[df$y==positive_class, "predictor"]
+  prob_neg<-df[df$y!=positive_class,"predictor"]
+  pr<-pr.curve(prob_pos, prob_neg, curve=TRUE)
+  if(!is.null(outdir)){
+    pdf(paste(outdir, prefix, ".rf_clf_PRC.pdf",sep=""), width=5, height=5)
+    plot(pr)
+    dev.off()
+  }
+  invisible(pr)
+}
+
+#' @title plot_ROC
+#' @param y A factor of classes to be used as the true results
+#' @param rf_clf_model A list object of a random forest model.
+# @param predictor A numeric or ordered vector of the same length than response, containing the predicted value of each observation.
+#' @param positive_class an optional character string for the factor level that corresponds to a "positive" result (if that makes sense for your data).
+#' If there are only two factor levels, the first level will be used as the "positive" result.
+#' @param prefix The prefix of data set.
+#' @param outdir The output directory.
+#' @examples
+#' set.seed(123)
+#' x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
+#'             t(rmultinom(8, 75, c(.201,.4,.12,.18,.099))),
+#'             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
+#'             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
+#'             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
+#' y<-factor(c(rep("A", 30), rep("C", 30)))
+#' rf_clf_model<-rf.out.of.bag(x, y)
+#' positive_class="A"
+#' plot_clf_ROC(y, rf_clf_model, outdir='./')
+#' @author Shi Huang
+#' @export
+plot_clf_ROC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outdir=NULL){
+  require('PRROC')
+  if(nlevels(y)!=2) stop("PPROC only support for ROC analysis in the binary classification!")
+  positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
+  predictor<-rf_clf_model$probabilities[, positive_class]
+  df<-data.frame(y, predictor)
+  prob_pos<-df[df$y==positive_class, "predictor"]
+  prob_neg<-df[df$y!=positive_class,"predictor"]
+  roc<-roc.curve(prob_pos, prob_neg, curve=TRUE)
+  if(!is.null(outdir)){
+    pdf(paste(outdir, prefix, ".rf_clf_ROC.pdf",sep=""), width=5, height=5)
+    plot(roc)
+    dev.off()
+  }
+  invisible(roc)
+}
+
 
 #' @title plot_clf_probabilities
 #' @param y A factor of classes to be used as the true results
