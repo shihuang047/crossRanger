@@ -7,7 +7,7 @@
 #' @importFrom gridExtra arrangeGrob
 #' @importFrom reshape2 melt
 
-#' @title plot_ROC
+#' @title plot_clf_pROC
 #' @param y A factor of classes to be used as the true results
 #' @param rf_clf_model A list object of a random forest model.
 # @param predictor A numeric or ordered vector of the same length than response, containing the predicted value of each observation.
@@ -29,6 +29,7 @@
 #' @author Shi Huang
 #' @export
 plot_clf_pROC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outdir=NULL){
+  if(class(rf_clf_model)!="rf.out.of.bag" & class(rf_clf_model)!="rf.cross.validation")stop("The rf_clf_model is not rf.out.of.bag/rf.cross.validation.")
   if(nlevels(y)!=2) stop("pROC only support for ROC analysis in the binary classification!")
   positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
   predictor<-rf_clf_model$probabilities[, positive_class]
@@ -72,6 +73,7 @@ plot_clf_pROC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outd
 #' @export
 plot_clf_PRC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outdir=NULL){
   require('PRROC')
+  if(class(rf_clf_model)!="rf.out.of.bag" & class(rf_clf_model)!="rf.cross.validation")stop("The rf_clf_model is not rf.out.of.bag/rf.cross.validation.")
   if(nlevels(y)!=2) stop("PPROC only support for PRC analysis in the binary classification!")
   positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
   predictor<-rf_clf_model$probabilities[, positive_class]
@@ -109,6 +111,7 @@ plot_clf_PRC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outdi
 #' @author Shi Huang
 #' @export
 plot_clf_ROC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outdir=NULL){
+  if(class(rf_clf_model)!="rf.out.of.bag" & class(rf_clf_model)!="rf.cross.validation")stop("The rf_clf_model is not rf.out.of.bag/rf.cross.validation.")
   require('PRROC')
   if(nlevels(y)!=2) stop("PPROC only support for ROC analysis in the binary classification!")
   positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
@@ -140,22 +143,22 @@ plot_clf_ROC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outdi
 #'             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
 #'             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
 #'             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
-#' y<-factor(c(rep("A", 30), rep("C", 30)))
+#' y<-factor(c(rep("1", 30), rep("C", 30)))
 #' rf_clf_model<-rf.out.of.bag(x, y)
-#' positive_class="A"
-#' plot_clf_pROC(y, rf_clf_model, positive_class)
+#' positive_class="1"
+#' plot_clf_probabilities(y, rf_clf_model, positive_class, outdir='./')
 #' @author Shi Huang
 #' @export
 plot_clf_probabilities<-function(y, rf_clf_model, positive_class=NA, prefix="train", outdir=NULL){
-  if(!class(rf_clf_model)=="rf.out.of.bag")stop("The rf_clf_model is not in the class of rf.out.of.bag.")
+  if(class(rf_clf_model)!="rf.out.of.bag" & class(rf_clf_model)!="rf.cross.validation")stop("The rf_clf_model is not rf.out.of.bag/rf.cross.validation.")
   positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
   l<-levels(y); l_sorted<-sort(levels(y))
   Mycolor <- rep(c("#D55E00", "#0072B2"), length.out=length(l))
   if(identical(order(l), order(l_sorted))){
     Mycolor=Mycolor; l_ordered=l
   }else{Mycolor=rev(Mycolor); l_ordered=l_sorted}
-  y_prob<-data.frame(y, rf_clf_model$probabilities)
-  p<-ggplot(y_prob, aes(x=y, y=get(positive_class))) +
+  y_prob<-data.frame(y, predictor=rf_clf_model$probabilities[,positive_class])
+  p<-ggplot(y_prob, aes(x=y, y=predictor)) +
     geom_violin()+
     geom_jitter(position=position_jitter(width=0.2),alpha=0.1) +
     geom_boxplot(outlier.shape = NA, width=0.4, alpha=0.01)+
@@ -194,11 +197,11 @@ plot_clf_probabilities<-function(y, rf_clf_model, positive_class=NA, prefix="tra
 #'             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
 #' y<-factor(c(rep("A", 30), rep("C", 30)))
 #' rf_model<-rf.out.of.bag(x, y)
-#' plot_ClfPerf_VS_NumOfFeatures(x, y, rf_model, metric="AUROC", outdir=NULL)
+#' plot_clf_feature_selection(x, y, rf_model, metric="AUROC", outdir=NULL)
 #' @author Shi Huang
 #' @export
 plot_clf_feature_selection <- function(x, y, rf_clf_model, metric="AUROC", positive_class=NA, outdir=NULL){
-  if(!class(rf_clf_model)=="rf.out.of.bag")stop("The rf_clf_model is not in the class of rf.out.of.bag.")
+  if(class(rf_clf_model)!="rf.out.of.bag" & class(rf_clf_model)!="rf.cross.validation")stop("The rf_clf_model is not rf.out.of.bag/rf.cross.validation.")
   positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
   if(rf_clf_model$error.type=="oob"){
     rf_imp_rank<-rank(-(rf_clf_model$importances)) #rf_all$importances

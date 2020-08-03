@@ -107,7 +107,7 @@ plot_clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferr
   summ_Enr<-reshape2::melt(summ[, c("Data_sets","num_enriched","num_depleted")])
   summ_Enr[summ_Enr$variable=="num_depleted",]$value<--summ_Enr[summ_Enr$variable=="num_depleted",]$value
   p_d<- ggplot(summ_Enr, aes(x=Data_sets, y=value, colour=variable)) + xlab("") + ylab("Enrichment")+
-    ylim(-max(summ_Enr$value), max(summ_Enr$value))+
+    ylim(-max(abs(summ_Enr$value)), max(abs(summ_Enr$value)))+
     geom_hline(yintercept=0)+
     geom_point(show.legend=F, size=2)+
     geom_bar(show.legend=F, stat = "identity", alpha=0.5, width=0.01) +
