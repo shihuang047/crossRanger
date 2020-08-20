@@ -34,7 +34,7 @@ x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
 y<-factor(c(rep("A", 30), rep("C", 30)))
 rf_model<-rf.out.of.bag(x, y)
-plot_ClfPerf_VS_NumOfFeatures(x, y, rf_model, metric="AUROC", outdir=NULL)
+plot_clf_feature_selection(x, y, rf_model, metric="AUROC", outdir=NULL)
 }
 \author{
 Shi Huang

@@ -2,7 +2,7 @@
 % Please edit documentation in R/ranger_clf_plot.R
 \name{plot_clf_pROC}
 \alias{plot_clf_pROC}
-\title{plot_ROC}
+\title{plot_clf_pROC}
 \usage{
 plot_clf_pROC(y, rf_clf_model, positive_class = NA, prefix = "train",
   outdir = NULL)
@@ -20,7 +20,7 @@ If there are only two factor levels, the first level will be used as the "positi
 \item{outdir}{The output directory.}
 }
 \description{
-plot_ROC
+plot_clf_pROC
 }
 \examples{
 set.seed(123)

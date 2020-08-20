@@ -36,9 +36,10 @@ metadata<-data.frame(f_s=factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep(
                                   rep("C", 7), rep("H", 8), rep("C", 7), rep("H", 8))),
                      age=c(1:30, 2:31)
                      )
-res_list<-rf_clf.by_datasets(df, metadata, s_category='f_s',
+res_list<-rf_clf.by_datasets(df, metadata, s_category='f_s', nfolds=5,
                              c_category='f_c', positive_class="C")
 rf_model_list<-res_list$rf_model_list
+
 rf_clf.cross_appl(rf_model_list, res_list$x_list, res_list$y_list, positive_class="C")
 #--------------------
 comp_group="A"

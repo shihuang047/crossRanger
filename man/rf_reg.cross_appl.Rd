@@ -32,7 +32,10 @@ metadata<-data.frame(f_s=factor(c(rep("A", 30), rep("B", 30))),
                      f_c=factor(c(rep("C", 15), rep("D", 15), rep("E", 15), rep("F", 15))),
                      age=c(1:30, 2:31)
                      )
+table(metadata[, 'f_c'])
 reg_res<-rf_reg.by_datasets(df, metadata, s_category='f_c', c_category='age')
+rf_reg.cross_appl(reg_res, x_list=reg_res$x_list, y_list=reg_res$y_list)
+reg_res<-rf_reg.by_datasets(df, metadata, nfolds=5, s_category='f_c', c_category='age')
 rf_reg.cross_appl(reg_res, x_list=reg_res$x_list, y_list=reg_res$y_list)
 }
 \seealso{

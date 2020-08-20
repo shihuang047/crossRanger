@@ -274,9 +274,10 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=3,
 #'                                   rep("C", 7), rep("H", 8), rep("C", 7), rep("H", 8))),
 #'                      age=c(1:30, 2:31)
 #'                      )
-#' res_list<-rf_clf.by_datasets(df, metadata, s_category='f_s',
+#' res_list<-rf_clf.by_datasets(df, metadata, s_category='f_s', nfolds=5,
 #'                              c_category='f_c', positive_class="C")
 #' rf_model_list<-res_list$rf_model_list
+#'
 #' rf_clf.cross_appl(rf_model_list, res_list$x_list, res_list$y_list, positive_class="C")
 #' #--------------------
 #' comp_group="A"
@@ -292,6 +293,7 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=3,
 rf_clf.cross_appl<-function(rf_model_list, x_list, y_list, positive_class=NA){
   ## TODO: check the class of inputs
   L<-length(rf_model_list)
+  y_list<-lapply(y_list,factor)
   positive_class<-ifelse(is.na(positive_class), levels(factor(y_list[[1]]))[1], positive_class)
   try(if(!identical(L, length(x_list), length(y_list))) stop("The length of x list, y list and rf model list should be identical."))
   perf_summ<-data.frame(matrix(NA, ncol=17, nrow=L*L))
@@ -334,10 +336,14 @@ rf_clf.cross_appl<-function(rf_model_list, x_list, y_list, positive_class=NA){
       if(nrow(x_list[[j]])>0){
         newx<-x_list[[j]]
         newy<-y_list[[j]]
+        if(class(oob)=="rf.out.of.bag"){
+           oob_rf.model<-oob$rf.model
+          }else{
+            oob_rf.model<-oob$rf.model[[1]]} # pick one sout of K rf models in the "rf.cross.validation"
         #pred_prob<-predict(oob$rf.model, x_list[[j]], type="prob") # for regular rf.out.of.bag (randomForest) function
-        pred_prob <- get.predict.probability.from.forest(oob$rf.model, newx) # ranger only
+        pred_prob <- get.predict.probability.from.forest(oob_rf.model, newx) # ranger only
         pred_prob<-pred_prob[,order(colnames(pred_prob))] # to avoid unanticipated order of numeric levels of factor y
-        pred_newy<-factor(predict(oob$rf.model, newx, type="response")$predictions) # ranger only
+        pred_newy<-factor(predict(oob_rf.model, newx, type="response")$predictions) # ranger only
         if(identical(levels(newy), levels(oob$y))){
           colnames(pred_prob)<- levels(newy)
           levels(pred_newy)<- levels(newy)
@@ -392,7 +398,10 @@ rf_clf.cross_appl<-function(rf_model_list, x_list, y_list, positive_class=NA){
 #'                      f_c=factor(c(rep("C", 15), rep("D", 15), rep("E", 15), rep("F", 15))),
 #'                      age=c(1:30, 2:31)
 #'                      )
+#' table(metadata[, 'f_c'])
 #' reg_res<-rf_reg.by_datasets(df, metadata, s_category='f_c', c_category='age')
+#' rf_reg.cross_appl(reg_res, x_list=reg_res$x_list, y_list=reg_res$y_list)
+#' reg_res<-rf_reg.by_datasets(df, metadata, nfolds=5, s_category='f_c', c_category='age')
 #' rf_reg.cross_appl(reg_res, x_list=reg_res$x_list, y_list=reg_res$y_list)
 #' @author Shi Huang
 #' @export
@@ -442,7 +451,10 @@ rf_reg.cross_appl<-function(rf_list, x_list, y_list){
       if(nrow(x_list[[j]])>0){
         newx<-x_list[[j]]
         newy<-y_list[[j]]
-        pred_newy<-predict(rf_list$rf_model_list[[i]], newx, type="response")$predictions # ranger only
+        if(class(oob)=="ranger"){oob_rf.model<-oob
+          }else{
+           oob_rf.model<-oob[[1]]} # pick one out of K rf models in the ranger list
+        pred_newy<-predict(oob_rf.model, newx, type="response")$predictions # ranger only
         #---  RF test performance: MSE, MAE and R_squared
         cat("Test dataset: ", names(x_list)[j] ,"\n")
         test_sample_size<-length(newy)
@@ -546,6 +558,7 @@ generate.comps_datalist<-function(df, f, comp_group){
 rf_clf.comps<-function(df, f, comp_group, verbose=FALSE, clr_transform=TRUE,
                        rf_imp_values=FALSE,ntree=500, p.adj.method = "bonferroni",
                        q_cutoff=0.05){
+  f<-factor(f)
   all_other_groups<-levels(f)[which(levels(f)!=comp_group)]
   L<-length(all_other_groups)
   nCores <- parallel::detectCores()

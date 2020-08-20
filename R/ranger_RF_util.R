@@ -119,8 +119,7 @@ balanced.folds <- function(y, nfolds=3){
     # -1 or nfolds = len(y) means leave-one-out
     if (nfolds == -1 || nfolds == length(y)){
         invisible(1:length(y))
-    }
-    else{
+    }else{
     # Can't have more folds than there are items per class
     nfolds = min(nfolds, max(Nk))
     # Assign folds evenly within each class, then shuffle within each class
