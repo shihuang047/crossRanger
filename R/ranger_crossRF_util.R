@@ -36,9 +36,11 @@ rf_clf.pairwise <- function (df, f, nfolds=3, ntree=5000, verbose=FALSE) {
     acc<-conf$overall[1]
     kappa_oob<-conf$overall[2]
     cat("Accuracy in the cross-validation: ", acc ,"\n")
-    if(nlevels(f_ij)==2){rf_AUC<-get.auroc(oob$probabilities, f_ij, positive_class)}else{rf_AUC<-NA}
-    cat("AUC in the cross-validation: ", rf_AUC ,"\n") # wired value of "1" kept showing
-    c("AUC"=rf_AUC, acc, kappa_oob, conf$byClass)
+    if(nlevels(f_ij)==2){rf_AUROC<-get.auroc(oob$probabilities[, positive_class], f_ij, positive_class)}else{rf_AUROC<-NA}
+    if(nlevels(f_ij)==2){rf_AUPRC<-get.auprc(oob$probabilities[, positive_class], f_ij, positive_class)}else{rf_AUPRC<-NA}
+    cat("AUROC in the cross-validation: ", rf_AUROC ,"\n") # wired value of "1" kept showing
+    cat("AUPRC in the cross-validation: ", rf_AUPRC ,"\n") # wired value of "1" kept showing
+    c("AUROC"=rf_AUROC, "AUPRC"=rf_AUPRC, acc, kappa_oob, conf$byClass)
   }
   if(nlevels(f)==2){
     out_summ<-rf_compare_levels(df, f, i=1, j=2, nfolds, ntree, verbose)
@@ -118,7 +120,7 @@ rf_clf.by_datasets<-function(df, metadata, s_category, c_category, positive_clas
     lapply(seq_along(x),
            function(i) c(x[[i]], lapply(list(...), function(y) y[[i]])))
   }
-  oper<-foreach::foreach(i=1:L, .combine='comb', .multicombine=TRUE, .init=list(list(), list(), list())) %dopar% {
+  oper<-foreach::foreach(i=1:L, .combine='comb', .multicombine=TRUE, .init=list(list(), list(),  list(), list())) %dopar% {
     x<-x_list[[i]]
     y<-factor(y_list[[i]])
     # 2. AUC of random forest model
@@ -129,12 +131,13 @@ rf_clf.by_datasets<-function(df, metadata, s_category, c_category, positive_clas
       oob<-rf.cross.validation(x, y, nfolds=nfolds, verbose=verbose, ntree=ntree, imp_pvalues = rf_imp_pvalues)
       rf_imps=rowMeans(oob$importances)
     }
-    if(nlevels(y)==2){rf_AUC<-get.auroc(oob$probabilities, y, positive_class) }else{ rf_AUC <- NA }
+    if(nlevels(y)==2){rf_AUROC<-get.auroc(oob$probabilities[, positive_class], y, positive_class) }else{ rf_AUROC <- NA }
+    if(nlevels(y)==2){rf_AUPRC<-get.auprc(oob$probabilities[, positive_class], y, positive_class) }else{ rf_AUPRC <- NA }
     # 3. # of significantly differential abundant features between health and disease
     out<-BetweenGroup.test(x, y, clr_transform=clr_transform, positive_class=positive_class, p.adj.method = p.adj.method, q_cutoff=q_cutoff)
     feature_imps<-data.frame(feature=rownames(out), dataset=rep(datasets[i], ncol(x)),
                              rf_imps=rf_imps, out)
-    list(oob=oob, rf_AUC=rf_AUC, feature_imps=feature_imps)
+    list(oob=oob, rf_AUROC=rf_AUROC, rf_AUPRC=rf_AUPRC, feature_imps=feature_imps)
   }
 
   result<-list()
@@ -143,8 +146,9 @@ rf_clf.by_datasets<-function(df, metadata, s_category, c_category, positive_clas
   result$datasets<-datasets
   result$sample_size<-sample_size
   result$rf_model_list<-oper[[1]]
-  result$rf_AUC<-unlist(oper[[2]])
-  result$feature_imps_list<-oper[[3]]
+  result$rf_AUROC<-unlist(oper[[2]])
+  result$rf_AUPRC<-unlist(oper[[3]])
+  result$feature_imps_list<-oper[[4]]
   class(result)<-"rf_clf.by_datasets"
   return(result)
 }
@@ -296,8 +300,8 @@ rf_clf.cross_appl<-function(rf_model_list, x_list, y_list, positive_class=NA){
   y_list<-lapply(y_list,factor)
   positive_class<-ifelse(is.na(positive_class), levels(factor(y_list[[1]]))[1], positive_class)
   try(if(!identical(L, length(x_list), length(y_list))) stop("The length of x list, y list and rf model list should be identical."))
-  perf_summ<-data.frame(matrix(NA, ncol=17, nrow=L*L))
-  colnames(perf_summ)<-c("Train_data", "Test_data", "Validation_type", "Accuracy", "AUC", "Kappa",
+  perf_summ<-data.frame(matrix(NA, ncol=18, nrow=L*L))
+  colnames(perf_summ)<-c("Train_data", "Test_data", "Validation_type", "Accuracy", "AUROC", "AUPRC", "Kappa",
                          "Sensitivity", "Specificity", "Pos_Pred_Value","Neg_Pred_Value", "Precision", "Recall",
                          "F1", "Prevalence", "Detection_Rate", "Detection_Prevalence", "Balanced_Accuracy")
   predicted<-matrix(list(), ncol=2, nrow=L*L)
@@ -313,21 +317,22 @@ rf_clf.cross_appl<-function(rf_model_list, x_list, y_list, positive_class=NA){
     #  RF Training accuracy
     #---
     cat("\nTraining dataset: ", names(x_list)[i] ,"\n\n")
-    conf<-confusionMatrix(data=oob$predicted, oob$y, positive=positive_class)
+    conf<-caret::confusionMatrix(data=oob$predicted, oob$y, positive=positive_class)
     acc<-conf$overall[1]
     kappa_oob<-conf$overall[2]
     cat("Accuracy in the self-validation: ", acc ,"\n")
     #---
-    #  AUC computation using "pROC" package
+    #  AUC computation
     #---
-    auc<-get.auroc(oob$probabilities, oob$y, positive_class)
-    cat("AUC in the self-validation: ", auc ,"\n")
-
+    auroc<-get.auroc(oob$probabilities[, positive_class], oob$y, positive_class)
+    auprc<-get.auprc(oob$probabilities[, positive_class], oob$y, positive_class)
+    cat("AUROC in the self-validation: ", auroc ,"\n")
+    cat("AUPRC in the self-validation: ", auprc ,"\n")
     D<-1:L
     T<-D[D!=i]
     a=1+(i-1)*L
     perf_summ[a, 1:3]<-c(names(x_list)[i], names(x_list)[i], "self_validation")
-    perf_summ[a, 4:17]<-c(acc, auc, kappa_oob, conf$byClass)
+    perf_summ[a, 4:18]<-c(acc, auroc, auprc, kappa_oob, conf$byClass)
     predicted[a, 1][[1]]<-data.frame(test_y=y, pred_y=oob$predicted)
     predicted[a, 2][[1]]<-oob$probabilities
     #rownames(predicted)[a]<-paste(names(x_list)[i], names(x_list)[i], sep="__VS__")
@@ -349,18 +354,20 @@ rf_clf.cross_appl<-function(rf_model_list, x_list, y_list, positive_class=NA){
           levels(pred_newy)<- levels(newy)
           #---Accuracy
           cat("Test dataset: ", names(x_list)[j] ,"\n")
-          test_conf<-confusionMatrix(data=pred_newy, newy, positive=positive_class)
+          test_conf<-caret::confusionMatrix(data=pred_newy, newy, positive=positive_class)
           test_acc<-test_conf$overall[1]
           test_kappa<-test_conf$overall[2]
           cat("Accuracy in the cross-applications: ", test_acc ,"\n")
           #---AUC
-          test_auc<-get.auroc(pred_prob, newy, positive_class)
-          cat("AUC in the cross-applications: ", test_auc ,"\n")
-          perf_summ[a+loop_num, 4:17]<-c(test_acc, test_auc, test_kappa, test_conf$byClass)
+          test_auroc<-get.auroc(pred_prob[, positive_class], newy, positive_class)
+          test_auprc<-get.auprc(pred_prob[, positive_class], newy, positive_class)
+          cat("AUROC in the cross-applications: ", test_auroc ,"\n")
+          cat("AUPRC in the cross-applications: ", test_auprc ,"\n")
+          perf_summ[a+loop_num, 4:18]<-c(test_acc, test_auroc, test_auprc, test_kappa, test_conf$byClass)
         }else{
           colnames(pred_prob)<- levels(oob$y)
           levels(pred_newy)<- levels(oob$y)
-          perf_summ[a+loop_num, 4:17]<-rep(NA, 14)
+          perf_summ[a+loop_num, 4:18]<-rep(NA, 15)
         }
         perf_summ[a+loop_num, 1:3]<-c(names(x_list)[i], names(x_list)[j], "cross_application")
         predicted[a+loop_num, 1][[1]]<-data.frame(test_y=newy, pred_y=pred_newy)
@@ -570,7 +577,7 @@ rf_clf.comps<-function(df, f, comp_group, verbose=FALSE, clr_transform=TRUE,
   }
   require('foreach')
   oper<-foreach::foreach(i=1:L, .combine='comb', .multicombine=TRUE,
-                         .init=list(list(), list(), list(), list(), list(), list(), list())) %dopar% {
+                         .init=list(list(), list(), list(), list(), list(), list(), list(), list())) %dopar% {
     sub_f<-factor(f[which(f==comp_group | f==all_other_groups[i])])
     sub_df<-df[which(f==comp_group | f==all_other_groups[i]), ]
     print(levels(factor(sub_f)))
@@ -579,14 +586,18 @@ rf_clf.comps<-function(df, f, comp_group, verbose=FALSE, clr_transform=TRUE,
     dataset<-paste(comp_group, all_other_groups[i], sep="_VS_")
     # 2. AUC of random forest model
     oob <- rf.out.of.bag(sub_df, factor(sub_f), verbose=verbose, ntree=ntree, imp_pvalues = rf_imp_values)
-    if(nlevels(factor(sub_f))==2){rf_AUC <- get.auroc(oob$probabilities, factor(sub_f), comp_group)}else{rf_AUC <- NA}
+    if(nlevels(factor(sub_f))==2){
+      rf_AUROC <- get.auroc(oob$probabilities[, comp_group], factor(sub_f), comp_group)
+      rf_AUPRC <- get.auprc(oob$probabilities[, comp_group], factor(sub_f), comp_group)
+      }else{rf_AUC <- NA}
     # 3. # of significantly differential abundant features between health and disease
     out<-BetweenGroup.test(sub_df, factor(sub_f), clr_transform=clr_transform, q_cutoff=q_cutoff,
                            positive_class=comp_group, p.adj.method = p.adj.method)
     wilcox<-data.frame(feature=rownames(out),
                        dataset=rep(dataset, ncol(sub_df)), rf_imps=oob$importances,
                        out)
-    list(x=sub_df, y=sub_f, sample_size=sample_size, datasets=dataset, oob=oob, rf_AUC=rf_AUC, wilcox=wilcox)
+    list(x=sub_df, y=sub_f, sample_size=sample_size, datasets=dataset,
+         oob=oob, rf_AUROC=rf_AUROC, rf_AUPRC=rf_AUPRC, wilcox=wilcox)
   }
   names(oper[[1]])<-names(oper[[2]])<-names(oper[[5]])<-unlist(oper[[4]])
   result<-list()
@@ -595,8 +606,9 @@ rf_clf.comps<-function(df, f, comp_group, verbose=FALSE, clr_transform=TRUE,
   result$sample_size<-unlist(oper[[3]])
   result$datasets<-unlist(oper[[4]])
   result$rf_model_list<-oper[[5]]
-  result$rf_AUC<-unlist(oper[[6]])
-  result$feature_imps_list<-oper[[7]]
+  result$rf_AUROC<-unlist(oper[[6]])
+  result$rf_AUPRC<-unlist(oper[[7]])
+  result$feature_imps_list<-oper[[8]]
   class(result)<-"rf_clf.comps"
   return(result)
 }

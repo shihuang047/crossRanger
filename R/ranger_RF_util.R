@@ -393,23 +393,25 @@ balanced.folds <- function(y, nfolds=3){
 #' @param positive_class A class of the obs factor.
 #' @return The auroc value.
 #' @examples
-#' obs<-factor(c(rep("A", 31), rep("B", 29)))
+#' y<-factor(c(rep("A", 31), rep("B", 29)))
 #' pred <- c(runif(30, 0.5, 0.9), runif(30, 0, 0.6))
 #' prob <-data.frame(A=pred, B=1-pred)
-#' get.auroc(obs, prob, positive_class="A")
+#' positive_class="A"
+#' get.auroc(predictor=prob[, positive_class], y, positive_class="A")
+#' get.auroc(predictor=prob[, positive_class], y, positive_class="B")
 #' @author Shi Huang
 #' @export
-get.auroc <- function(prob, obs, positive_class) {
+get.auroc <- function(predictor, y, positive_class) {
   pos_class<-function(f, positive_class){
-    if(nlevels(f)>2) stop("Only two-level factor allowed.")
+    if(nlevels(f)>2) cat("More than two levels in the factor.")
     idx<-which(levels(f)==positive_class)
     levels(f)[-idx]<-0
     levels(f)[idx]<-1
     factor(f)
   }
   require(ROCR)
-  obs<-pos_class(obs, positive_class=positive_class)
-  pred <- ROCR::prediction(prob[, positive_class], obs)
+  y<-pos_class(y, positive_class=positive_class)
+  pred <- ROCR::prediction(predictor, y)
   auroc  <- ROCR::performance(pred, "auc")@y.values[[1]]
   return(auroc)
 }
@@ -422,37 +424,20 @@ get.auroc <- function(prob, obs, positive_class) {
 #' @param positive_class A class in the binary factor.
 #' @return auprc
 #' @examples
-#' obs<-factor(c(rep("A", 10), rep("B", 50)))
+#' y<-factor(c(rep("A", 10), rep("B", 50)))
 #' pred <- c(runif(10, 0.4, 0.9), runif(50, 0, 0.6))
 #' prob <-data.frame(A=pred, B=1-pred)
-#' get.auprc(obs, prob, "A")
-#' get.auprc(obs, prob, "B")
+#' positive_class="A"
+#' get.auprc(predictor=prob[, positive_class], y, positive_class="A")
+#' get.auprc(predictor=prob[, positive_class], y, positive_class="B")
 #' @author Shi Huang
 #' @export
-get.auprc <- function(obs, prob, positive_class) {
-  pos_class<-function(f, positive_class){
-    if(nlevels(f)>2) stop("Only two-level factor allowed.")
-    idx<-which(levels(f)==positive_class)
-    levels(f)[-idx]<-0
-    levels(f)[idx]<-1
-    factor(f)
-  }
-  obs<-pos_class(obs, positive_class=positive_class)
-  #require(ROCR)
-  #require(caTools)
-  xx.df <- ROCR::prediction(prob[, positive_class], obs)
-  perf  <- ROCR::performance(xx.df, "prec", "rec")
-  xy    <- data.frame(recall=perf@x.values[[1]], precision=perf@y.values[[1]])
-
-  # take out division by 0 for lowest threshold
-  xy <- subset(xy, !is.nan(xy$precision))
-
-  # Designate recall = 0 as precision = x...arbitrary
-  xy <- rbind(c(0, 0), xy)
-  #xy <- xy[!(rowSums(xy)==0), ]
-
-  auprc   <- caTools::trapz(xy$recall, xy$precision)
-  auprc
+get.auprc<- function(predictor, y, positive_class){
+  df<-data.frame(y, predictor)
+  prob_pos<-df[df$y==positive_class, "predictor"]
+  prob_neg<-df[df$y!=positive_class,"predictor"]
+  pr<-PRROC::pr.curve(prob_pos, prob_neg, curve=TRUE)
+  pr$auc.integral
 }
 
 

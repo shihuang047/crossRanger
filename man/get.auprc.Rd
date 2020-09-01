@@ -4,13 +4,13 @@
 \alias{get.auprc}
 \title{get.auprc}
 \usage{
-get.auprc(obs, prob, positive_class)
+get.auprc(prob, obs, positive_class)
 }
 \arguments{
-\item{obs}{A binary factor vector indicates observed values.}
-
 \item{prob}{A two-column numeric matrix of the same # of rows as the length of observed values,
 containing the predicted value of each observation.}
+
+\item{obs}{A binary factor vector indicates observed values.}
 
 \item{positive_class}{A class in the binary factor.}
 }
@@ -25,6 +25,7 @@ obs<-factor(c(rep("A", 10), rep("B", 50)))
 pred <- c(runif(10, 0.4, 0.9), runif(50, 0, 0.6))
 prob <-data.frame(A=pred, B=1-pred)
 get.auprc(obs, prob, "A")
+get.auprc0(obs, prob, "A")
 get.auprc(obs, prob, "B")
 }
 \author{

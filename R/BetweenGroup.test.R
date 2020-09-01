@@ -175,21 +175,18 @@ mttest<-function(x, y, p.adj.method="bonferroni", paired=FALSE){
 #' desc_stats_all(x, y, clr_transform=TRUE)
 #' @author Shi Huang
 #' @export
-desc_stats_all<-function(x, y, clr_transform=FALSE){
-  auroc <- function(x, y) {
-    require(ROCR)
-    pred <- ROCR::prediction(x, y)
-    out  <- ROCR::performance(pred, "auc")@y.values[[1]]
-    return(out)
-  }
+desc_stats_all<-function(x, y, positive_class=NA, clr_transform=FALSE){
   OccRate<-function(x) sum(x!=0)/length(x)
-  func_all_list<-c("mean_all", "var_all", "sd_all", "OccRate_all", "AUC")
-  desc_stats_all_df<-data.frame(t(apply(x,2,function(x) c(mean(x), stats::var(x), stats::sd(x), OccRate(x), auroc(x,y)) )))
+  func_all_list<-c("mean_all", "var_all", "sd_all", "OccRate_all", "AUROC", "AUPRC")
+  positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
+  desc_stats_all_df<-data.frame(t(apply(x,2,function(a)
+    c(mean(a), stats::var(a), stats::sd(a), OccRate(a), get.auroc(a,y, positive_class), get.auprc(a,y, positive_class)))))
   colnames(desc_stats_all_df)<-func_all_list
   if(clr_transform){
     clr_x<-compositions::clr(x)
-    func_all_list<-c("clr_mean_all", "clr_var_all", "clr_sd_all", "clr_AUC")
-    clr_desc_stats_all_df<-data.frame(t(apply(clr_x, 2, function(x) c(mean(x), stats::var(x), stats::sd(x), auroc(x,y)) )))
+    func_all_list<-c("clr_mean_all", "clr_var_all", "clr_sd_all", "clr_AUROC", "clr_AUPRC")
+    clr_desc_stats_all_df<-data.frame(t(apply(clr_x, 2, function(a)
+      c(mean(a), stats::var(a), stats::sd(a), get.auroc(a,y, positive_class), get.auprc(a,y, positive_class)) )))
     colnames(clr_desc_stats_all_df)<-func_all_list
     desc_stats_all_df<-data.frame(desc_stats_all_df, clr_desc_stats_all_df)
   }

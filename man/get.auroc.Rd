@@ -24,7 +24,7 @@ calculates the area under the ROC curve
 obs<-factor(c(rep("A", 31), rep("B", 29)))
 pred <- c(runif(30, 0.5, 0.9), runif(30, 0, 0.6))
 prob <-data.frame(A=pred, B=1-pred)
-get.auroc(obs, prob, positive_class="A")
+get.auroc(prob, obs, positive_class="A")
 }
 \author{
 Shi Huang

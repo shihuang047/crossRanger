@@ -76,7 +76,8 @@ corr_datasets_by_imps<-function(feature_imps_list, ranked=TRUE, plot=FALSE){
 plot_clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir=NULL){
   datasets<-clf_res_list$datasets
   sample_size<-clf_res_list$sample_size
-  rf_AUC<-clf_res_list$rf_AUC
+  rf_AUROC<-clf_res_list$rf_AUROC
+  rf_AUPRC<-clf_res_list$rf_AUPRC
   feature_imps_list<-clf_res_list$feature_imps_list
   # Statistics summary of biomarkers discovery in multiple datasets
   num_sig_p.adj<-sapply(feature_imps_list, function(x) sum(x[,"Wilcoxon.test_p.adj"] < q_cutoff))
@@ -85,14 +86,14 @@ plot_clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferr
   num_depleted<-sapply(feature_imps_list, function(x) length(grep("depleted", x[,"Enr"])))
   # ggplot
   require('ggplot2')
-  summ<-data.frame(datasets=datasets, sample_size=sample_size, AUC=rf_AUC, num_sig_p, num_sig_p.adj, num_enriched, num_depleted)
+  summ<-data.frame(datasets=datasets, sample_size=sample_size, AUROC=rf_AUROC, AUPRC=rf_AUPRC, num_sig_p, num_sig_p.adj, num_enriched, num_depleted)
   names(summ)[1:2]<-c("Data_sets", "Sample_size")
   #summ_m<-reshape2::melt(summ)
   p_a<- ggplot(summ, aes(x=Data_sets, y=Sample_size)) + xlab("Data sets") + ylab("Sample size")+
     geom_bar(stat="identity", alpha=0.5, width=0.5)+
     coord_flip()+ # if want to filp coordinate
     theme_bw()
-  p_b<- ggplot(summ, aes(x=Data_sets, y=AUC)) + xlab("") + ylab("AUROC")+
+  p_b<- ggplot(summ, aes(x=Data_sets, y=AUPRC)) + xlab("") + ylab("AUPRC")+
     geom_point(shape="diamond", size=4)+ geom_bar(stat = "identity", alpha=0.5, width=0.01) +
     geom_hline(yintercept=0.5, linetype="dashed")+
     coord_flip()+ # if want to filp coordinate
@@ -119,7 +120,7 @@ plot_clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferr
   ggsave(filename=paste(outdir,"Datasets_AUROC.ggplot.pdf",sep=""),p1, width=9, height=3+nrow(summ)*0.2)
   # boxplot indicating p and p.adj values of sig. features
   feature_res<-plyr::ldply(feature_imps_list)
-  feature_res_m<-reshape2::melt(feature_res[, c("feature","dataset", "Enr", "AUC","rf_imps", "Wilcoxon.test_p", "Wilcoxon.test_p.adj")])
+  feature_res_m<-reshape2::melt(feature_res[, c("feature","dataset", "Enr", "AUROC", "AUPRC","rf_imps", "Wilcoxon.test_p", "Wilcoxon.test_p.adj")])
   # customised colors for Enr's 3 factors
   gg_color_hue <- function(n) {
     hues = seq(15, 375, length = n + 1)
@@ -246,7 +247,7 @@ rf_clf.by_datasets.summ<-function(df, metadata, s_category, c_category, positive
   res_list<-rf_clf.by_datasets(df, metadata, s_category, c_category, positive_class,
                                rf_imp_pvalues, nfolds, verbose, ntree)
   expected_list_names<-c("x_list", "y_list","datasets","rf_model_list",
-                         "sample_size","rf_AUC","feature_imps_list")
+                         "sample_size","rf_AUROC","rf_AUPRC", "feature_imps_list")
   stopifnot(all(names(res_list) %in% expected_list_names==TRUE))
   plot_res_list<-plot_clf_res_list(res_list, p_cutoff=0.05,
                                    p.adj.method = "bonferroni", q_cutoff=0.05,
@@ -286,11 +287,11 @@ rf_clf.by_datasets.summ<-function(df, metadata, s_category, c_category, positive
 #' comp_group="A"
 #' rf_clf.comps.summ(df, f, comp_group, verbose=FALSE, ntree=500, p_cutoff=0.05,
 #'                   p.adj.method = "bonferroni", q_cutoff=0.05, outdir=NULL)
-#'
+#'@export
 rf_clf.comps.summ<-function(df, f, comp_group, clr_transform=TRUE, nfolds=3, verbose=FALSE, ntree=5000,
                            p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir=NULL){
   clf_comps_list<-rf_clf.comps(df, f, comp_group, verbose=verbose, ntree=ntree, clr_transform=clr_transform)
-  expected_list_names<-c("x_list", "y_list", "datasets","rf_model_list","sample_size","rf_AUC","feature_imps_list")
+  expected_list_names<-c("x_list", "y_list", "datasets","rf_model_list","sample_size","rf_AUROC","rf_AUPRC", "feature_imps_list")
   stopifnot(all(names(clf_comps_list) %in% expected_list_names==TRUE))
   plot_res_list<-plot_clf_res_list(clf_res_list=clf_comps_list, p_cutoff=0.05,
                                    p.adj.method = "bonferroni", q_cutoff=0.05, outdir=outdir)
