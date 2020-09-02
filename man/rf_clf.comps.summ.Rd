@@ -47,7 +47,6 @@ f=factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
 comp_group="A"
 rf_clf.comps.summ(df, f, comp_group, verbose=FALSE, ntree=500, p_cutoff=0.05,
                   p.adj.method = "bonferroni", q_cutoff=0.05, outdir=NULL)
-
 }
 \seealso{
 ranger

@@ -186,7 +186,7 @@ desc_stats_all<-function(x, y, positive_class=NA, clr_transform=FALSE){
     clr_x<-compositions::clr(x)
     func_all_list<-c("clr_mean_all", "clr_var_all", "clr_sd_all", "clr_AUROC", "clr_AUPRC")
     clr_desc_stats_all_df<-data.frame(t(apply(clr_x, 2, function(a)
-      c(mean(a), stats::var(a), stats::sd(a), get.auroc(a,y, positive_class), get.auprc(a,y, positive_class)) )))
+      c(mean(a), stats::var(a), stats::sd(a), get.auroc(a,y, positive_class), get.auprc(a,y, positive_class)))))
     colnames(clr_desc_stats_all_df)<-func_all_list
     desc_stats_all_df<-data.frame(desc_stats_all_df, clr_desc_stats_all_df)
   }

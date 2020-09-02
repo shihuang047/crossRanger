@@ -4,15 +4,15 @@
 \alias{get.auroc}
 \title{get.auroc}
 \usage{
-get.auroc(prob, obs, positive_class)
+get.auroc(predictor, y, positive_class)
 }
 \arguments{
-\item{prob}{A two-column numeric matrix of the same # of rows as the length of observed values,
-containing the predicted value of each observation.}
+\item{predictor}{A predictor. For example, one column in the probability table, suggesting
+the probability assign a given observation to the positive class in the factor y.}
 
-\item{obs}{A binary factor vector indicates observed values.}
+\item{y}{A binary factor vector indicates observed values.}
 
-\item{positive_class}{A class of the obs factor.}
+\item{positive_class}{A class of the factor y.}
 }
 \value{
 The auroc value.
@@ -21,10 +21,12 @@ The auroc value.
 calculates the area under the ROC curve
 }
 \examples{
-obs<-factor(c(rep("A", 31), rep("B", 29)))
+y<-factor(c(rep("A", 31), rep("B", 29)))
 pred <- c(runif(30, 0.5, 0.9), runif(30, 0, 0.6))
 prob <-data.frame(A=pred, B=1-pred)
-get.auroc(prob, obs, positive_class="A")
+positive_class="A"
+get.auroc(predictor=prob[, positive_class], y, positive_class="A")
+get.auroc(predictor=prob[, positive_class], y, positive_class="B")
 }
 \author{
 Shi Huang

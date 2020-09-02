@@ -249,7 +249,7 @@ balanced.folds <- function(y, nfolds=3){
 
 #' @title get.oob.probability.from.forest
 #' @description Get probability of each class using only out-of-bag predictions from RF
-#' @param model A object of random forest out-of-bag model.
+#' @param model A model object in the class of `rf.out.of.bag`.
 #' @param x The training data.
 #' @return A table of probabilities \code{probs}
 #' @author Shi Huang
@@ -387,10 +387,10 @@ balanced.folds <- function(y, nfolds=3){
 
 #' @title get.auroc
 #' @description calculates the area under the ROC curve
-#' @param obs A binary factor vector indicates observed values.
-#' @param prob A two-column numeric matrix of the same # of rows as the length of observed values,
-#'             containing the predicted value of each observation.
-#' @param positive_class A class of the obs factor.
+#' @param y A binary factor vector indicates observed values.
+#' @param predictor A predictor. For example, one column in the probability table, indicating
+#'            the probability of a given observation being the positive class in the factor y.
+#' @param positive_class A class of the factor y.
 #' @return The auroc value.
 #' @examples
 #' y<-factor(c(rep("A", 31), rep("B", 29)))
@@ -417,11 +417,18 @@ get.auroc <- function(predictor, y, positive_class) {
 }
 
 #' @title get.auprc
-#' @description calculates the area under Precision-recall curve
-#' @param obs A binary factor vector indicates observed values.
-#' @param prob A two-column numeric matrix of the same # of rows as the length of observed values,
-#'             containing the predicted value of each observation.
-#' @param positive_class A class in the binary factor.
+#' @description calculates the area under Precision-recall curve (AUPRC).
+#' @param y A binary factor vector indicates observed values.
+#' @param predictor A predictor. For example, one column in the probability table, indicating
+#'            the probability of a given observation being the positive class in the factor y.
+#' @param positive_class A class of the factor y.
+#' @details It’s a bit trickier to interpret AUPRC than it is to interpret AUROC.
+#' The AUPRC of a random classifier is equal to the fraction of positives (Saito et al.),
+#' where the fraction of positives is calculated as (# positive examples / total # examples).
+#' That means that _different_ classes have _different_ AUPRC baselines. A class with 12% positives
+#' has a baseline AUPRC of 0.12, so obtaining an AUPRC of 0.40 on this class is great. However
+#' a class with 98% positives has a baseline AUPRC of 0.98, which means that obtaining an AUPRC
+#' of 0.40 on this class is bad.
 #' @return auprc
 #' @examples
 #' y<-factor(c(rep("A", 10), rep("B", 50)))
@@ -436,8 +443,10 @@ get.auprc<- function(predictor, y, positive_class){
   df<-data.frame(y, predictor)
   prob_pos<-df[df$y==positive_class, "predictor"]
   prob_neg<-df[df$y!=positive_class,"predictor"]
-  pr<-PRROC::pr.curve(prob_pos, prob_neg, curve=TRUE)
-  pr$auc.integral
+  prc<-PRROC::pr.curve(prob_pos, prob_neg, curve=FALSE,  max.compute = T, min.compute = T, rand.compute = T)
+  auprc<-prc$auc.integral
+  if(prc$auc.integral==prc$rand$auc.integral) cat("Note: ", auprc, "is the auprc of a random classifier!\n")
+  auprc
 }
 
 

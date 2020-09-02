@@ -4,29 +4,38 @@
 \alias{get.auprc}
 \title{get.auprc}
 \usage{
-get.auprc(prob, obs, positive_class)
+get.auprc(predictor, y, positive_class)
 }
 \arguments{
-\item{prob}{A two-column numeric matrix of the same # of rows as the length of observed values,
-containing the predicted value of each observation.}
+\item{predictor}{A predictor. For example, one column in the probability table, suggesting
+the probability assign a given observation to the positive class in the factor y.}
 
-\item{obs}{A binary factor vector indicates observed values.}
+\item{y}{A binary factor vector indicates observed values.}
 
-\item{positive_class}{A class in the binary factor.}
+\item{positive_class}{A class of the factor y.}
 }
 \value{
 auprc
 }
 \description{
-calculates the area under Precision-recall curve
+calculates the area under Precision-recall curve (AUPRC).
+}
+\details{
+It’s a bit trickier to interpret AUPRC than it is to interpret AUROC.
+The AUPRC of a random classifier is equal to the fraction of positives (Saito et al.),
+where the fraction of positives is calculated as (# positive examples / total # examples).
+That means that _different_ classes have _different_ AUPRC baselines. A class with 12% positives
+has a baseline AUPRC of 0.12, so obtaining an AUPRC of 0.40 on this class is great. However
+a class with 98% positives has a baseline AUPRC of 0.98, which means that obtaining an AUPRC
+of 0.40 on this class is bad.
 }
 \examples{
-obs<-factor(c(rep("A", 10), rep("B", 50)))
+y<-factor(c(rep("A", 10), rep("B", 50)))
 pred <- c(runif(10, 0.4, 0.9), runif(50, 0, 0.6))
 prob <-data.frame(A=pred, B=1-pred)
-get.auprc(obs, prob, "A")
-get.auprc0(obs, prob, "A")
-get.auprc(obs, prob, "B")
+positive_class="A"
+get.auprc(predictor=prob[, positive_class], y, positive_class="A")
+get.auprc(predictor=prob[, positive_class], y, positive_class="B")
 }
 \author{
 Shi Huang

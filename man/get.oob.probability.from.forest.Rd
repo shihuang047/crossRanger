@@ -7,7 +7,7 @@
 get.oob.probability.from.forest(model, x)
 }
 \arguments{
-\item{model}{A object of random forest out-of-bag model.}
+\item{model}{A model object in the class of `rf.out.of.bag`.}
 
 \item{x}{The training data.}
 }

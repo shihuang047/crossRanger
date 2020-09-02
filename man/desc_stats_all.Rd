@@ -4,7 +4,7 @@
 \alias{desc_stats_all}
 \title{desc_stats_all}
 \usage{
-desc_stats_all(x, y, clr_transform = FALSE)
+desc_stats_all(x, y, positive_class = NA, clr_transform = FALSE)
 }
 \arguments{
 \item{x}{A data.martrix or data.frame including multiple numeric vectors.}
