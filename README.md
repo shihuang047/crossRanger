@@ -3,7 +3,7 @@
 
 ***
 ## Introduction
-crossRanger = Cross-application of Ranger models.
+crossRanger: this package enables random forests classification or regression on a single target variable for the multiple datasets and allows users to apply the prebuilt random forests model from one dataset to predict the target variable in other datasets.
 
 [ranger](https://github.com/imbs-hl/ranger) is a fast implementation of random forests (Breiman 2001) or recursive partitioning, particularly suited for high dimensional data. Classification, regression, and survival forests are supported. To meet the meta-analysis requirements we further use `ranger` as a core RF implementation function to develop this package for microbiome-centric analyses. 
 
