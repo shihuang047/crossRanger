@@ -65,25 +65,37 @@ plot_clf_pROC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outd
 #'             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
 #'             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
 #'             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
-#' y<-factor(c(rep("A", 30), rep("C", 30)))
+#' x0 <- data.frame(rbind(t(rmultinom(7, 75, c(.011,.3,.22,.18,.289))),
+#'             t(rmultinom(8, 75, c(.011,.3,.22,.18,.289))),
+#'             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
+#'             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
+#'             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289)))))
+#' y<-factor(c(rep("A", 30), rep("B", 30)))
+#' y0<-factor(c(rep("A", 5), rep("B", 55)))
 #' rf_clf_model<-rf.out.of.bag(x, y)
-#' positive_class="A"
-#' plot_clf_PRC(y, rf_clf_model, outdir='./')
+#' plot_clf_PRC(y, rf_clf_model, positive_class="A", outdir='./A')
+#' plot_clf_PRC(y, rf_clf_model, positive_class="B", outdir='./B')
+#' rf_clf_model0<-rf.out.of.bag(x0, y0)
+#' plot_clf_PRC(y0, rf_clf_model0, positive_class="A", outdir='./A')
+#' plot_clf_PRC(y0, rf_clf_model0, positive_class="B", outdir='./B')
 #' @author Shi Huang
 #' @export
 plot_clf_PRC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outdir=NULL){
   require('PRROC')
   if(class(rf_clf_model)!="rf.out.of.bag" & class(rf_clf_model)!="rf.cross.validation")stop("The rf_clf_model is not rf.out.of.bag/rf.cross.validation.")
-  if(nlevels(y)!=2) stop("PPROC only support for PRC analysis in the binary classification!")
+  # if(nlevels(y)!=2) stop("PPROC only support for PRC analysis in the binary classification!")
   positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
   predictor<-rf_clf_model$probabilities[, positive_class]
   df<-data.frame(y, predictor)
   prob_pos<-df[df$y==positive_class, "predictor"]
   prob_neg<-df[df$y!=positive_class,"predictor"]
-  pr<-pr.curve(prob_pos, prob_neg, curve=TRUE)
+  pr<-pr.curve(prob_pos, prob_neg, curve=TRUE, max.compute = TRUE, min.compute = TRUE, rand.compute = TRUE)
+  auprc<-round(pr$auc.integral, 3)
+  rel_auprc<-round((pr$auc.integral-pr$min$auc.integral)/(pr$max$auc.integral-pr$min$auc.integral), 3)
   if(!is.null(outdir)){
     pdf(paste(outdir, prefix, ".rf_clf_PRC.pdf",sep=""), width=5, height=5)
-    plot(pr)
+    plot(pr, max.plot = TRUE, min.plot = TRUE, rand.plot = TRUE, fill.area = TRUE,
+         auc.main = FALSE, main = paste("AUPRC=",auprc,"\n", "Relative AUPRC=", rel_auprc, sep=""))
     dev.off()
   }
   invisible(pr)
@@ -104,25 +116,41 @@ plot_clf_PRC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outdi
 #'             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
 #'             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
 #'             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
-#' y<-factor(c(rep("A", 30), rep("C", 30)))
+#' x0 <- data.frame(rbind(t(rmultinom(7, 75, c(.011,.3,.22,.18,.289))),
+#'             t(rmultinom(8, 75, c(.011,.3,.22,.18,.289))),
+#'             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
+#'             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
+#'             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289)))))
+#' y<-factor(c(rep("A", 20), rep("B", 20), rep("C", 20)))
+#' y0<-factor(c(rep("A", 5), rep("B", 55)))
 #' rf_clf_model<-rf.out.of.bag(x, y)
-#' positive_class="A"
-#' plot_clf_ROC(y, rf_clf_model, outdir='./')
+#' plot_clf_ROC(y, rf_clf_model, positive_class="A", outdir='./A')
+#' plot_clf_ROC(y, rf_clf_model, positive_class="B", outdir='./B')
+#' plot_clf_PRC(y, rf_clf_model, positive_class="A", outdir='./A')
+#' plot_clf_PRC(y, rf_clf_model, positive_class="B", outdir='./B')
+#' rf_clf_model0<-rf.out.of.bag(x0, y0)
+#' plot_clf_ROC(y0, rf_clf_model0, positive_class="A", outdir='./A')
+#' plot_clf_ROC(y0, rf_clf_model0, positive_class="B", outdir='./B')
+#' plot_clf_PRC(y0, rf_clf_model0, positive_class="A", outdir='./A')
+#' plot_clf_PRC(y0, rf_clf_model0, positive_class="B", outdir='./B')
+#' pred_df<-data.frame(y=y0, prediction=rf_clf_model0$probabilities[, positive_class])
+#' ggplot(pred_df, aes(prediction, fill = y)) +
+#' geom_histogram(alpha = 0.5, position = 'identity')
 #' @author Shi Huang
 #' @export
 plot_clf_ROC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outdir=NULL){
   if(class(rf_clf_model)!="rf.out.of.bag" & class(rf_clf_model)!="rf.cross.validation")stop("The rf_clf_model is not rf.out.of.bag/rf.cross.validation.")
   require('PRROC')
-  if(nlevels(y)!=2) stop("PPROC only support for ROC analysis in the binary classification!")
+  #if(nlevels(y)!=2) stop("PPROC only support for ROC analysis in the binary classification!")
   positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
   predictor<-rf_clf_model$probabilities[, positive_class]
   df<-data.frame(y, predictor)
   prob_pos<-df[df$y==positive_class, "predictor"]
   prob_neg<-df[df$y!=positive_class,"predictor"]
-  roc<-roc.curve(prob_pos, prob_neg, curve=TRUE)
+  roc<-roc.curve(prob_pos, prob_neg, curve=TRUE, max.compute = TRUE, min.compute = TRUE, rand.compute = TRUE)
   if(!is.null(outdir)){
     pdf(paste(outdir, prefix, ".rf_clf_ROC.pdf",sep=""), width=5, height=5)
-    plot(roc)
+    plot(roc, rand.plot = TRUE, fill.area = TRUE)
     dev.off()
   }
   invisible(roc)
@@ -143,7 +171,7 @@ plot_clf_ROC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outdi
 #'             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
 #'             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
 #'             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
-#' y<-factor(c(rep("1", 30), rep("C", 30)))
+#' y<-factor(c(rep("1", 20), rep("A", 20), rep("C", 20)))
 #' rf_clf_model<-rf.out.of.bag(x, y)
 #' positive_class="1"
 #' plot_clf_probabilities(y, rf_clf_model, positive_class, outdir='./')

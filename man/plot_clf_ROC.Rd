@@ -29,10 +29,26 @@ x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
-y<-factor(c(rep("A", 30), rep("C", 30)))
+x0 <- data.frame(rbind(t(rmultinom(7, 75, c(.011,.3,.22,.18,.289))),
+            t(rmultinom(8, 75, c(.011,.3,.22,.18,.289))),
+            t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
+            t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
+            t(rmultinom(15, 75, c(.011,.3,.22,.18,.289)))))
+y<-factor(c(rep("A", 30), rep("B", 30)))
+y0<-factor(c(rep("A", 5), rep("B", 55)))
 rf_clf_model<-rf.out.of.bag(x, y)
-positive_class="A"
-plot_clf_ROC(y, rf_clf_model, outdir='./')
+plot_clf_ROC(y, rf_clf_model, positive_class="A", outdir='./A')
+plot_clf_ROC(y, rf_clf_model, positive_class="B", outdir='./B')
+plot_clf_PRC(y, rf_clf_model, positive_class="A", outdir='./A')
+plot_clf_PRC(y, rf_clf_model, positive_class="B", outdir='./B')
+rf_clf_model0<-rf.out.of.bag(x0, y0)
+plot_clf_ROC(y0, rf_clf_model0, positive_class="A", outdir='./A')
+plot_clf_ROC(y0, rf_clf_model0, positive_class="B", outdir='./B')
+plot_clf_PRC(y0, rf_clf_model0, positive_class="A", outdir='./A')
+plot_clf_PRC(y0, rf_clf_model0, positive_class="B", outdir='./B')
+pred_df<-data.frame(y=y0, prediction=rf_clf_model0$probabilities[, positive_class])
+ggplot(pred_df, aes(prediction, fill = y)) +
+geom_histogram(alpha = 0.5, position = 'identity')
 }
 \author{
 Shi Huang

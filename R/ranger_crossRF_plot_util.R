@@ -93,7 +93,7 @@ plot_clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferr
     geom_bar(stat="identity", alpha=0.5, width=0.5)+
     coord_flip()+ # if want to filp coordinate
     theme_bw()
-  p_b<- ggplot(summ, aes(x=Data_sets, y=AUPRC)) + xlab("") + ylab("AUPRC")+
+  p_b<- ggplot(summ, aes(x=Data_sets, y=AUROC)) + xlab("") + ylab("AUROC")+
     geom_point(shape="diamond", size=4)+ geom_bar(stat = "identity", alpha=0.5, width=0.01) +
     geom_hline(yintercept=0.5, linetype="dashed")+
     coord_flip()+ # if want to filp coordinate

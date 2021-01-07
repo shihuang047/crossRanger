@@ -443,9 +443,10 @@ get.auprc<- function(predictor, y, positive_class){
   df<-data.frame(y, predictor)
   prob_pos<-df[df$y==positive_class, "predictor"]
   prob_neg<-df[df$y!=positive_class,"predictor"]
-  prc<-PRROC::pr.curve(prob_pos, prob_neg, curve=FALSE,  max.compute = T, min.compute = T, rand.compute = T)
-  auprc<-prc$auc.integral
-  if(prc$auc.integral==prc$rand$auc.integral) cat("Note: ", auprc, "is the auprc of a random classifier!\n")
+  pr<-PRROC::pr.curve(prob_pos, prob_neg, curve=FALSE,  max.compute = T, min.compute = T, rand.compute = T)
+  rel_auprc<-round((pr$auc.integral-pr$min$auc.integral)/(pr$max$auc.integral-pr$min$auc.integral), 3)
+  auprc<-pr$auc.integral
+  if(pr$auc.integral==pr$rand$auc.integral) cat("Note: ", auprc, "is the auprc of a random classifier!\n")
   auprc
 }
 

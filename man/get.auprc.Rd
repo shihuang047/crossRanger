@@ -7,8 +7,8 @@
 get.auprc(predictor, y, positive_class)
 }
 \arguments{
-\item{predictor}{A predictor. For example, one column in the probability table, suggesting
-the probability assign a given observation to the positive class in the factor y.}
+\item{predictor}{A predictor. For example, one column in the probability table, indicating
+the probability of a given observation being the positive class in the factor y.}
 
 \item{y}{A binary factor vector indicates observed values.}
 
