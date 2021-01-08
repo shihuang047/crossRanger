@@ -403,7 +403,7 @@ balanced.folds <- function(y, nfolds=3){
 #' @export
 get.auroc <- function(predictor, y, positive_class) {
   pos_class<-function(f, positive_class){
-    if(nlevels(f)>2) cat("More than two levels in the factor.")
+    #if(nlevels(f)>2) cat("More than two levels in the factor.")
     idx<-which(levels(f)==positive_class)
     levels(f)[-idx]<-0
     levels(f)[idx]<-1
@@ -444,7 +444,7 @@ get.auprc<- function(predictor, y, positive_class){
   prob_pos<-df[df$y==positive_class, "predictor"]
   prob_neg<-df[df$y!=positive_class,"predictor"]
   pr<-PRROC::pr.curve(prob_pos, prob_neg, curve=FALSE,  max.compute = T, min.compute = T, rand.compute = T)
-  rel_auprc<-round((pr$auc.integral-pr$min$auc.integral)/(pr$max$auc.integral-pr$min$auc.integral), 3)
+  #rel_auprc<-round((pr$auc.integral-pr$min$auc.integral)/(pr$max$auc.integral-pr$min$auc.integral), 3)
   auprc<-pr$auc.integral
   if(pr$auc.integral==pr$rand$auc.integral) cat("Note: ", auprc, "is the auprc of a random classifier!\n")
   auprc
