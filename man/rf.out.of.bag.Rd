@@ -4,8 +4,14 @@
 \alias{rf.out.of.bag}
 \title{rf.out.of.bag}
 \usage{
-rf.out.of.bag(x, y, ntree = 500, verbose = FALSE, sparse = FALSE,
-  imp_pvalues = FALSE)
+rf.out.of.bag(
+  x,
+  y,
+  ntree = 500,
+  verbose = FALSE,
+  sparse = FALSE,
+  imp_pvalues = FALSE
+)
 }
 \arguments{
 \item{x}{Training data: data.matrix or data.frame.}

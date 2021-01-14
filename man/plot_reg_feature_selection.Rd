@@ -4,8 +4,14 @@
 \alias{plot_reg_feature_selection}
 \title{plot_reg_feature_selection}
 \usage{
-plot_reg_feature_selection(x, y, rf_reg_model, metric = "MAE",
-  unit = "unit", outdir = NULL)
+plot_reg_feature_selection(
+  x,
+  y,
+  rf_reg_model,
+  metric = "MAE",
+  unit = "unit",
+  outdir = NULL
+)
 }
 \arguments{
 \item{x}{The data frame or data matrix for model training.}

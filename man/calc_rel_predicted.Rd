@@ -4,10 +4,19 @@
 \alias{calc_rel_predicted}
 \title{calc_rel_predicted}
 \usage{
-calc_rel_predicted(train_y, predicted_train_y, train_SampleIDs = NULL,
-  test_y = NULL, predicted_test_y = NULL, test_SampleIDs = NULL,
-  train_prefix = "train", test_prefix = "test",
-  train_target_field = "y", test_target_field = NULL, outdir = NULL)
+calc_rel_predicted(
+  train_y,
+  predicted_train_y,
+  train_SampleIDs = NULL,
+  test_y = NULL,
+  predicted_test_y = NULL,
+  test_SampleIDs = NULL,
+  train_prefix = "train",
+  test_prefix = "test",
+  train_target_field = "y",
+  test_target_field = "y",
+  outdir = NULL
+)
 }
 \arguments{
 \item{train_y}{The numeric labels for training data.}
@@ -51,8 +60,10 @@ test_y<- 1:45
 train_rf_model<-rf.out.of.bag(train_x, train_y)
 predicted_test_y<-predict(train_rf_model$rf.model, test_x)$predictions
 calc_rel_predicted(train_y, predicted_train_y=train_rf_model$predicted)
-calc_rel_predicted(train_y, predicted_train_y=train_rf_model$predicted, train_SampleIDs=NULL,
-                   test_y, predicted_test_y, test_SampleIDs=NULL,
+calc_rel_predicted(train_y=train_y, predicted_train_y=train_rf_model$predicted,
+                   train_SampleIDs=as.character(1:60),
+                   test_y=test_y, predicted_test_y=predicted_test_y,
+                   test_SampleIDs=as.character(1:45),
                    train_target_field="y",  test_target_field="test_y", outdir=NULL)
 }
 \author{

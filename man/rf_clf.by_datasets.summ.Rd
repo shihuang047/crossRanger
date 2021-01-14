@@ -4,10 +4,21 @@
 \alias{rf_clf.by_datasets.summ}
 \title{rf_clf.by_datasets.summ}
 \usage{
-rf_clf.by_datasets.summ(df, metadata, s_category, c_category,
-  positive_class = NA, rf_imp_pvalues = FALSE, nfolds = 3,
-  verbose = FALSE, ntree = 500, p_cutoff = 0.05,
-  p.adj.method = "bonferroni", q_cutoff = 0.05, outdir = NULL)
+rf_clf.by_datasets.summ(
+  df,
+  metadata,
+  s_category,
+  c_category,
+  positive_class = NA,
+  rf_imp_pvalues = FALSE,
+  nfolds = 3,
+  verbose = FALSE,
+  ntree = 500,
+  p_cutoff = 0.05,
+  p.adj.method = "bonferroni",
+  q_cutoff = 0.05,
+  outdir = NULL
+)
 }
 \arguments{
 \item{df}{Training data: a data.frame.}

@@ -4,8 +4,15 @@
 \alias{plot_obs_VS_pred}
 \title{plot_obs_VS_pred}
 \usage{
-plot_obs_VS_pred(y, predicted_y, SampleIDs = NULL, prefix = "train",
-  target_field = "value", span = 1, outdir = NULL)
+plot_obs_VS_pred(
+  y,
+  predicted_y,
+  SampleIDs = NULL,
+  prefix = "train",
+  target_field = "value",
+  span = 1,
+  outdir = NULL
+)
 }
 \arguments{
 \item{y}{The numeric values for labeling data.}

@@ -4,8 +4,14 @@
 \alias{plot_residuals}
 \title{plot_residuals}
 \usage{
-plot_residuals(y, predicted_y, SampleIDs = NULL, prefix = "train",
-  target_field = "value", outdir = NULL)
+plot_residuals(
+  y,
+  predicted_y,
+  SampleIDs = NULL,
+  prefix = "train",
+  target_field = "value",
+  outdir = NULL
+)
 }
 \arguments{
 \item{y}{The numeric values for labeling data.}

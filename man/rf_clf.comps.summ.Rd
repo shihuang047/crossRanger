@@ -4,9 +4,19 @@
 \alias{rf_clf.comps.summ}
 \title{rf_clf.comps.summ}
 \usage{
-rf_clf.comps.summ(df, f, comp_group, clr_transform = TRUE, nfolds = 3,
-  verbose = FALSE, ntree = 5000, p_cutoff = 0.05,
-  p.adj.method = "bonferroni", q_cutoff = 0.05, outdir = NULL)
+rf_clf.comps.summ(
+  df,
+  f,
+  comp_group,
+  clr_transform = TRUE,
+  nfolds = 3,
+  verbose = FALSE,
+  ntree = 5000,
+  p_cutoff = 0.05,
+  p.adj.method = "bonferroni",
+  q_cutoff = 0.05,
+  outdir = NULL
+)
 }
 \arguments{
 \item{df}{Training data: a data.frame.}

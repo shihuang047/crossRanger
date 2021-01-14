@@ -4,8 +4,13 @@
 \alias{id_non_spcf_markers}
 \title{id_non_spcf_markers}
 \usage{
-id_non_spcf_markers(feature_res, positive_class = "disease",
-  other_class = "health", p.adj.method = "BH", outdir = NULL)
+id_non_spcf_markers(
+  feature_res,
+  positive_class = "disease",
+  other_class = "health",
+  p.adj.method = "BH",
+  outdir = NULL
+)
 }
 \arguments{
 \item{feature_res}{the inheritant output from the function of plot.res_list, rf_clf.comps.summ or rf_clf.by_dataset.summ}

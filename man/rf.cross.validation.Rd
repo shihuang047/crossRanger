@@ -4,8 +4,15 @@
 \alias{rf.cross.validation}
 \title{rf.cross.validation}
 \usage{
-rf.cross.validation(x, y, nfolds = 3, ntree = 500, verbose = FALSE,
-  sparse = FALSE, imp_pvalues = FALSE)
+rf.cross.validation(
+  x,
+  y,
+  nfolds = 3,
+  ntree = 500,
+  verbose = FALSE,
+  sparse = FALSE,
+  imp_pvalues = FALSE
+)
 }
 \arguments{
 \item{x}{Training data: data.matrix or data.frame.}

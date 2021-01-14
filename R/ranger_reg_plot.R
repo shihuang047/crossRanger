@@ -1,5 +1,6 @@
 #' @importFrom stats cor wilcox.test residuals smooth.spline fitted
 #' @importFrom plyr ldply
+#' @importFrom rlang .data
 #' @import ggplot2
 #' @importFrom gridExtra arrangeGrob
 #' @importFrom reshape2 melt
@@ -35,7 +36,7 @@ plot_obs_VS_pred <- function(y, predicted_y, SampleIDs=NULL, prefix="train", tar
   }else if(length(SampleIDs)>0 & nrow(df)!=length(SampleIDs)){
     stop("Please make sure that sample IDs match with y or predicted y.")
   }
-  p<-ggplot(df, aes(x=y, y=predicted_y))+
+  p<-ggplot(df, aes(x=.data$y, y=.data$predicted_y))+
     ylab(paste("Predicted ",target_field,sep=""))+
     xlab(paste("Observed ",target_field,sep=""))+
     geom_point(alpha=0.1)+
@@ -76,7 +77,7 @@ plot_residuals <- function(y, predicted_y, SampleIDs=NULL, prefix="train", targe
   }else if(length(SampleIDs)>0 & nrow(df)!=length(SampleIDs)){
     stop("Please make sure that sample IDs match with y or predicted y.")
   }
-  p<-ggplot(df, aes(x=y, y=rsdl))+
+  p<-ggplot(df, aes(x=.data$y, y=.data$rsdl))+
     ylab(paste("Residuals of prediceted ",target_field,sep=""))+
     xlab(paste("Observed ",target_field,sep=""))+
     geom_point(alpha=0.1)+
@@ -126,10 +127,10 @@ plot_perf_VS_rand<-function(y, predicted_y, prefix="train", target_field,
   }
   perf_value<-get.reg.performance(predicted_y, y, n_features)[[metric]]
   perf_values<-data.frame(perf_value, rand_perf_values=rand_perf(y))
-  p<-ggplot(perf_values, aes(x=rand_perf_values)) + geom_histogram(alpha=0.5) +
+  p<-ggplot(perf_values, aes(x=.data$rand_perf_values)) + geom_histogram(alpha=0.5) +
     #xlim(c(1, 20))+
     xlab(metric)+
-    geom_vline(data=perf_values, aes(xintercept = perf_value)) +
+    geom_vline(data=perf_values, aes(xintercept = .data$perf_value)) +
     annotate(geom="text", x=perf_value, y=20, label=as.character(round(perf_value, 2)), color="red", hjust = 0)
   theme_bw()
   if(!is.null(outdir)){
@@ -185,14 +186,14 @@ plot_train_vs_test<-function(train_y, predicted_train_y, test_y, predicted_test_
   l<-levels(pred$data); l_sorted<-sort(levels(pred$data))
   #Mycolor <- c("#D55E00", "#0072B2")
   #if(identical(order(l), order(l_sorted))){Mycolor=Mycolor }else{Mycolor=rev(Mycolor)}
-  p<-ggplot(pred,aes(x=value,y=predicted_value))+
+  p<-ggplot(pred,aes(x=.data$value,y=.data$predicted_value))+
     ylab(paste("Predicted ",train_target_field,sep=""))+
     xlab(paste("Observed ",train_target_field,sep=""))+
-    geom_point(aes(color=data), alpha=0.1)+
-    geom_smooth(aes(color=data), method="loess",span=1)+
+    geom_point(aes(color=.data$data), alpha=0.1)+
+    geom_smooth(aes(color=.data$data), method="loess",span=1)+
     #scale_color_manual(values = Mycolor)+
     theme_bw() +
-    facet_wrap(~data)+
+    facet_wrap(~.data$data)+
     theme(legend.position="none")
   #coord_flip()+
   if(!is.null(outdir)){
@@ -248,10 +249,10 @@ plot_reg_feature_selection <- function(x, y, rf_reg_model, metric="MAE", unit="u
   top_n_perf[length(n_features), ]<-c(max_n, rf_reg_model$MSE, rf_reg_model$RMSE, rf_reg_model$MAE, rf_reg_model$MAPE)
   top_n_perf<-data.frame(top_n_perf)
   breaks<-top_n_perf$n_features
-  p<-ggplot(top_n_perf, aes(x=n_features, y=get(metric))) +
+  p<-ggplot(top_n_perf, aes(x=.data$n_features, y={{metric}})) +
     xlab("# of features used")+
     ylab(paste(metric, " (", unit ,")", sep=""))+
-    scale_x_continuous(trans = "log",breaks=breaks)+
+    scale_x_continuous(trans = "log", breaks=breaks)+
     geom_point() + geom_line()+
     theme_bw()+
     theme(axis.line = element_line(color="black"),
@@ -293,25 +294,29 @@ plot_reg_feature_selection <- function(x, y, rf_reg_model, metric="MAE", unit="u
 #' train_rf_model<-rf.out.of.bag(train_x, train_y)
 #' predicted_test_y<-predict(train_rf_model$rf.model, test_x)$predictions
 #' calc_rel_predicted(train_y, predicted_train_y=train_rf_model$predicted)
-#' calc_rel_predicted(train_y, predicted_train_y=train_rf_model$predicted, train_SampleIDs=NULL,
-#'                    test_y, predicted_test_y, test_SampleIDs=NULL,
+#' calc_rel_predicted(train_y=train_y, predicted_train_y=train_rf_model$predicted,
+#'                    train_SampleIDs=as.character(1:60),
+#'                    test_y=test_y, predicted_test_y=predicted_test_y,
+#'                    test_SampleIDs=as.character(1:45),
 #'                    train_target_field="y",  test_target_field="test_y", outdir=NULL)
 #' @author Shi Huang
 #' @export
 calc_rel_predicted<-function(train_y, predicted_train_y, train_SampleIDs=NULL,
                              test_y=NULL, predicted_test_y=NULL, test_SampleIDs=NULL,
                              train_prefix="train", test_prefix="test",
-                             train_target_field="y", test_target_field=NULL, outdir=NULL){
+                             train_target_field="y", test_target_field="y", outdir=NULL){
   spl_train <- smooth.spline(train_y, predicted_train_y)
   train_relTrain <- residuals(spl_train)
   train_fittedTrain <- fitted(spl_train)
   relTrain_data<-train_relTrain_data <- data.frame(y=train_y, predicted_y=predicted_train_y,
                                                    rel_predicted_y=train_relTrain,
                                                    fitted_predicted_y=train_fittedTrain)
-  if(nrow(relTrain_data)==length(train_SampleIDs)){
-    relTrain_data<-data.frame(SampleIDs=train_SampleIDs, relTrain_data)
-  }else if(!is.null(train_SampleIDs)){
-    stop("Please make sure that sample IDs match with y or predicted y in the train data.")
+  if(!is.null(train_SampleIDs)){
+    if(nrow(relTrain_data)==length(train_SampleIDs)){
+      train_relTrain_data<-data.frame(SampleIDs=train_SampleIDs, relTrain_data)
+    }else{
+      stop("Please make sure that sample IDs match with y or predicted y in the train data.")
+    }
   }
   sink(paste(outdir, train_prefix,".Relative_",train_target_field,".results.xls",sep=""));cat("\t");
   write.table(relTrain_data,quote=FALSE,sep="\t", row.names = FALSE);sink(NULL)
@@ -322,10 +327,12 @@ calc_rel_predicted<-function(train_y, predicted_train_y, train_SampleIDs=NULL,
     test_relTrain_data <- data.frame(y=test_y, predicted_y=predicted_test_y,
                                      rel_predicted_y=test_relTrain,
                                      fitted_predicted_y=test_fitted)
-    if(nrow(test_relTrain_data)==length(test_SampleIDs)){
-      test_relTrain_data<-data.frame(SampleIDs=test_SampleIDs, test_relTrain_data)
-    }else if(!is.null(test_SampleIDs)){
-      stop("Please make sure that sample IDs match with y or predicted y in the test data.")
+    if(!is.null(test_SampleIDs)){
+      if(nrow(test_relTrain_data)==length(test_SampleIDs)){
+        test_relTrain_data<-data.frame(SampleIDs=test_SampleIDs, test_relTrain_data)
+        }else{
+          stop("Please make sure that sample IDs match with y or predicted y in the test data.")
+        }
     }
     relTrain_data<-rbind(train_relTrain_data, test_relTrain_data)
     DataSet <- factor(c(rep(train_prefix,length(train_relTrain)), rep(test_prefix,length(test_relTrain)) ))
@@ -364,8 +371,8 @@ calc_rel_predicted<-function(train_y, predicted_train_y, train_SampleIDs=NULL,
 #' @export
 plot_rel_predicted <- function(relTrain_data, prefix="train", target_field="value", outdir=NULL){
   if(length(prefix)==1){
-    relTrain_data<-subset(relTrain_data, DataSet==prefix)
-    p<-ggplot(relTrain_data, aes(x=y, y=rel_predicted_y))+
+    relTrain_data<-subset(relTrain_data, .data$DataSet==prefix)
+    p<-ggplot(relTrain_data, aes(x=.data$y, y=.data$rel_predicted_y))+
       ylab(paste("Relative prediceted ",target_field,sep=""))+
       xlab(paste("Observed ",target_field,sep=""))+
       geom_point(alpha=0.1)+
@@ -374,7 +381,7 @@ plot_rel_predicted <- function(relTrain_data, prefix="train", target_field="valu
       theme_bw()
     #coord_flip()+
   }else{
-    p<-ggplot(relTrain_data, aes(x=y, y=rel_predicted_y, color=DataSet))+
+    p<-ggplot(relTrain_data, aes(x=.data$y, y=.data$rel_predicted_y, color=.data$DataSet))+
       ylab(paste("Relative prediceted ",target_field,sep=""))+
       xlab(paste("Observed ",target_field,sep=""))+
       geom_point(alpha=0.1)+
@@ -423,8 +430,8 @@ boxplot_rel_predicted_train_vs_test<-function(relTrain_data, train_target_field=
     # if(identical(order(l), order(l_sorted))){
     #   Mycolor=Mycolor; l_ordered=l
     # }else{Mycolor=rev(Mycolor); l_ordered=l_sorted}
-    p<-ggplot(relTrain_data, aes(x=DataSet, y=rel_predicted_y)) +
-      geom_violin(aes(color=DataSet))+
+    p<-ggplot(relTrain_data, aes(x=.data$DataSet, y=.data$rel_predicted_y)) +
+      geom_violin(aes(color=.data$DataSet))+
       geom_boxplot(outlier.shape = NA, width=0.4)+
       geom_jitter(position=position_jitter(width=0.2),alpha=0.1) + # aes(color=DataSet),
       geom_hline(yintercept=0)+

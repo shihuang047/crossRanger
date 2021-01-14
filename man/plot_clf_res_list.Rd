@@ -4,8 +4,13 @@
 \alias{plot_clf_res_list}
 \title{plot_clf_res_list}
 \usage{
-plot_clf_res_list(clf_res_list, p_cutoff = 0.05,
-  p.adj.method = "bonferroni", q_cutoff = 0.05, outdir = NULL)
+plot_clf_res_list(
+  clf_res_list,
+  p_cutoff = 0.05,
+  p.adj.method = "bonferroni",
+  q_cutoff = 0.05,
+  outdir = NULL
+)
 }
 \arguments{
 \item{clf_res_list}{a list, the output of the function \code{rf_clf.by_datasets}.}

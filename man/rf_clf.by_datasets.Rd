@@ -4,10 +4,20 @@
 \alias{rf_clf.by_datasets}
 \title{rf_clf.by_datasets}
 \usage{
-rf_clf.by_datasets(df, metadata, s_category, c_category,
-  positive_class = NA, rf_imp_pvalues = FALSE, clr_transform = TRUE,
-  nfolds = 3, verbose = FALSE, ntree = 500, p.adj.method = "BH",
-  q_cutoff = 0.05)
+rf_clf.by_datasets(
+  df,
+  metadata,
+  s_category,
+  c_category,
+  positive_class = NA,
+  rf_imp_pvalues = FALSE,
+  clr_transform = TRUE,
+  nfolds = 3,
+  verbose = FALSE,
+  ntree = 500,
+  p.adj.method = "BH",
+  q_cutoff = 0.05
+)
 }
 \arguments{
 \item{df}{Training data: a data.frame.}

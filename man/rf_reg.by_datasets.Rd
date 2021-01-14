@@ -4,8 +4,16 @@
 \alias{rf_reg.by_datasets}
 \title{rf_reg.by_datasets}
 \usage{
-rf_reg.by_datasets(df, metadata, s_category, c_category, nfolds = 3,
-  rf_imp_pvalues = FALSE, verbose = FALSE, ntree = 500)
+rf_reg.by_datasets(
+  df,
+  metadata,
+  s_category,
+  c_category,
+  nfolds = 3,
+  rf_imp_pvalues = FALSE,
+  verbose = FALSE,
+  ntree = 500
+)
 }
 \arguments{
 \item{df}{Training data: a data.frame.}

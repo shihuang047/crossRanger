@@ -1,6 +1,8 @@
 #' @importFrom stats model.matrix predict quantile sd
 #' @importFrom Matrix Matrix
 #' @importFrom ranger ranger
+#' @importFrom PRROC pr.curve roc.curve
+#' @importFrom ROCR prediction performance
 
 #' @title rf.out.of.bag
 #' @description It runs standard random forests with out-of-bag error estimation for both classification and regression using \code{ranger}.
@@ -51,9 +53,9 @@
 "rf.out.of.bag" <-function(x, y, ntree=500, verbose=FALSE, sparse = FALSE, imp_pvalues=FALSE){
   set.seed(123)
   data<-data.frame(y, x)
-  require(Matrix)
+  #require(Matrix)
   if(sparse){
-    sparse_data <- Matrix::Matrix(data.matrix(data), sparse = sparse)
+    sparse_data <- Matrix(data.matrix(data), sparse = sparse)
     rf.model <- ranger::ranger(dependent.variable.name="y", data=sparse_data, keep.inbag=TRUE, importance='permutation',
                                classification=ifelse(is.factor(y), TRUE, FALSE), num.trees=ntree, verbose=verbose, probability = FALSE)
   }else{
@@ -190,7 +192,7 @@ balanced.folds <- function(y, nfolds=3){
         data<-data.frame(y=y_tr, x[-foldix,])
         require(Matrix)
         if(sparse){
-          sparse_data <- Matrix::Matrix(data.matrix(data), sparse = TRUE)
+          sparse_data <- Matrix(data.matrix(data), sparse = TRUE)
           result$rf.model[[fold]]<- model <- ranger::ranger(dependent.variable.name="y", data=sparse_data, classification=ifelse(is.factor(y_tr), TRUE, FALSE),
                                                           keep.inbag=TRUE, importance='permutation', verbose=verbose, num.trees=ntree)
         }else{
@@ -409,10 +411,10 @@ get.auroc <- function(predictor, y, positive_class) {
     levels(f)[idx]<-1
     factor(f)
   }
-  require(ROCR)
+  #require(ROCR)
   y<-pos_class(y, positive_class=positive_class)
-  pred <- ROCR::prediction(predictor, y)
-  auroc  <- ROCR::performance(pred, "auc")@y.values[[1]]
+  pred <- prediction(predictor, y)
+  auroc  <- performance(pred, "auc")@y.values[[1]]
   return(auroc)
 }
 
@@ -443,7 +445,7 @@ get.auprc<- function(predictor, y, positive_class){
   df<-data.frame(y, predictor)
   prob_pos<-df[df$y==positive_class, "predictor"]
   prob_neg<-df[df$y!=positive_class,"predictor"]
-  pr<-PRROC::pr.curve(prob_pos, prob_neg, curve=FALSE,  max.compute = T, min.compute = T, rand.compute = T)
+  pr<-pr.curve(prob_pos, prob_neg, curve=FALSE,  max.compute = T, min.compute = T, rand.compute = T)
   #rel_auprc<-round((pr$auc.integral-pr$min$auc.integral)/(pr$max$auc.integral-pr$min$auc.integral), 3)
   auprc<-pr$auc.integral
   if(pr$auc.integral==pr$rand$auc.integral) cat("Note: ", auprc, "is the auprc of a random classifier!\n")

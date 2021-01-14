@@ -3,6 +3,7 @@
 #' @importFrom parallel detectCores
 #' @importFrom caret confusionMatrix
 
+utils::globalVariables(c("i"))
 
 #' @title rf_clf.pairwise
 #' @description Perform pairwise rf classfication for a data matrix between all pairs of group levels
@@ -120,7 +121,7 @@ rf_clf.by_datasets<-function(df, metadata, s_category, c_category, positive_clas
     lapply(seq_along(x),
            function(i) c(x[[i]], lapply(list(...), function(y) y[[i]])))
   }
-  oper<-foreach::foreach(i=1:L, .combine='comb', .multicombine=TRUE, .init=list(list(), list(),  list(), list())) %dopar% {
+  oper<-foreach(i=1:L, .combine='comb', .multicombine=TRUE, .init=list(list(), list(),  list(), list())) %dopar% {
     x<-x_list[[i]]
     y<-factor(y_list[[i]])
     # 2. AUC of random forest model
@@ -219,7 +220,7 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=3,
                   oper_names<-c("rf.model", "y", "predicted", "MSE", "RMSE", "nRMSE",
                                 "MAE", "MAPE", "MASE", "R_squared", "Adj_R_squared",
                                 "importances", "params", "error.type", "nfolds")}
-  oper<-foreach::foreach(i=1:L, .combine='comb', .multicombine=TRUE,
+  oper<-foreach(i=1:L, .combine='comb', .multicombine=TRUE,
                 .init=out_list) %dopar% {
                              if(nfolds==3){
                                oob<-rf.out.of.bag(x_list[[i]], y_list[[i]],
@@ -575,8 +576,8 @@ rf_clf.comps<-function(df, f, comp_group, verbose=FALSE, clr_transform=TRUE,
     lapply(seq_along(x),
            function(i) c(x[[i]], lapply(list(...), function(y) y[[i]])))
   }
-  require('foreach')
-  oper<-foreach::foreach(i=1:L, .combine='comb', .multicombine=TRUE,
+  #require('foreach')
+  oper<-foreach(i=1:L, .combine='comb', .multicombine=TRUE,
                          .init=list(list(), list(), list(), list(), list(), list(), list(), list())) %dopar% {
     sub_f<-factor(f[which(f==comp_group | f==all_other_groups[i])])
     sub_df<-df[which(f==comp_group | f==all_other_groups[i]), ]

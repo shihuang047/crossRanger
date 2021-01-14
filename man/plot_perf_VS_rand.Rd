@@ -4,8 +4,16 @@
 \alias{plot_perf_VS_rand}
 \title{plot_perf_VS_rand}
 \usage{
-plot_perf_VS_rand(y, predicted_y, prefix = "train", target_field,
-  metric = "MAE", permutation = 100, n_features, outdir = NULL)
+plot_perf_VS_rand(
+  y,
+  predicted_y,
+  prefix = "train",
+  target_field,
+  metric = "MAE",
+  permutation = 100,
+  n_features,
+  outdir = NULL
+)
 }
 \arguments{
 \item{y}{The numeric values for labeling data.}

@@ -4,8 +4,14 @@
 \alias{plot_clf_feature_selection}
 \title{plot_clf_feature_selection}
 \usage{
-plot_clf_feature_selection(x, y, rf_clf_model, metric = "AUROC",
-  positive_class = NA, outdir = NULL)
+plot_clf_feature_selection(
+  x,
+  y,
+  rf_clf_model,
+  metric = "AUROC",
+  positive_class = NA,
+  outdir = NULL
+)
 }
 \arguments{
 \item{x}{The data frame or data matrix for model training.}

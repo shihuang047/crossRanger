@@ -4,8 +4,13 @@
 \alias{plot_clf_PRC}
 \title{plot_PRC}
 \usage{
-plot_clf_PRC(y, rf_clf_model, positive_class = NA, prefix = "train",
-  outdir = NULL)
+plot_clf_PRC(
+  y,
+  rf_clf_model,
+  positive_class = NA,
+  prefix = "train",
+  outdir = NULL
+)
 }
 \arguments{
 \item{y}{A factor of classes to be used as the true results}

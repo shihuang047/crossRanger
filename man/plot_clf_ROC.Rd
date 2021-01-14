@@ -4,8 +4,13 @@
 \alias{plot_clf_ROC}
 \title{plot_ROC}
 \usage{
-plot_clf_ROC(y, rf_clf_model, positive_class = NA, prefix = "train",
-  outdir = NULL)
+plot_clf_ROC(
+  y,
+  rf_clf_model,
+  positive_class = NA,
+  prefix = "train",
+  outdir = NULL
+)
 }
 \arguments{
 \item{y}{A factor of classes to be used as the true results}
@@ -34,7 +39,7 @@ x0 <- data.frame(rbind(t(rmultinom(7, 75, c(.011,.3,.22,.18,.289))),
             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289)))))
-y<-factor(c(rep("A", 30), rep("B", 30)))
+y<-factor(c(rep("A", 20), rep("B", 20), rep("C", 20)))
 y0<-factor(c(rep("A", 5), rep("B", 55)))
 rf_clf_model<-rf.out.of.bag(x, y)
 plot_clf_ROC(y, rf_clf_model, positive_class="A", outdir='./A')

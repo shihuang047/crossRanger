@@ -11,6 +11,8 @@ desc_stats_all(x, y, positive_class = NA, clr_transform = FALSE)
 
 \item{y}{A factor with two or more levels.}
 
+\item{positive_class}{A string indicating the specified class in the factor y. The positive class should be specified in the case-control design.}
+
 \item{clr_transform}{A logical value indicates if clr transformation before statistical analysis of compositional microbiome data.}
 }
 \description{

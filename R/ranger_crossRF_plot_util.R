@@ -2,6 +2,7 @@
 #' @importFrom stats cor
 #' @importFrom utils write.table
 #' @importFrom plyr ldply
+#' @importFrom rlang .data
 #' @import ggplot2
 #' @importFrom gridExtra arrangeGrob
 #' @importFrom reshape2 melt
@@ -40,9 +41,9 @@ corr_datasets_by_imps<-function(feature_imps_list, ranked=TRUE, plot=FALSE){
     corr_mat<-stats::cor(do.call(cbind, feature_imps_list))
   }
   if(plot){
-    require(corrplot)
-    corrplot::corrplot(corr =corr_mat, order="AOE", type="upper") # tl.pos = "d"
-    corrplot::corrplot(corr = corr_mat, add=TRUE, type="lower", method="number",
+    #require(corrplot)
+    corrplot(corr =corr_mat, order="AOE", type="upper") # tl.pos = "d"
+    corrplot(corr = corr_mat, add=TRUE, type="lower", method="number",
              order="AOE",diag=TRUE, tl.pos="n", cl.pos="n")
   }
   corr_mat
@@ -85,29 +86,29 @@ plot_clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferr
   num_enriched<-sapply(feature_imps_list, function(x) length(grep("enriched", x[,"Enr"])))
   num_depleted<-sapply(feature_imps_list, function(x) length(grep("depleted", x[,"Enr"])))
   # ggplot
-  require('ggplot2')
+  # require('ggplot2')
   summ<-data.frame(datasets=datasets, sample_size=sample_size, AUROC=rf_AUROC, AUPRC=rf_AUPRC, num_sig_p, num_sig_p.adj, num_enriched, num_depleted)
   names(summ)[1:2]<-c("Data_sets", "Sample_size")
   #summ_m<-reshape2::melt(summ)
-  p_a<- ggplot(summ, aes(x=Data_sets, y=Sample_size)) + xlab("Data sets") + ylab("Sample size")+
+  p_a<- ggplot(summ, aes(x=.data$Data_sets, y=.data$Sample_size)) + xlab("Data sets") + ylab("Sample size")+
     geom_bar(stat="identity", alpha=0.5, width=0.5)+
     coord_flip()+ # if want to filp coordinate
     theme_bw()
-  p_b<- ggplot(summ, aes(x=Data_sets, y=AUROC)) + xlab("") + ylab("AUROC")+
+  p_b<- ggplot(summ, aes(x=.data$Data_sets, y=.data$AUROC)) + xlab("") + ylab("AUROC")+
     geom_point(shape="diamond", size=4)+ geom_bar(stat = "identity", alpha=0.5, width=0.01) +
     geom_hline(yintercept=0.5, linetype="dashed")+
     coord_flip()+ # if want to filp coordinate
     theme_bw()+
     scale_y_continuous(limits = c(0.5,1)) +
     theme(axis.title.y=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank())
-  p_c<- ggplot(summ, aes(x=Data_sets, y=num_sig_p.adj)) + xlab("") + ylab("# of sig. features")+
+  p_c<- ggplot(summ, aes(x=.data$Data_sets, y=.data$num_sig_p.adj)) + xlab("") + ylab("# of sig. features")+
     geom_point(size=2)+ geom_bar(stat = "identity", alpha=0.5, width=0.01) +
     coord_flip()+ # if want to filp coordinate
     theme_bw()+
     theme(axis.title.y=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank())
   summ_Enr<-reshape2::melt(summ[, c("Data_sets","num_enriched","num_depleted")])
   summ_Enr[summ_Enr$variable=="num_depleted",]$value<--summ_Enr[summ_Enr$variable=="num_depleted",]$value
-  p_d<- ggplot(summ_Enr, aes(x=Data_sets, y=value, colour=variable)) + xlab("") + ylab("Enrichment")+
+  p_d<- ggplot(summ_Enr, aes(x=.data$Data_sets, y=.data$value, colour=.data$variable)) + xlab("") + ylab("Enrichment")+
     ylim(-max(abs(summ_Enr$value)), max(abs(summ_Enr$value)))+
     geom_hline(yintercept=0)+
     geom_point(show.legend=F, size=2)+
@@ -115,8 +116,8 @@ plot_clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferr
     coord_flip()+ # if want to filp coordinate
     theme_bw()+
     theme(axis.title.y=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank())
-  require('gridExtra')
-  p1<-gridExtra::arrangeGrob(p_a, p_b, p_c, p_d, ncol = 4, nrow = 1, widths = c(4, 2, 2, 2))
+  #require('gridExtra')
+  p1<-arrangeGrob(p_a, p_b, p_c, p_d, ncol = 4, nrow = 1, widths = c(4, 2, 2, 2))
   ggsave(filename=paste(outdir,"Datasets_AUROC.ggplot.pdf",sep=""),p1, width=9, height=3+nrow(summ)*0.2)
   # boxplot indicating p and p.adj values of sig. features
   feature_res<-plyr::ldply(feature_imps_list)
@@ -127,12 +128,12 @@ plot_clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferr
     hcl(h = hues, l = 65, c = 100)[1:n]
   }
   my3cols<-c("grey60", rev(gg_color_hue(2)))
-  p2<-ggplot(feature_res_m, aes(x=dataset, y=value)) +
+  p2<-ggplot(feature_res_m, aes(x=.data$dataset, y=.data$value)) +
     geom_boxplot(outlier.shape = NA)+
-    facet_grid(.~variable, scales="free") + scale_color_manual(values = my3cols) +
+    facet_grid(.~.data$variable, scales="free") + scale_color_manual(values = my3cols) +
     coord_flip()+ # if want to filp coordinate
     theme_bw()+
-    geom_jitter(aes(color=Enr), position=position_jitter() ,size=1, alpha=0.4)+ #jitter
+    geom_jitter(aes(color=.data$Enr), position=position_jitter() ,size=1, alpha=0.4)+ #jitter
     theme(axis.line = element_line(color="black"),
           strip.background = element_rect(colour = "white"),
           panel.border = element_blank())
@@ -186,27 +187,27 @@ plot_reg_res_list<-function(reg_res_list, outdir=NULL){
                    R_squared=rf_R_squared, Adj_R_squared=rf_Adj_R_squared)
   names(summ)[1:2]<-c("Data_sets", "Sample_size")
   #summ_m<-reshape2::melt(summ)
-  p_a<- ggplot(summ, aes(x=Data_sets, y=Sample_size)) + xlab("Data sets") + ylab("Sample size")+
+  p_a<- ggplot(summ, aes(x=.data$Data_sets, y=.data$Sample_size)) + xlab("Data sets") + ylab("Sample size")+
     geom_bar(stat="identity", alpha=0.5, width=0.5)+
     coord_flip()+ # if want to filp coordinate
     theme_bw()
-  p_b<- ggplot(summ, aes(x=Data_sets, y=RMSE)) + xlab("") + ylab("RMSE")+
+  p_b<- ggplot(summ, aes(x=.data$Data_sets, y=.data$RMSE)) + xlab("") + ylab("RMSE")+
     geom_point(size=2)+ geom_bar(stat = "identity", alpha=0.5, width=0.01) +
     coord_flip()+ # if want to filp coordinate
     theme_bw()+
     theme(axis.title.y=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank())
-  p_c<- ggplot(summ, aes(x=Data_sets, y=MAE)) + xlab("") + ylab("MAE")+
+  p_c<- ggplot(summ, aes(x=.data$Data_sets, y=.data$MAE)) + xlab("") + ylab("MAE")+
     geom_point(size=2)+ geom_bar(stat = "identity", alpha=0.5, width=0.01) +
     coord_flip()+ # if want to filp coordinate
     theme_bw()+
     theme(axis.title.y=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank())
-  p_d<- ggplot(summ, aes(x=Data_sets, y=R_squared)) + xlab("") + ylab("R_squared")+
+  p_d<- ggplot(summ, aes(x=.data$Data_sets, y=.data$R_squared)) + xlab("") + ylab("R_squared")+
     geom_point(size=2)+ geom_bar(stat = "identity", alpha=0.5, width=0.01) +
     coord_flip()+ # if want to filp coordinate
     theme_bw()+
     theme(axis.title.y=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank())
-  require('gridExtra')
-  summ_plot<-gridExtra::arrangeGrob(p_a, p_b, p_c, p_d, ncol = 4, nrow = 1, widths = c(3, 2, 2, 2))
+  #require('gridExtra')
+  summ_plot<-arrangeGrob(p_a, p_b, p_c, p_d, ncol = 4, nrow = 1, widths = c(3, 2, 2, 2))
   ggsave(filename=paste(outdir,"Datasets_perfs.ggplot.pdf",sep=""), summ_plot, width=9, height=3+nrow(summ)*0.2)
   # boxplot indicating p and p.adj values of sig. features
   #feature_res<-plyr::ldply(feature_imps_list)
@@ -392,7 +393,7 @@ id_non_spcf_markers <- function(feature_res, positive_class="disease",
   fac_spcf_m<-reshape2::melt(fac_spcf)
   fac_spcf_m$variable<-factor(fac_spcf_m$variable, levels = rev(levels(fac_spcf_m$variable)))
   mycolors<-c("grey80", gg_color_hue(nlevels(fac_spcf_m$variable)-1))
-  p_summ<-ggplot(fac_spcf_m, aes(x=dataset, y=value, fill=variable)) +
+  p_summ<-ggplot(fac_spcf_m, aes(x=.data$dataset, y=.data$value, fill=.data$variable)) +
     geom_bar(stat="identity")+
     scale_fill_manual(values=mycolors)+
     ylab("Fraction overlap with non-specific markers")+
@@ -405,7 +406,7 @@ id_non_spcf_markers <- function(feature_res, positive_class="disease",
   #---- non-specific disease, non-specific health, non-specific mixed and non markers
   #---- across all patients in all datasets
   feature_res_spcf<-tmp
-  p_spcf_abd<-ggplot(feature_res_spcf, aes(x=non_spcf_disease_global, y=log(mean_all)))  +
+  p_spcf_abd<-ggplot(feature_res_spcf, aes(x=.data$non_spcf_disease_global, y=log(.data$mean_all)))  +
     geom_boxplot(outlier.shape = NA) +
     geom_jitter(position=position_jitter(width = 0.2) ,size=1, alpha=0.4) + #jitter
     xlab("")+ ylab("log10(mean abundance)")+
@@ -413,7 +414,7 @@ id_non_spcf_markers <- function(feature_res, positive_class="disease",
     theme_bw()
   ggsave(filename=paste(outdir,"Markers_specific_VS_mean_",p.adj.method,".pdf",sep=""),
          plot=p_spcf_abd, width=5, height=3)
-  p_spcf_OccRate<-ggplot(feature_res_spcf, aes(x=non_spcf_disease_global, y=OccRate_all))  +
+  p_spcf_OccRate<-ggplot(feature_res_spcf, aes(x=.data$non_spcf_disease_global, y=.data$OccRate_all))  +
     geom_boxplot(outlier.shape = NA) +
     geom_jitter(position=position_jitter(width = 0.2) ,size=1, alpha=0.4) + #jitter
     xlab("")+ ylab("Ubiquity")+

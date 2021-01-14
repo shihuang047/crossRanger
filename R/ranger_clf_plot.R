@@ -1,9 +1,10 @@
 #' @importFrom pROC plot.roc ci.se
 #' @importFrom grDevices dev.off hcl pdf
 #' @importFrom graphics plot text
+#' @importFrom rlang .data
 #' @importFrom utils data write.table
-#' @import ggplot2
-#' @import PRROC
+#' @importFrom ggplot2 ggplot aes xlab ylab theme_bw coord_flip ggsave geom_boxplot geom_histogram geom_violin geom_jitter geom_point geom_line geom_hline geom_vline xlim ylim scale_x_continuous scale_color_manual theme element_rect element_line element_text element_blank
+#' @importFrom PRROC roc.curve pr.curve
 #' @importFrom gridExtra arrangeGrob
 #' @importFrom reshape2 melt
 
@@ -81,7 +82,7 @@ plot_clf_pROC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outd
 #' @author Shi Huang
 #' @export
 plot_clf_PRC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outdir=NULL){
-  require('PRROC')
+  #require('PRROC')
   if(class(rf_clf_model)!="rf.out.of.bag" & class(rf_clf_model)!="rf.cross.validation")stop("The rf_clf_model is not rf.out.of.bag/rf.cross.validation.")
   # if(nlevels(y)!=2) stop("PPROC only support for PRC analysis in the binary classification!")
   positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
@@ -140,7 +141,7 @@ plot_clf_PRC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outdi
 #' @export
 plot_clf_ROC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outdir=NULL){
   if(class(rf_clf_model)!="rf.out.of.bag" & class(rf_clf_model)!="rf.cross.validation")stop("The rf_clf_model is not rf.out.of.bag/rf.cross.validation.")
-  require('PRROC')
+  #require('PRROC')
   #if(nlevels(y)!=2) stop("PPROC only support for ROC analysis in the binary classification!")
   positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
   predictor<-rf_clf_model$probabilities[, positive_class]
@@ -186,7 +187,7 @@ plot_clf_probabilities<-function(y, rf_clf_model, positive_class=NA, prefix="tra
     Mycolor=Mycolor; l_ordered=l
   }else{Mycolor=rev(Mycolor); l_ordered=l_sorted}
   y_prob<-data.frame(y, predictor=rf_clf_model$probabilities[,positive_class])
-  p<-ggplot(y_prob, aes(x=y, y=predictor)) +
+  p<-ggplot(y_prob, aes(x=.data$y, y=.data$predictor)) +
     geom_violin()+
     geom_jitter(position=position_jitter(width=0.2),alpha=0.1) +
     geom_boxplot(outlier.shape = NA, width=0.4, alpha=0.01)+
@@ -263,7 +264,7 @@ plot_clf_feature_selection <- function(x, y, rf_clf_model, metric="AUROC", posit
                                         all_conf$overall[2], all_conf$byClass["F1"])
   top_n_perf<-data.frame(top_n_perf)
   breaks<-top_n_perf$n_features
-  p<-ggplot(top_n_perf, aes(x=n_features, y=get(metric))) +
+  p<-ggplot(top_n_perf, aes(x=.data$n_features, y={{metric}})) +
     xlab("# of features used")+
     ylab(metric)+
     scale_x_continuous(trans = "log",breaks=breaks)+

@@ -1,6 +1,8 @@
 #' @importFrom foreach foreach %dopar%
 #' @importFrom parallel detectCores
 #' @importFrom doMC registerDoMC
+#' @importFrom rlang .data
+#' @importFrom plyr mapvalues
 #' @importFrom stats sd var t.test wilcox.test bartlett.test oneway.test kruskal.test p.adjust
 
 
@@ -102,6 +104,7 @@ BetweenGroup.test <-function(x, y, clr_transform=FALSE, p.adj.method="bonferroni
 #'             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
 #'             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
 #' log.mat(x, base=10)
+#' @rdname log.mat
 #' @author Shi Huang
 #' @export
 log.mat<-function(mat, base=2){
@@ -164,6 +167,7 @@ mttest<-function(x, y, p.adj.method="bonferroni", paired=FALSE){
 #' @param x A data.martrix or data.frame including multiple numeric vectors.
 #' @param y A factor with two or more levels.
 #' @param clr_transform A logical value indicates if clr transformation before statistical analysis of compositional microbiome data.
+#' @param positive_class A string indicating the specified class in the factor y. The positive class should be specified in the case-control design.
 #' @examples
 #' y <-factor(c(rep("A", 30), rep("B", 30)))
 #' x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
@@ -255,20 +259,19 @@ desc_stats_by_group<-function(x, y, clr_transform=FALSE, positive_class=NA){
 #' Enr_by_q_cutoff(test_output, desc_stats_by_group_df, q_cutoff=0.05)
 #' @export
 Enr_by_q_cutoff<-function(test_output, desc_stats_by_group_df, positive_class=NA, q_cutoff=0.05){
-  positive_class<-ifelse(is.na(positive_class), levels(factor(y))[1], positive_class)
-  require("plyr")
+  # positive_class<-ifelse(is.na(positive_class), levels(factor(y))[1], positive_class)
+  # require("plyr")
   IfSig<-as.factor(ifelse(test_output[, "Wilcoxon.test_p.adj"]< q_cutoff, "Sig", "NotSig"))
   Enr0<-factor(ifelse(desc_stats_by_group_df$mean_logfc>0, paste(positive_class, "enriched", sep="_"), paste(positive_class, "depleted", sep="_")))
-  IfSigEnr=interaction(IfSig, Enr0)
-  Enr<-plyr::mapvalues(IfSigEnr,c(paste("NotSig.",positive_class,"_depleted",sep=""),
-                            paste("NotSig.",positive_class,"_enriched",sep=""),
-                            paste("Sig.",positive_class,"_depleted",sep=""),
-                            paste("Sig.",positive_class,"_enriched",sep="")
-  ),
-  c("Neutral", "Neutral",
-    paste(positive_class,"_depleted",sep=""),
-    paste(positive_class,"_enriched",sep="")
-  ))
+  IfSigEnr<-interaction(IfSig, Enr0)
+  Enr<-mapvalues(IfSigEnr,
+                       c(paste("NotSig.",positive_class,"_depleted",sep=""),
+                         paste("NotSig.",positive_class,"_enriched",sep=""),
+                         paste("Sig.",positive_class,"_depleted",sep=""),
+                         paste("Sig.",positive_class,"_enriched",sep="")),
+                       c("Neutral", "Neutral",
+                         paste(positive_class,"_depleted",sep=""),
+                         paste(positive_class,"_enriched",sep="")))
   data.frame(IfSig,IfSigEnr,Enr)
 }
 

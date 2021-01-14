@@ -4,9 +4,13 @@
 \alias{boxplot_rel_predicted_train_vs_test}
 \title{boxplot_rel_predicted_train_vs_test}
 \usage{
-boxplot_rel_predicted_train_vs_test(relTrain_data,
-  train_target_field = "value", train_prefix = "train",
-  test_prefix = "test", outdir = NULL)
+boxplot_rel_predicted_train_vs_test(
+  relTrain_data,
+  train_target_field = "value",
+  train_prefix = "train",
+  test_prefix = "test",
+  outdir = NULL
+)
 }
 \arguments{
 \item{relTrain_data}{The output dataframe of \code{calc_rel_predicted}.}

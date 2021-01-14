@@ -4,8 +4,12 @@
 \alias{plot_rel_predicted}
 \title{plot_rel_predicted}
 \usage{
-plot_rel_predicted(relTrain_data, prefix = "train",
-  target_field = "value", outdir = NULL)
+plot_rel_predicted(
+  relTrain_data,
+  prefix = "train",
+  target_field = "value",
+  outdir = NULL
+)
 }
 \arguments{
 \item{relTrain_data}{The output dataframe of \code{calc_rel_predicted}.}

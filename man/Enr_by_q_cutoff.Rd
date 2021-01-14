@@ -4,8 +4,12 @@
 \alias{Enr_by_q_cutoff}
 \title{Enr_by_q_cutoff}
 \usage{
-Enr_by_q_cutoff(test_output, desc_stats_by_group_df, positive_class = NA,
-  q_cutoff = 0.05)
+Enr_by_q_cutoff(
+  test_output,
+  desc_stats_by_group_df,
+  positive_class = NA,
+  q_cutoff = 0.05
+)
 }
 \arguments{
 \item{test_output}{The output from function \code{mttest}.}

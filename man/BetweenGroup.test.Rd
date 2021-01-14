@@ -4,9 +4,15 @@
 \alias{BetweenGroup.test}
 \title{BetweenGroup.test}
 \usage{
-BetweenGroup.test(x, y, clr_transform = FALSE,
-  p.adj.method = "bonferroni", positive_class = NA, q_cutoff = 0.2,
-  paired = FALSE)
+BetweenGroup.test(
+  x,
+  y,
+  clr_transform = FALSE,
+  p.adj.method = "bonferroni",
+  positive_class = NA,
+  q_cutoff = 0.2,
+  paired = FALSE
+)
 }
 \arguments{
 \item{x}{A data.martrix or data.frame including multiple numeric vectors.}

@@ -4,8 +4,13 @@
 \alias{plot_clf_probabilities}
 \title{plot_clf_probabilities}
 \usage{
-plot_clf_probabilities(y, rf_clf_model, positive_class = NA,
-  prefix = "train", outdir = NULL)
+plot_clf_probabilities(
+  y,
+  rf_clf_model,
+  positive_class = NA,
+  prefix = "train",
+  outdir = NULL
+)
 }
 \arguments{
 \item{y}{A factor of classes to be used as the true results}
@@ -29,7 +34,7 @@ x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
-y<-factor(c(rep("1", 30), rep("C", 30)))
+y<-factor(c(rep("1", 20), rep("A", 20), rep("C", 20)))
 rf_clf_model<-rf.out.of.bag(x, y)
 positive_class="1"
 plot_clf_probabilities(y, rf_clf_model, positive_class, outdir='./')

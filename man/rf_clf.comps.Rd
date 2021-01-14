@@ -4,9 +4,17 @@
 \alias{rf_clf.comps}
 \title{rf_clf.comps}
 \usage{
-rf_clf.comps(df, f, comp_group, verbose = FALSE, clr_transform = TRUE,
-  rf_imp_values = FALSE, ntree = 500, p.adj.method = "bonferroni",
-  q_cutoff = 0.05)
+rf_clf.comps(
+  df,
+  f,
+  comp_group,
+  verbose = FALSE,
+  clr_transform = TRUE,
+  rf_imp_values = FALSE,
+  ntree = 500,
+  p.adj.method = "bonferroni",
+  q_cutoff = 0.05
+)
 }
 \arguments{
 \item{df}{Training data: a data.frame.}
