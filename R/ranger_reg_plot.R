@@ -295,6 +295,11 @@ plot_reg_feature_selection <- function(x, y, rf_reg_model, metric="MAE", unit="u
 #' predicted_test_y<-predict(train_rf_model$rf.model, test_x)$predictions
 #' calc_rel_predicted(train_y, predicted_train_y=train_rf_model$predicted)
 #' calc_rel_predicted(train_y=train_y, predicted_train_y=train_rf_model$predicted,
+#'                    #train_SampleIDs=as.character(1:60),
+#'                    test_y=test_y, predicted_test_y=predicted_test_y,
+#'                    #test_SampleIDs=as.character(1:45),
+#'                    train_target_field="y",  test_target_field="test_y", outdir=NULL)
+#' calc_rel_predicted(train_y=train_y, predicted_train_y=train_rf_model$predicted,
 #'                    train_SampleIDs=as.character(1:60),
 #'                    test_y=test_y, predicted_test_y=predicted_test_y,
 #'                    test_SampleIDs=as.character(1:45),
@@ -312,10 +317,10 @@ calc_rel_predicted<-function(train_y, predicted_train_y, train_SampleIDs=NULL,
                                                    rel_predicted_y=train_relTrain,
                                                    fitted_predicted_y=train_fittedTrain)
   if(!is.null(train_SampleIDs)){
-    if(nrow(relTrain_data)==length(train_SampleIDs)){
-      train_relTrain_data<-data.frame(SampleIDs=train_SampleIDs, relTrain_data)
-    }else{
+    if(nrow(relTrain_data)!=length(train_SampleIDs)){
       stop("Please make sure that sample IDs match with y or predicted y in the train data.")
+    }else{
+      relTrain_data<-train_relTrain_data<-data.frame(SampleIDs=train_SampleIDs, relTrain_data)
     }
   }
   sink(paste(outdir, train_prefix,".Relative_",train_target_field,".results.xls",sep=""));cat("\t");
@@ -328,10 +333,10 @@ calc_rel_predicted<-function(train_y, predicted_train_y, train_SampleIDs=NULL,
                                      rel_predicted_y=test_relTrain,
                                      fitted_predicted_y=test_fitted)
     if(!is.null(test_SampleIDs)){
-      if(nrow(test_relTrain_data)==length(test_SampleIDs)){
-        test_relTrain_data<-data.frame(SampleIDs=test_SampleIDs, test_relTrain_data)
+      if(nrow(test_relTrain_data)!=length(test_SampleIDs)){
+        stop("Please make sure that sample IDs match with y or predicted y in the test data.")
         }else{
-          stop("Please make sure that sample IDs match with y or predicted y in the test data.")
+          test_relTrain_data<-data.frame(SampleIDs=test_SampleIDs, test_relTrain_data)
         }
     }
     relTrain_data<-rbind(train_relTrain_data, test_relTrain_data)
@@ -416,7 +421,10 @@ plot_rel_predicted <- function(relTrain_data, prefix="train", target_field="valu
 #' test_y<- 1:45
 #' train_rf_model<-rf.out.of.bag(train_x, train_y)
 #' predicted_test_y<-predict(train_rf_model$rf.model, test_x)$predictions
-#' relTrain_data<-calc_rel_predicted(train_y, train_rf_model$predicted, test_y, predicted_test_y)
+#' relTrain_data<-calc_rel_predicted(train_y, predicted_train_y=train_rf_model$predicted,
+#'                                   train_SampleIDs=NULL,
+#'                                   test_y, predicted_test_y,
+#'                                   test_SampleIDs=NULL)
 #' boxplot_rel_predicted_train_vs_test(relTrain_data)
 #' @author Shi Huang
 #' @export

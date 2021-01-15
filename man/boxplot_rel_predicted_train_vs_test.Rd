@@ -41,7 +41,8 @@ test_x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
 test_y<- 1:45
 train_rf_model<-rf.out.of.bag(train_x, train_y)
 predicted_test_y<-predict(train_rf_model$rf.model, test_x)$predictions
-relTrain_data<-calc_rel_predicted(train_y, train_rf_model$predicted, test_y, predicted_test_y)
+relTrain_data<-calc_rel_predicted(train_y, predicted_train_y=train_rf_model$predicted, train_SampleIDs=NULL,
+                                  test_y, predicted_test_y, test_SampleIDs=NULL)
 boxplot_rel_predicted_train_vs_test(relTrain_data)
 }
 \author{

@@ -1,6 +1,6 @@
 #' @importFrom stats model.matrix predict quantile sd
 #' @importFrom Matrix Matrix
-#' @importFrom ranger ranger
+#' @importFrom ranger ranger importance_pvalues
 #' @importFrom PRROC pr.curve roc.curve
 #' @importFrom ROCR prediction performance
 
@@ -56,10 +56,10 @@
   #require(Matrix)
   if(sparse){
     sparse_data <- Matrix(data.matrix(data), sparse = sparse)
-    rf.model <- ranger::ranger(dependent.variable.name="y", data=sparse_data, keep.inbag=TRUE, importance='permutation',
+    rf.model <- ranger(dependent.variable.name="y", data=sparse_data, keep.inbag=TRUE, importance='permutation',
                                classification=ifelse(is.factor(y), TRUE, FALSE), num.trees=ntree, verbose=verbose, probability = FALSE)
   }else{
-    rf.model<-ranger::ranger(y~., data=data, keep.inbag=TRUE, importance='permutation',
+    rf.model<-ranger(y~., data=data, keep.inbag=TRUE, importance='permutation',
                              classification=ifelse(is.factor(y), TRUE, FALSE), num.trees=ntree, verbose=verbose, probability = FALSE)
   }
   result <- list()
@@ -88,7 +88,7 @@
     result$importances <- rf.model$variable.importance
     result$importances[colSums(x)==0]<-NA
   }else{
-      result$importances <- ranger::importance_pvalues(rf.model, method = "altmann", formula = y ~., data=data) # if sparse_data, there will NOT pvalue output
+      result$importances <- importance_pvalues(rf.model, method = "altmann", formula = y ~., data=data) # if sparse_data, there will NOT pvalue output
   }
   result$params <- list(ntree=ntree)
   result$error.type <- "oob"
@@ -190,13 +190,13 @@ balanced.folds <- function(y, nfolds=3){
         foldix <- which(folds==fold)
         if(is.factor(y)) y_tr<-factor(result$y[-foldix]) else y_tr<-result$y[-foldix]
         data<-data.frame(y=y_tr, x[-foldix,])
-        require(Matrix)
+        #require(Matrix)
         if(sparse){
           sparse_data <- Matrix(data.matrix(data), sparse = TRUE)
-          result$rf.model[[fold]]<- model <- ranger::ranger(dependent.variable.name="y", data=sparse_data, classification=ifelse(is.factor(y_tr), TRUE, FALSE),
+          result$rf.model[[fold]]<- model <- ranger(dependent.variable.name="y", data=sparse_data, classification=ifelse(is.factor(y_tr), TRUE, FALSE),
                                                           keep.inbag=TRUE, importance='permutation', verbose=verbose, num.trees=ntree)
         }else{
-          result$rf.model[[fold]]<- model <- ranger::ranger(y~., data=data, keep.inbag=TRUE, importance='permutation',
+          result$rf.model[[fold]]<- model <- ranger(y~., data=data, keep.inbag=TRUE, importance='permutation',
                                                          classification=ifelse(is.factor(y_tr), TRUE, FALSE), num.trees=ntree, verbose=verbose)
         }
         newx <- x[foldix,]
@@ -237,7 +237,7 @@ balanced.folds <- function(y, nfolds=3){
     if(imp_pvalues==FALSE){
       result$importances[,fold] <- result$rf.model[[fold]]$variable.importance
     }else{
-      imp<-ranger::importance_pvalues(result$rf.model[[fold]], method = "altmann", formula = y ~., data=data)
+      imp<-importance_pvalues(result$rf.model[[fold]], method = "altmann", formula = y ~., data=data)
       result$importances[,fold] <- imp[, 1]
       result$importance_pvalues[,fold] <- imp[, 2]
     }
@@ -473,7 +473,7 @@ get.auprc<- function(predictor, y, positive_class){
 "get.mislabel.scores" <- function(y, y.prob){
   result <- matrix(0,nrow=length(y),ncol=3)
   # get matrices containing only p(other classes), and containing only p(class)
-  mm <- stats::model.matrix(~0 + y)
+  mm <- model.matrix(~0 + y)
   y.prob.other.max <- apply(y.prob * (1-mm),1,max)
   y.prob.alleged <- apply(y.prob * mm, 1, max)
   result <- cbind(y.prob.alleged, y.prob.other.max, y.prob.alleged - y.prob.other.max)
