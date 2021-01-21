@@ -265,10 +265,10 @@ plot_clf_feature_selection <- function(x, y, rf_clf_model, metric="AUROC", posit
                                         all_conf$overall[2], all_conf$byClass["F1"])
   top_n_perf<-data.frame(top_n_perf)
   breaks<-top_n_perf$n_features
-  p<-ggplot(top_n_perf, aes(x=.data$n_features, y={{metric}})) +
+  p<-ggplot(top_n_perf, aes(x=.data$n_features, y=get(metric))) +
     xlab("# of features used")+
     ylab(metric)+
-    scale_x_continuous(trans = "log", breaks=breaks)+
+    #scale_x_continuous(trans = "log", breaks=breaks)+
     geom_point() + geom_line()+ ylim(0.5, 1)+
     theme_bw()+
     theme(axis.line = element_line(color="black"),
