@@ -250,7 +250,8 @@ plot_clf_feature_selection <- function(x, y, rf_clf_model, metric="AUROC", posit
     x_n<-x[, idx]
     y_n<-y
     top_n_rf<-rf.out.of.bag(x_n, y_n, ntree=500) # it depends on the rf.out.of.bag defined before
-    top_n_AUC<-get.auroc(top_n_rf$probabilities[, positive_class], y_n, positive_class=positive_class)
+    #top_n_AUC<-get.auroc(top_n_rf$probabilities[, positive_class], y_n, positive_class=positive_class)
+    top_n_AUC<-plot_clf_ROC(y_n, top_n_rf)$auc
     top_n_conf<-caret::confusionMatrix(data=top_n_rf$predicted, top_n_rf$y, positive=positive_class)
     top_n_perf[i, 1]<-n_features[i]
     top_n_perf[i, 2]<-top_n_AUC
@@ -258,8 +259,8 @@ plot_clf_feature_selection <- function(x, y, rf_clf_model, metric="AUROC", posit
     top_n_perf[i, 4]<-top_n_conf$overall[2]# kappa conf$byClass["F1"]
     top_n_perf[i, 5]<-top_n_conf$byClass["F1"]
   }
-  all_AUC<-get.auroc(rf_clf_model$probabilities[, positive_class], y_n, positive_class=positive_class)
-  all_conf<-caret::confusionMatrix(data=rf_clf_model$predicted, top_n_rf$y, positive=positive_class)
+  all_AUC<-plot_clf_ROC(y, rf_clf_model)$auc
+  all_conf<-caret::confusionMatrix(data=rf_clf_model$predicted, rf_clf_model$y, positive=positive_class)
   top_n_perf[length(n_features)+1, ]<-c(max_n, all_AUC, all_conf$overall[1],
                                         all_conf$overall[2], all_conf$byClass["F1"])
   top_n_perf<-data.frame(top_n_perf)
@@ -267,7 +268,7 @@ plot_clf_feature_selection <- function(x, y, rf_clf_model, metric="AUROC", posit
   p<-ggplot(top_n_perf, aes(x=.data$n_features, y={{metric}})) +
     xlab("# of features used")+
     ylab(metric)+
-    scale_x_continuous(trans = "log",breaks=breaks)+
+    scale_x_continuous(trans = "log", breaks=breaks)+
     geom_point() + geom_line()+ ylim(0.5, 1)+
     theme_bw()+
     theme(axis.line = element_line(color="black"),
