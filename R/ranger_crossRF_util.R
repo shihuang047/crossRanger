@@ -115,7 +115,7 @@ rf_clf.by_datasets<-function(df, metadata, s_category, c_category, positive_clas
   # 1. sample size of all datasets
   sample_size<-as.numeric(table(factor(metadata[, s_category])))
   nCores <- parallel::detectCores()
-  doMC::registerDoMC(nCores)
+  doMC::registerDoMC(nCores-2)
   # comb function for parallelization using foreach
   comb <- function(x, ...) {
     lapply(seq_along(x),
@@ -202,7 +202,7 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=3,
   # sample size of all datasets
   sample_size<-as.numeric(table(metadata[, s_category]))
   nCores <- parallel::detectCores()
-  doMC::registerDoMC(nCores)
+  doMC::registerDoMC(nCores-2)
   # comb function for parallelization using foreach
   comb <- function(x, ...) {
     lapply(seq_along(x),
@@ -570,7 +570,7 @@ rf_clf.comps<-function(df, f, comp_group, verbose=FALSE, clr_transform=TRUE,
   all_other_groups<-levels(f)[which(levels(f)!=comp_group)]
   L<-length(all_other_groups)
   nCores <- parallel::detectCores()
-  doMC::registerDoMC(nCores)
+  doMC::registerDoMC(nCores-2)
   # comb function for parallelization using foreach
   comb <- function(x, ...) {
     lapply(seq_along(x),
