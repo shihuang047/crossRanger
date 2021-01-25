@@ -107,13 +107,13 @@ rf_clf.by_datasets<-function(df, metadata, s_category, c_category, positive_clas
                              rf_imp_pvalues=FALSE, clr_transform=TRUE, nfolds=3, verbose=FALSE, ntree=500,
                              p.adj.method = "BH", q_cutoff=0.05){
   ## TODO: check the class of inputs
-  y_list<-split(metadata[, c_category], metadata[, s_category])
-  x_list<-split(df, metadata[, s_category])
+  y_list<-split(factor(metadata[, c_category]), factor(metadata[, s_category]))
+  x_list<-split(df, factor(metadata[, s_category]))
   datasets<-levels(factor(metadata[, s_category]))
   L<-length(y_list)
   positive_class<-ifelse(is.na(positive_class), levels(factor(y_list[[1]]))[1], positive_class)
   # 1. sample size of all datasets
-  sample_size<-as.numeric(table(metadata[, s_category]))
+  sample_size<-as.numeric(table(factor(metadata[, s_category])))
   nCores <- parallel::detectCores()
   doMC::registerDoMC(nCores)
   # comb function for parallelization using foreach
