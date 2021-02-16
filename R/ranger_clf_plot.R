@@ -227,6 +227,9 @@ plot_clf_probabilities<-function(y, rf_clf_model, positive_class=NA, prefix="tra
 #' y<-factor(c(rep("A", 30), rep("C", 30)))
 #' rf_model<-rf.out.of.bag(x, y)
 #' plot_clf_feature_selection(x, y, rf_model, metric="AUROC", outdir=NULL)
+#' res<-replicate(10, plot_clf_feature_selection(x, y, rf_model, metric="AUROC", outdir=NULL))
+#' do.call(rbind, res["AUROC",])
+#' err.cv <- sapply(res, "[[", "AUROC")
 #' @author Shi Huang
 #' @export
 plot_clf_feature_selection <- function(x, y, rf_clf_model, metric="AUROC", positive_class=NA, outdir=NULL){
@@ -241,27 +244,31 @@ plot_clf_feature_selection <- function(x, y, rf_clf_model, metric="AUROC", posit
   n_total_features<-ncol(x)
   n_features<-c(2, 4, 8, 16, 32, 64, 128, 256, 512, 1024)
   n_features<-n_features[1:which.min(abs(n_features-n_total_features))]
-  top_n_perf<-matrix(NA, ncol=5, nrow=length(n_features)+1)
-  colnames(top_n_perf)<-c("n_features", "AUROC", "Accuracy", "Kappa", "F1")
+  top_n_perf<-matrix(NA, ncol=6, nrow=length(n_features)+1)
+  colnames(top_n_perf)<-c("n_features", "AUROC", "AUPRC", "Accuracy", "Kappa", "F1")
   rownames(top_n_perf)<-top_n_perf[,1]<-c(n_features, max_n)
   for(i in 1:length(n_features)){
     idx<-which(rf_imp_rank<=n_features[i])
     #top_n_features<-names(rf_imp_rank[idx])
     x_n<-x[, idx]
     y_n<-y
-    top_n_rf<-rf.out.of.bag(x_n, y_n, ntree=500) # it depends on the rf.out.of.bag defined before
+    top_n_rf<-rf.cross.validation(x_n, y_n, nfolds=5, ntree=500)
+    #top_n_rf<-rf.out.of.bag(x_n, y_n, ntree=500) # it depends on the rf.out.of.bag defined before
     #top_n_AUC<-get.auroc(top_n_rf$probabilities[, positive_class], y_n, positive_class=positive_class)
-    top_n_AUC<-plot_clf_ROC(y_n, top_n_rf)$auc
+    top_n_AUROC<-plot_clf_ROC(y_n, top_n_rf)$auc
+    top_n_AUPRC<-plot_clf_PRC(y_n, top_n_rf)$auc.integral
     top_n_conf<-caret::confusionMatrix(data=top_n_rf$predicted, top_n_rf$y, positive=positive_class)
     top_n_perf[i, 1]<-n_features[i]
-    top_n_perf[i, 2]<-top_n_AUC
-    top_n_perf[i, 3]<-top_n_conf$overall[1] # Accuracy
-    top_n_perf[i, 4]<-top_n_conf$overall[2]# kappa conf$byClass["F1"]
-    top_n_perf[i, 5]<-top_n_conf$byClass["F1"]
+    top_n_perf[i, 2]<-top_n_AUROC
+    top_n_perf[i, 3]<-top_n_AUPRC
+    top_n_perf[i, 4]<-top_n_conf$overall[1] # Accuracy
+    top_n_perf[i, 5]<-top_n_conf$overall[2]# kappa conf$byClass["F1"]
+    top_n_perf[i, 6]<-top_n_conf$byClass["F1"]
   }
-  all_AUC<-plot_clf_ROC(y, rf_clf_model)$auc
+  all_AUROC<-plot_clf_ROC(y, rf_clf_model)$auc
+  all_AUPRC<-plot_clf_PRC(y, rf_clf_model)$auc.integral
   all_conf<-caret::confusionMatrix(data=rf_clf_model$predicted, rf_clf_model$y, positive=positive_class)
-  top_n_perf[length(n_features)+1, ]<-c(max_n, all_AUC, all_conf$overall[1],
+  top_n_perf[length(n_features)+1, ]<-c(max_n, all_AUROC, all_AUPRC, all_conf$overall[1],
                                         all_conf$overall[2], all_conf$byClass["F1"])
   top_n_perf<-data.frame(top_n_perf)
   breaks<-top_n_perf$n_features
@@ -280,5 +287,7 @@ plot_clf_feature_selection <- function(x, y, rf_clf_model, metric="AUROC", posit
   }
   top_n_perf
 }
+
+
 
 

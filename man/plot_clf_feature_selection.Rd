@@ -41,6 +41,9 @@ x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
 y<-factor(c(rep("A", 30), rep("C", 30)))
 rf_model<-rf.out.of.bag(x, y)
 plot_clf_feature_selection(x, y, rf_model, metric="AUROC", outdir=NULL)
+res<-replicate(10, plot_clf_feature_selection(x, y, rf_model, metric="AUROC", outdir=NULL))
+do.call(rbind, res["AUROC",])
+err.cv <- sapply(res, "[[", "AUROC")
 }
 \author{
 Shi Huang
