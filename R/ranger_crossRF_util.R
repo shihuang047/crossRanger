@@ -132,8 +132,8 @@ rf_clf.by_datasets<-function(df, metadata, s_category, c_category, positive_clas
       oob<-rf.cross.validation(x, y, nfolds=nfolds, verbose=verbose, ntree=ntree, imp_pvalues = rf_imp_pvalues)
       rf_imps=rowMeans(oob$importances)
     }
-    if(nlevels(y)==2){rf_AUROC<-get.auroc(oob$probabilities[, positive_class], y, positive_class) }else{ rf_AUROC <- NA }
-    if(nlevels(y)==2){rf_AUPRC<-get.auprc(oob$probabilities[, positive_class], y, positive_class) }else{ rf_AUPRC <- NA }
+    rf_AUROC<-get.auroc(oob$probabilities[, positive_class], y, positive_class)
+    rf_AUPRC<-get.auprc(oob$probabilities[, positive_class], y, positive_class)
     # 3. # of significantly differential abundant features between health and disease
     out<-BetweenGroup.test(x, y, clr_transform=clr_transform, positive_class=positive_class, p.adj.method = p.adj.method, q_cutoff=q_cutoff)
     feature_imps<-data.frame(feature=rownames(out), dataset=rep(datasets[i], ncol(x)),

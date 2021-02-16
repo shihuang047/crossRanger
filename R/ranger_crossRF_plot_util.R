@@ -80,8 +80,8 @@ plot_clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferr
   rf_AUPRC<-clf_res_list$rf_AUPRC
   feature_imps_list<-clf_res_list$feature_imps_list
   # Statistics summary of biomarkers discovery in multiple datasets
-  num_sig_p.adj<-sapply(feature_imps_list, function(x) sum(x[, "non.param.test_p.adj"] < q_cutoff))
-  num_sig_p<-sapply(feature_imps_list, function(x) sum(x[, "non.param.test_p"]< p_cutoff))
+  num_sig_p.adj<-sapply(feature_imps_list, function(x) sum(x[, "non.param.test_p.adj"] < q_cutoff, na.rm=TRUE))
+  num_sig_p<-sapply(feature_imps_list, function(x) sum(x[, "non.param.test_p"]< p_cutoff, na.rm=TRUE))
   num_enriched<-sapply(feature_imps_list, function(x) length(grep("enriched", x[,"Enr"])))
   num_depleted<-sapply(feature_imps_list, function(x) length(grep("depleted", x[,"Enr"])))
   # ggplot
@@ -116,7 +116,7 @@ plot_clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferr
     theme_bw()+
     theme(axis.title.y=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank())
   #require('gridExtra')
-  p1<-arrangeGrob(p_a, p_b, p_c, p_d, ncol = 4, nrow = 1, widths = c(4, 2, 2, 2))
+  p1<-gridExtra::arrangeGrob(p_a, p_b, p_c, p_d, ncol = 4, nrow = 1, widths = c(4, 2, 2, 2))
   ggsave(filename=paste(outdir,"Datasets_AUROC.ggplot.pdf",sep=""),p1, width=9, height=3+nrow(summ)*0.2)
   # boxplot indicating p and p.adj values of sig. features
   feature_res<-plyr::ldply(feature_imps_list)
