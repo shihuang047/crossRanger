@@ -27,7 +27,6 @@
 #'                      age=c(1:30, 2:31)
 #'                      )
 #' reg_res<-rf_reg.by_datasets(df, metadata, s_category='f_d', c_category='age')
-#' corr_datasets_by_imps(reg_res$feature_imps_list)
 #' corr_datasets_by_imps(reg_res$feature_imps_list, plot=TRUE)
 #' clf_res<-rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c')
 #' corr_datasets_by_imps(clf_res$feature_imps_list, plot=TRUE)
@@ -81,8 +80,8 @@ plot_clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferr
   rf_AUPRC<-clf_res_list$rf_AUPRC
   feature_imps_list<-clf_res_list$feature_imps_list
   # Statistics summary of biomarkers discovery in multiple datasets
-  num_sig_p.adj<-sapply(feature_imps_list, function(x) sum(x[,"Wilcoxon.test_p.adj"] < q_cutoff))
-  num_sig_p<-sapply(feature_imps_list, function(x) sum(x[,"Wilcoxon.test_p"]< p_cutoff))
+  num_sig_p.adj<-sapply(feature_imps_list, function(x) sum(x[, "non.param.test_p.adj"] < q_cutoff))
+  num_sig_p<-sapply(feature_imps_list, function(x) sum(x[, "non.param.test_p"]< p_cutoff))
   num_enriched<-sapply(feature_imps_list, function(x) length(grep("enriched", x[,"Enr"])))
   num_depleted<-sapply(feature_imps_list, function(x) length(grep("depleted", x[,"Enr"])))
   # ggplot
@@ -121,7 +120,7 @@ plot_clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferr
   ggsave(filename=paste(outdir,"Datasets_AUROC.ggplot.pdf",sep=""),p1, width=9, height=3+nrow(summ)*0.2)
   # boxplot indicating p and p.adj values of sig. features
   feature_res<-plyr::ldply(feature_imps_list)
-  feature_res_m<-reshape2::melt(feature_res[, c("feature","dataset", "Enr", "AUROC", "AUPRC","rf_imps", "Wilcoxon.test_p", "Wilcoxon.test_p.adj")])
+  feature_res_m<-reshape2::melt(feature_res[, c("feature","dataset", "Enr", "AUROC", "AUPRC","rf_imps", "non.param.test_p", "non.param.test_p.adj")])
   # customised colors for Enr's 3 factors
   gg_color_hue <- function(n) {
     hues = seq(15, 375, length = n + 1)

@@ -30,7 +30,6 @@ metadata<-data.frame(f_s=factor(c(rep("A", 15), rep("B", 15), rep("A", 15), rep(
                      age=c(1:30, 2:31)
                      )
 reg_res<-rf_reg.by_datasets(df, metadata, s_category='f_d', c_category='age')
-corr_datasets_by_imps(reg_res$feature_imps_list)
 corr_datasets_by_imps(reg_res$feature_imps_list, plot=TRUE)
 clf_res<-rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c')
 corr_datasets_by_imps(clf_res$feature_imps_list, plot=TRUE)

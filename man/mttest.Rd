@@ -20,6 +20,7 @@ Perform the univariate test for all features in the compositional microbiome dat
 }
 \examples{
 y <-factor(c(rep("A", 30), rep("B", 30)))
+y <-factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
 x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
             t(rmultinom(8, 75, c(.201,.4,.12,.18,.099))),
             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),

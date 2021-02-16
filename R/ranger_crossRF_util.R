@@ -594,11 +594,11 @@ rf_clf.comps<-function(df, f, comp_group, verbose=FALSE, clr_transform=TRUE,
     # 3. # of significantly differential abundant features between health and disease
     out<-BetweenGroup.test(sub_df, factor(sub_f), clr_transform=clr_transform, q_cutoff=q_cutoff,
                            positive_class=comp_group, p.adj.method = p.adj.method)
-    wilcox<-data.frame(feature=rownames(out),
+    stats_out<-data.frame(feature=rownames(out),
                        dataset=rep(dataset, ncol(sub_df)), rf_imps=oob$importances,
                        out)
     list(x=sub_df, y=sub_f, sample_size=sample_size, datasets=dataset,
-         oob=oob, rf_AUROC=rf_AUROC, rf_AUPRC=rf_AUPRC, wilcox=wilcox)
+         oob=oob, rf_AUROC=rf_AUROC, rf_AUPRC=rf_AUPRC, stats_out=stats_out)
   }
   names(oper[[1]])<-names(oper[[2]])<-names(oper[[5]])<-unlist(oper[[4]])
   result<-list()
