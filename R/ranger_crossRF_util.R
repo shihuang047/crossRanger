@@ -135,7 +135,7 @@ rf_clf.by_datasets<-function(df, metadata, s_category, c_category, positive_clas
     rf_AUROC<-get.auroc(oob$probabilities[, positive_class], y, positive_class)
     rf_AUPRC<-get.auprc(oob$probabilities[, positive_class], y, positive_class)
     # 3. # of significantly differential abundant features between health and disease
-    out<-BetweenGroup.test(x, y, clr_transform=clr_transform, positive_class=positive_class, p.adj.method = p.adj.method, q_cutoff=q_cutoff)
+    out<-crossRanger::BetweenGroup.test(x, y, clr_transform=clr_transform, positive_class=positive_class, p.adj.method = p.adj.method, q_cutoff=q_cutoff)
     feature_imps<-data.frame(feature=rownames(out), dataset=rep(datasets[i], ncol(x)),
                              rf_imps=rf_imps, out)
     list(oob=oob, rf_AUROC=rf_AUROC, rf_AUPRC=rf_AUPRC, feature_imps=feature_imps)

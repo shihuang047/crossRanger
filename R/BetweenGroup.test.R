@@ -117,13 +117,15 @@ mttest<-function(x, y, p.adj.method="bonferroni", paired=FALSE){
            function(i) c(x[[i]], lapply(list(...), function(y) y[[i]])))
   }
   oper<-foreach::foreach(i=1:ncol(x), .combine='comb', .multicombine=TRUE, .init=list(c(), c())) %dopar% {
-    if(stats::var(x[, i])==0){test_out1<-test_out2<-1}
-    if(nlevels(y)==2){
-      test_out1<-t.test(x[,i]~y, paired=paired)$p.value
-      test_out2<-wilcox.test(x[,i]~y, paired=paired, conf.int=TRUE, exact=FALSE, correct=FALSE)$p.value
+    if(stats::var(x[, i])==0){test_out1<-test_out2<-1
     }else{
-      test_out1<-oneway.test(x[,i]~y, var.equal=FALSE)$p.value
-      test_out2<-kruskal.test(x[,i]~y)$p.value
+      if(nlevels(y)==2){
+        test_out1<-t.test(x[,i]~y, paired=paired)$p.value
+        test_out2<-wilcox.test(x[,i]~y, paired=paired, conf.int=TRUE, exact=FALSE, correct=FALSE)$p.value
+      }else{
+        test_out1<-oneway.test(x[,i]~y, var.equal=FALSE)$p.value
+        test_out2<-kruskal.test(x[,i]~y)$p.value
+      }
     }
     out<-c(test_out1, test_out2)
   }
