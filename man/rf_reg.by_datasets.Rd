@@ -9,7 +9,7 @@ rf_reg.by_datasets(
   metadata,
   s_category,
   c_category,
-  nfolds = 3,
+  nfolds = 5,
   rf_imp_pvalues = FALSE,
   verbose = FALSE,
   ntree = 500

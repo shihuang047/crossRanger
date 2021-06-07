@@ -1,9 +1,9 @@
 {
-    "path" : "~/crossRanger",
-    "sortOrder" : [
+    "path": "~/crossRanger",
+    "sortOrder": [
         {
-            "ascending" : true,
-            "columnIndex" : 2
+            "ascending": true,
+            "columnIndex": 2
         }
     ]
 }

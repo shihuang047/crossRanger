@@ -1,5 +1,6 @@
 #' @importFrom doMC registerDoMC
-#' @importFrom foreach foreach %dopar%
+#' @importFrom foreach foreach
+#' @importFrom foreach %dopar%
 #' @importFrom parallel detectCores
 #' @importFrom caret confusionMatrix
 
@@ -135,7 +136,7 @@ rf_clf.by_datasets<-function(df, metadata, s_category, c_category, positive_clas
     rf_AUROC<-get.auroc(oob$probabilities[, positive_class], y, positive_class)
     rf_AUPRC<-get.auprc(oob$probabilities[, positive_class], y, positive_class)
     # 3. # of significantly differential abundant features between health and disease
-    out<-crossRanger::BetweenGroup.test(x, y, clr_transform=clr_transform, positive_class=positive_class, p.adj.method = p.adj.method, q_cutoff=q_cutoff)
+    out<-BetweenGroup.test(x, y, clr_transform=clr_transform, positive_class=positive_class, p.adj.method = p.adj.method, q_cutoff=q_cutoff)
     feature_imps<-data.frame(feature=rownames(out), dataset=rep(datasets[i], ncol(x)),
                              rf_imps=rf_imps, out)
     list(oob=oob, rf_AUROC=rf_AUROC, rf_AUPRC=rf_AUPRC, feature_imps=feature_imps)
@@ -186,14 +187,14 @@ rf_clf.by_datasets<-function(df, metadata, s_category, c_category, positive_clas
 #' reg_res
 #' @author Shi Huang
 #' @export
-rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=3,
+rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=5,
                              rf_imp_pvalues=FALSE, verbose=FALSE, ntree=500){
   ## TODO: check the class of inputs
   #as.numeric.factor <- function(y) {as.numeric(levels(y))[y]}
   y<-metadata[, c_category]
   if(is.factor(metadata[, c_category])) y<-as.numeric(as.character(y))
-  y_list<-split(y, metadata[, s_category])
-  x_list<-split(df, metadata[, s_category])
+  y_list<-split(y, factor(metadata[, s_category]))
+  x_list<-split(df, factor(metadata[, s_category]))
   # data check
   try(if(!all(unlist(lapply(y_list, length)) == unlist(lapply(x_list, nrow))))
     stop("# of samples in x and length of y should match to each other within all datasets!") )

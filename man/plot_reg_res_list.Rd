@@ -4,12 +4,14 @@
 \alias{plot_reg_res_list}
 \title{plot_reg_res_list}
 \usage{
-plot_reg_res_list(reg_res_list, outdir = NULL)
+plot_reg_res_list(reg_res_list, outdir = NULL, plot_height = NULL)
 }
 \arguments{
-\item{reg_res_list}{a list, the output of the function \code{rf_reg.by_datasets}.}
+\item{reg_res_list}{A list object, the output of the function \code{rf_reg.by_datasets}.}
 
 \item{outdir}{The output directory.}
+
+\item{plot_height}{The plot height.}
 }
 \description{
 Plot a summary of the performance of a list of classification models

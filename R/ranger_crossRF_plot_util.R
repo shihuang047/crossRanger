@@ -51,11 +51,12 @@ corr_datasets_by_imps<-function(feature_imps_list, ranked=TRUE, plot=FALSE){
 #' @title plot_clf_res_list
 #' @description Plot a summary of the performance of a list of classification models
 #' output from \code{rf_clf.by_datasets}.
-#' @param clf_res_list a list, the output of the function \code{rf_clf.by_datasets}.
+#' @param clf_res_list A list, the output of the function \code{rf_clf.by_datasets}.
 #' @param q_cutoff A number indicating the cutoff of q values after fdr correction.
 #' @param p.adj.method A string indicating the p-value correction method.
 #' @param p_cutoff A number indicating the cutoff of p values.
 #' @param outdir The output directory.
+#' @param plot_height The plot height.
 #' @seealso ranger rf_clf.by_datasets
 #' @examples
 #' df <- data.frame(rbind(t(rmultinom(7, 75, c(.21,.6,.12,.38,.099))),
@@ -73,7 +74,7 @@ corr_datasets_by_imps<-function(feature_imps_list, ranked=TRUE, plot=FALSE){
 #' plot_clf_res_list(clf_res_list)
 #' @author Shi Huang
 #' @export
-plot_clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir=NULL){
+plot_clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferroni", q_cutoff=0.05, outdir=NULL, plot_height=NULL){
   datasets<-clf_res_list$datasets
   sample_size<-clf_res_list$sample_size
   rf_AUROC<-clf_res_list$rf_AUROC
@@ -117,7 +118,8 @@ plot_clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferr
     theme(axis.title.y=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank())
   #require('gridExtra')
   p1<-gridExtra::arrangeGrob(p_a, p_b, p_c, p_d, ncol = 4, nrow = 1, widths = c(4, 2, 2, 2))
-  ggsave(filename=paste(outdir,"Datasets_AUROC.ggplot.pdf",sep=""),p1, width=9, height=3+nrow(summ)*0.2)
+  ggsave(filename=paste(outdir,"Datasets_AUROC.ggplot.pdf",sep=""),p1,
+         width=9, height=ifelse(is.null(plot_height), 3+nrow(summ)*0.2, plot_height))
   # boxplot indicating p and p.adj values of sig. features
   feature_res<-plyr::ldply(feature_imps_list)
   feature_res_m<-reshape2::melt(feature_res[, c("feature","dataset", "Enr", "AUROC", "AUPRC","rf_imps", "non.param.test_p", "non.param.test_p.adj")])
@@ -149,7 +151,8 @@ plot_clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferr
 #' @title plot_reg_res_list
 #' @description Plot a summary of the performance of a list of classification models
 #' output from \code{rf_clf.by_datasets}.
-#' @param reg_res_list a list, the output of the function \code{rf_reg.by_datasets}.
+#' @param reg_res_list A list object, the output of the function \code{rf_reg.by_datasets}.
+#' @param plot_height The plot height.
 #' @param outdir The output directory.
 #' @seealso ranger rf_reg.by_datasets
 #' @examples
@@ -168,7 +171,7 @@ plot_clf_res_list<-function(clf_res_list, p_cutoff=0.05, p.adj.method = "bonferr
 #' plot_reg_res_list(reg_res_list)
 #' @author Shi Huang
 #' @export
-plot_reg_res_list<-function(reg_res_list, outdir=NULL){
+plot_reg_res_list<-function(reg_res_list, outdir=NULL, plot_height=NULL){
   datasets<-reg_res_list$datasets
   sample_size<-reg_res_list$sample_size
   rf_MSE<-reg_res_list$rf_MSE
@@ -207,7 +210,8 @@ plot_reg_res_list<-function(reg_res_list, outdir=NULL){
     theme(axis.title.y=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank())
   #require('gridExtra')
   summ_plot<-arrangeGrob(p_a, p_b, p_c, p_d, ncol = 4, nrow = 1, widths = c(3, 2, 2, 2))
-  ggsave(filename=paste(outdir,"Datasets_perfs.ggplot.pdf",sep=""), summ_plot, width=9, height=3+nrow(summ)*0.2)
+  ggsave(filename=paste(outdir,"Datasets_perfs.ggplot.pdf",sep=""), summ_plot,
+         width=9, height=ifelse(is.null(plot_height), 3+nrow(summ)*0.2, plot_height))
   # boxplot indicating p and p.adj values of sig. features
   #feature_res<-plyr::ldply(feature_imps_list)
   feature_res<-do.call(cbind, feature_imps_list)

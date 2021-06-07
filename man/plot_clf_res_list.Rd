@@ -9,11 +9,12 @@ plot_clf_res_list(
   p_cutoff = 0.05,
   p.adj.method = "bonferroni",
   q_cutoff = 0.05,
-  outdir = NULL
+  outdir = NULL,
+  plot_height = NULL
 )
 }
 \arguments{
-\item{clf_res_list}{a list, the output of the function \code{rf_clf.by_datasets}.}
+\item{clf_res_list}{A list, the output of the function \code{rf_clf.by_datasets}.}
 
 \item{p_cutoff}{A number indicating the cutoff of p values.}
 
@@ -22,6 +23,8 @@ plot_clf_res_list(
 \item{q_cutoff}{A number indicating the cutoff of q values after fdr correction.}
 
 \item{outdir}{The output directory.}
+
+\item{plot_height}{The plot height.}
 }
 \description{
 Plot a summary of the performance of a list of classification models
