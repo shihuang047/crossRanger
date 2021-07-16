@@ -229,8 +229,9 @@ plot_clf_probabilities<-function(y, rf_clf_model, positive_class=NA, prefix="tra
 #' s<-factor(rep(c("B1", "B2", "B3", "B4"), 15))
 #' rf_model<-rf.cross.validation(x, y, nfolds=5)
 #' plot_clf_feature_selection(x, y, nfolds=5, rf_model, metric="AUROC", outdir=NULL)
-#' plot_clf_feature_selection(x, y, nfolds=s, rf_model, metric="AUROC", outdir=NULL)
-#' res<-replicate(10, plot_clf_feature_selection(x, y, nfolds=5, rf_model, metric="AUROC", outdir=NULL))
+#' summ<-plot_clf_feature_selection(x, y, nfolds=s, rf_model, metric="AUROC", outdir=NULL)
+#' res<-replicate(10, plot_clf_feature_selection(x, y,
+#' nfolds=5, rf_model, metric="AUROC", outdir=NULL))
 #' do.call(rbind, res["AUROC",])
 #' @author Shi Huang
 #' @export
@@ -249,14 +250,13 @@ plot_clf_feature_selection <- function(x, y, nfolds=5, rf_clf_model, metric="AUR
   top_n_perf<-matrix(NA, ncol=6, nrow=length(n_features)+1)
   colnames(top_n_perf)<-c("n_features", "AUROC", "AUPRC", "Accuracy", "Kappa", "F1")
   rownames(top_n_perf)<-top_n_perf[,1]<-c(n_features, max_n)
+  top_n_rf_list <-list()
   for(i in 1:length(n_features)){
     idx<-which(rf_imp_rank<=n_features[i])
     #top_n_features<-names(rf_imp_rank[idx])
     x_n<-x[, idx]
     y_n<-y
-    top_n_rf<-rf.cross.validation(x_n, y_n, nfolds=nfolds, ntree=500)
-    #top_n_rf<-rf.out.of.bag(x_n, y_n, ntree=500) # it depends on the rf.out.of.bag defined before
-    #top_n_AUC<-get.auroc(top_n_rf$probabilities[, positive_class], y_n, positive_class=positive_class)
+    top_n_rf_list[[i]] <- top_n_rf <- rf.cross.validation(x_n, y_n, nfolds=nfolds, ntree=500)
     top_n_AUROC<-plot_clf_ROC(y_n, top_n_rf)$auc
     top_n_AUPRC<-plot_clf_PRC(y_n, top_n_rf)$auc.integral
     top_n_conf<-caret::confusionMatrix(data=top_n_rf$predicted, top_n_rf$y, positive=positive_class)
@@ -287,7 +287,10 @@ plot_clf_feature_selection <- function(x, y, nfolds=5, rf_clf_model, metric="AUR
   if(!is.null(outdir)){
   ggsave(filename=paste(outdir,"train.",metric,"_VS_top_ranking_features.scatterplot.pdf",sep=""), plot=p, width=5, height=4)
   }
-  top_n_perf
+  res <- list()
+  res$top_n_perf <- top_n_perf
+  res$top_n_rf <-top_n_rf_list
+  res
 }
 
 
