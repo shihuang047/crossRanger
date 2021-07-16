@@ -19,7 +19,8 @@ rf.cross.validation(
 
 \item{y}{A response vector. If a factor, classification is assumed, otherwise regression is assumed.}
 
-\item{nfolds}{The number of folds in the cross validation. If nfolds > length(y) or nfolds==-1, uses leave-one-out cross-validation.}
+\item{nfolds}{The number of folds in the cross validation. If nfolds > length(y)
+or nfolds==-1, uses leave-one-out cross-validation. If nfolds was a factor, it means customized folds (e.g., leave-one-group-out cv) were set for CV.}
 
 \item{ntree}{The number of trees.}
 
@@ -43,14 +44,18 @@ x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
-y<-factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
+s<-factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
+y<-factor(rep(c("Y", "N"), 30))
 y0<-factor(c(rep("A", 10), rep("B", 30), rep("C", 5), rep("D", 15)))
 system.time(rf.cross.validation(x, y, imp_pvalues=FALSE))
 system.time(rf.cross.validation(x, y, imp_pvalues=TRUE))
 rf.cross.validation(x, y0, imp_pvalues=FALSE)
-y<- 1:60
-rf.cross.validation(x, y, nfolds=5, imp_pvalues=FALSE)
-rf.cross.validation(x, y, nfolds=5, imp_pvalues=TRUE)
+y_n<- 1:60
+rf.cross.validation(x, y_n, nfolds=5, imp_pvalues=FALSE)
+rf.cross.validation(x, y_n, nfolds=5, imp_pvalues=TRUE)
+# when nfolds is a factor, it actually run a leave-one-group-out cv
+rf.cross.validation(x, y, nfolds=s, imp_pvalues=TRUE)
+rf.cross.validation(x, y_n, nfolds=s, imp_pvalues=FALSE)
 }
 \seealso{
 ranger

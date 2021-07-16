@@ -211,6 +211,7 @@ plot_clf_probabilities<-function(y, rf_clf_model, positive_class=NA, prefix="tra
 #' @description Plot the classification performance against the gradually reduced number of features used in the modeling.
 #' @param x The data frame or data matrix for model training.
 #' @param y A factor related to the responsive vector for training data.
+#' @param nfolds The number of folds in the cross-validation for each feature set.
 #' @param rf_clf_model The rf classification model from \code{rf.out.of.bag}
 #' @param positive_class A class of the y.
 #' @param metric The classification performance metric applied.
@@ -225,14 +226,15 @@ plot_clf_probabilities<-function(y, rf_clf_model, positive_class=NA, prefix="tra
 #'             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
 #'             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
 #' y<-factor(c(rep("A", 30), rep("C", 30)))
-#' rf_model<-rf.out.of.bag(x, y)
-#' plot_clf_feature_selection(x, y, rf_model, metric="AUROC", outdir=NULL)
-#' res<-replicate(10, plot_clf_feature_selection(x, y, rf_model, metric="AUROC", outdir=NULL))
+#' s<-factor(rep(c("B1", "B2", "B3", "B4"), 15))
+#' rf_model<-rf.cross.validation(x, y, nfolds=5)
+#' plot_clf_feature_selection(x, y, nfolds=5, rf_model, metric="AUROC", outdir=NULL)
+#' plot_clf_feature_selection(x, y, nfolds=s, rf_model, metric="AUROC", outdir=NULL)
+#' res<-replicate(10, plot_clf_feature_selection(x, y, nfolds=5, rf_model, metric="AUROC", outdir=NULL))
 #' do.call(rbind, res["AUROC",])
-#' err.cv <- sapply(res, "[[", "AUROC")
 #' @author Shi Huang
 #' @export
-plot_clf_feature_selection <- function(x, y, rf_clf_model, metric="AUROC", positive_class=NA, outdir=NULL){
+plot_clf_feature_selection <- function(x, y, nfolds=5, rf_clf_model, metric="AUROC", positive_class=NA, outdir=NULL){
   if(class(rf_clf_model)!="rf.out.of.bag" & class(rf_clf_model)!="rf.cross.validation")stop("The rf_clf_model is not rf.out.of.bag/rf.cross.validation.")
   positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
   if(rf_clf_model$error.type=="oob"){
@@ -252,7 +254,7 @@ plot_clf_feature_selection <- function(x, y, rf_clf_model, metric="AUROC", posit
     #top_n_features<-names(rf_imp_rank[idx])
     x_n<-x[, idx]
     y_n<-y
-    top_n_rf<-rf.cross.validation(x_n, y_n, nfolds=5, ntree=500)
+    top_n_rf<-rf.cross.validation(x_n, y_n, nfolds=nfolds, ntree=500)
     #top_n_rf<-rf.out.of.bag(x_n, y_n, ntree=500) # it depends on the rf.out.of.bag defined before
     #top_n_AUC<-get.auroc(top_n_rf$probabilities[, positive_class], y_n, positive_class=positive_class)
     top_n_AUROC<-plot_clf_ROC(y_n, top_n_rf)$auc

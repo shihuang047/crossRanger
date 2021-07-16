@@ -141,7 +141,8 @@ balanced.folds <- function(y, nfolds=3){
 #' @param x Training data: data.matrix or data.frame.
 #' @param y A response vector. If a factor, classification is assumed, otherwise regression is assumed.
 #' @param ntree The number of trees.
-#' @param nfolds The number of folds in the cross validation. If nfolds > length(y) or nfolds==-1, uses leave-one-out cross-validation.
+#' @param nfolds The number of folds in the cross validation. If nfolds > length(y)
+#' or nfolds==-1, uses leave-one-out cross-validation. If nfolds was a factor, it means customized folds (e.g., leave-one-group-out cv) were set for CV.
 #' @param sparse A boolean value indicates if the input matrix transformed into sparse matrix for rf modeling.
 #' @param verbose A boolean value indicates if showing computation status and estimated runtime.
 #' @param imp_pvalues If compute both importance score and pvalue for each feature.
@@ -155,85 +156,95 @@ balanced.folds <- function(y, nfolds=3){
 #'             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
 #'             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
 #'             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
-#' y<-factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
+#' s<-factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15)))
+#' y<-factor(rep(c("Y", "N"), 30))
 #' y0<-factor(c(rep("A", 10), rep("B", 30), rep("C", 5), rep("D", 15)))
 #' system.time(rf.cross.validation(x, y, imp_pvalues=FALSE))
 #' system.time(rf.cross.validation(x, y, imp_pvalues=TRUE))
 #' rf.cross.validation(x, y0, imp_pvalues=FALSE)
-#' y<- 1:60
-#' rf.cross.validation(x, y, nfolds=5, imp_pvalues=FALSE)
-#' rf.cross.validation(x, y, nfolds=5, imp_pvalues=TRUE)
+#' y_n<- 1:60
+#' rf.cross.validation(x, y_n, nfolds=5, imp_pvalues=FALSE)
+#' rf.cross.validation(x, y_n, nfolds=5, imp_pvalues=TRUE)
+#' # when nfolds is a factor, it actually run a leave-one-group-out cv
+#' rf.cross.validation(x, y, nfolds=s, imp_pvalues=TRUE)
+#' rf.cross.validation(x, y_n, nfolds=s, imp_pvalues=FALSE)
 #' @author Shi Huang
 #' @export
 "rf.cross.validation" <- function(x, y, nfolds=3, ntree=500, verbose=FALSE, sparse = FALSE, imp_pvalues=FALSE){
+  if(is.factor(nfolds)){
+    folds = factor(nfolds) # it means the customized folds were set
+    nfolds = nlevels(nfolds) # how many folds in this customized vector
+  }else{
     if(nfolds==-1) nfolds <- length(y)
     folds <- balanced.folds(y, nfolds=nfolds)
-    result <- list()
-    result$rf.model<-list()
-    if(is.factor(y)){
-      result$y <- as.factor(y)
-      result$predicted <- y
-      result$probabilities <- matrix(0, nrow=length(result$y), ncol=length(levels(result$y)))
-      rownames(result$probabilities) <- rownames(x)
-      colnames(result$probabilities) <- levels(result$y)
-      result$confusion.matrix<-t(sapply(levels(y), function(level) table(y[y==level])))
-      result$errs <- numeric(length(unique(folds)))
-    }else{
-      result$y <- y
-      result$predicted <- y
-    }
+  }
+  result <- list()
+  result$rf.model<-list()
+  if(is.factor(y)){
+    result$y <- as.factor(y)
+    result$predicted <- y
+    result$probabilities <- matrix(0, nrow=length(result$y), ncol=length(levels(result$y)))
+    rownames(result$probabilities) <- rownames(x)
+    colnames(result$probabilities) <- levels(result$y)
+    result$confusion.matrix<-t(sapply(levels(y), function(level) table(y[y==level])))
+    result$errs <- numeric(length(unique(folds))); names(result$errs) = sort(unique(folds))
+  }else{
+    result$y <- y
+    result$predicted <- y
+  }
 
-    if(imp_pvalues==TRUE){ result$importance_pvalues <- matrix(0, nrow=ncol(x), ncol=nfolds) }
-    # K-fold cross-validation
-    for(fold in sort(unique(folds))){
-        cat("The # of folds: ", fold, "\n") # if(verbose)
-        foldix <- which(folds==fold)
-        if(is.factor(y)) y_tr<-factor(result$y[-foldix]) else y_tr<-result$y[-foldix]
-        data<-data.frame(y=y_tr, x[-foldix,])
-        #require(Matrix)
-        if(sparse){
-          sparse_data <- Matrix(data.matrix(data), sparse = TRUE)
-          result$rf.model[[fold]]<- model <- ranger(dependent.variable.name="y", data=sparse_data, classification=ifelse(is.factor(y_tr), TRUE, FALSE),
-                                                          keep.inbag=TRUE, importance='permutation', verbose=verbose, num.trees=ntree)
-        }else{
-          result$rf.model[[fold]]<- model <- ranger(y~., data=data, keep.inbag=TRUE, importance='permutation',
-                                                         classification=ifelse(is.factor(y_tr), TRUE, FALSE), num.trees=ntree, verbose=verbose)
-        }
-        newx <- x[foldix,]
-        if(length(foldix)==1) newx <- matrix(newx, nrow=1)
-        predicted_foldix<-predict(model, newx)$predictions
-        if(is.factor(y)){
-          if(sparse){
-            y_numeric<-as.factor(sparse_data[,'y'])
-            predicted_foldix <- factor(predicted_foldix, levels=levels(y_numeric))
-            levels(predicted_foldix)=levels(y)
-          }else{
-            predicted_foldix <- factor(predicted_foldix, levels=levels(y))
-          }
-          result$predicted[foldix] <- predicted_foldix
-          probs <- get.predict.probability.from.forest(model, newx); colnames(probs)<-levels(result$y)
-          result$probabilities[foldix, colnames(probs)] <- probs
-          result$errs[fold] <- mean(result$predicted[foldix] != result$y[foldix])
-          result$confusion.matrix <- t(sapply(levels(y), function(level) table(result$predicted[y==level])))
-          cat("Error rate: ", result$errs[fold], "\n")
-        }else{
-          result$predicted[foldix] <- predicted_foldix
-          reg_perf<-get.reg.predict.performance(model, newx, newy=result$y[foldix])
-          result$MSE[fold] <- reg_perf$MSE
-          result$RMSE[fold] <- reg_perf$RMSE
-          result$nRMSE[fold] <- reg_perf$nRMSE
-          result$MAE[fold] <- reg_perf$MAE
-          result$MAPE[fold] <- reg_perf$MAPE
-          result$MASE[fold] <- reg_perf$MASE
-          result$R_squared[fold] <- reg_perf$R_squared
-          result$Adj_R_squared[fold] <- reg_perf$Adj_R_squared
-          cat("Mean squared residuals: ", reg_perf$MSE, "\n")
-          cat("Mean absolute error: ", reg_perf$MAE, "\n")
-          cat("pseudo R-squared (%explained variance): ", reg_perf$R_squared, "\n")
-        }
+  if(imp_pvalues==TRUE){ result$importance_pvalues <- matrix(0, nrow=ncol(x), ncol=nfolds) }
+  # K-fold cross-validation
+  for(fold in sort(unique(folds))){
+    cat("The # of folds: ", fold, "\n") # if(verbose)
+    foldix <- which(folds==fold)
+    if(is.factor(y)) y_tr<-factor(result$y[-foldix]) else y_tr<-result$y[-foldix]
+    data<-data.frame(y=y_tr, x[-foldix,])
+    require(Matrix)
+    if(sparse){
+      sparse_data <- Matrix(data.matrix(data), sparse = TRUE)
+      result$rf.model[[fold]]<- model <- ranger(dependent.variable.name="y", data=sparse_data, classification=ifelse(is.factor(y_tr), TRUE, FALSE),
+                                                keep.inbag=TRUE, importance='permutation', verbose=verbose, num.trees=ntree)
+    }else{
+      result$rf.model[[fold]]<- model <- ranger(y~., data=data, keep.inbag=TRUE, importance='permutation',
+                                                classification=ifelse(is.factor(y_tr), TRUE, FALSE), num.trees=ntree, verbose=verbose)
     }
-    result$importances <- matrix(0, nrow=ncol(x), ncol=nfolds)
-    for(fold in sort(unique(folds))){
+    newx <- x[foldix,]
+    if(length(foldix)==1) newx <- matrix(newx, nrow=1)
+    predicted_foldix<-predict(model, newx)$predictions
+    if(is.factor(y)){
+      if(sparse){
+        y_numeric<-as.factor(sparse_data[,'y'])
+        predicted_foldix <- factor(predicted_foldix, levels=levels(y_numeric))
+        levels(predicted_foldix)=levels(y)
+      }else{
+        predicted_foldix <- factor(predicted_foldix, levels=levels(y))
+      }
+      result$predicted[foldix] <- predicted_foldix
+      probs <- get.predict.probability.from.forest(model, newx); colnames(probs)<-levels(result$y)
+      result$probabilities[foldix, colnames(probs)] <- probs
+      result$errs[fold] <- mean(result$predicted[foldix] != result$y[foldix])
+      result$confusion.matrix <- t(sapply(levels(y), function(level) table(result$predicted[y==level])))
+      cat("Error rate: ", result$errs[fold], "\n")
+    }else{
+      result$predicted[foldix] <- predicted_foldix
+      reg_perf<-get.reg.predict.performance(model, newx, newy=result$y[foldix])
+      result$MSE[fold] <- reg_perf$MSE
+      result$RMSE[fold] <- reg_perf$RMSE
+      result$nRMSE[fold] <- reg_perf$nRMSE
+      result$MAE[fold] <- reg_perf$MAE
+      result$MAPE[fold] <- reg_perf$MAPE
+      result$MASE[fold] <- reg_perf$MASE
+      result$R_squared[fold] <- reg_perf$R_squared
+      result$Adj_R_squared[fold] <- reg_perf$Adj_R_squared
+      cat("Mean squared residuals: ", reg_perf$MSE, "\n")
+      cat("Mean absolute error: ", reg_perf$MAE, "\n")
+      cat("pseudo R-squared (%explained variance): ", reg_perf$R_squared, "\n")
+    }
+  }
+  result$importances <- matrix(0, nrow=ncol(x), ncol=nfolds)
+  colnames(result$importances) <- sort(unique(folds))
+  for(fold in sort(unique(folds))){
     if(imp_pvalues==FALSE){
       result$importances[,fold] <- result$rf.model[[fold]]$variable.importance
     }else{
@@ -241,13 +252,14 @@ balanced.folds <- function(y, nfolds=3){
       result$importances[,fold] <- imp[, 1]
       result$importance_pvalues[,fold] <- imp[, 2]
     }
-    }
-    result$params <- list(ntree=ntree, nfolds=nfolds)
-    result$error.type <- "cv"
-    result$nfolds <- nfolds
-    class(result) <- "rf.cross.validation"
-    return(result)
+  }
+  result$params <- list(ntree=ntree, nfolds=nfolds)
+  result$error.type <- "cv"
+  result$nfolds <- nfolds
+  class(result) <- "rf.cross.validation"
+  return(result)
 }
+
 
 #' @title get.oob.probability.from.forest
 #' @description Get probability of each class using only out-of-bag predictions from RF

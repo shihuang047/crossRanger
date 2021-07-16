@@ -202,8 +202,16 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=5,
   L<-length(y_list)
   # sample size of all datasets
   sample_size<-as.numeric(table(metadata[, s_category]))
-  nCores <- parallel::detectCores()
-  doMC::registerDoMC(nCores-2)
+  # check the available cores for parallel computation
+  chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
+  if (nzchar(chk) && chk == "TRUE") {
+    # use 2 cores in CRAN
+    nCores <- 2L
+  } else {
+    # use all cores in devtools::test()
+    nCores <- parallel::detectCores()
+  }
+  doMC::registerDoMC(nCores)
   # comb function for parallelization using foreach
   comb <- function(x, ...) {
     lapply(seq_along(x),
@@ -312,8 +320,6 @@ rf_clf.cross_appl<-function(rf_model_list, x_list, y_list, positive_class=NA){
     y<-y_list[[i]]
     x<-x_list[[i]]
     try(if(nlevels(y)==1) stop("Less than one level in the subgroup for classification"))
-    #rf_model<-randomForest(x, y, ntree=5000, importance=T)
-    #oob<-rf.out.of.bag(x, y, nfolds=nfolds, verbose=verbose, ntree=ntree)
     oob<-rf_model_list[[i]]
     #---
     #  RF Training accuracy

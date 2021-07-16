@@ -7,6 +7,7 @@
 plot_clf_feature_selection(
   x,
   y,
+  nfolds = 5,
   rf_clf_model,
   metric = "AUROC",
   positive_class = NA,
@@ -17,6 +18,8 @@ plot_clf_feature_selection(
 \item{x}{The data frame or data matrix for model training.}
 
 \item{y}{A factor related to the responsive vector for training data.}
+
+\item{nfolds}{The number of folds in the cross-validation for each feature set.}
 
 \item{rf_clf_model}{The rf classification model from \code{rf.out.of.bag}}
 
@@ -39,11 +42,12 @@ x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
 y<-factor(c(rep("A", 30), rep("C", 30)))
-rf_model<-rf.out.of.bag(x, y)
-plot_clf_feature_selection(x, y, rf_model, metric="AUROC", outdir=NULL)
-res<-replicate(10, plot_clf_feature_selection(x, y, rf_model, metric="AUROC", outdir=NULL))
+s<-factor(rep(c("B1", "B2", "B3", "B4"), 15))
+rf_model<-rf.cross.validation(x, y, nfolds=5)
+plot_clf_feature_selection(x, y, nfolds=5, rf_model, metric="AUROC", outdir=NULL)
+plot_clf_feature_selection(x, y, nfolds=s, rf_model, metric="AUROC", outdir=NULL)
+res<-replicate(10, plot_clf_feature_selection(x, y, nfolds=5, rf_model, metric="AUROC", outdir=NULL))
 do.call(rbind, res["AUROC",])
-err.cv <- sapply(res, "[[", "AUROC")
 }
 \author{
 Shi Huang
