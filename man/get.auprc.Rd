@@ -31,11 +31,15 @@ of 0.40 on this class is bad.
 }
 \examples{
 y<-factor(c(rep("A", 10), rep("B", 50)))
+y1<-factor(c(rep("A", 18), rep("B", 20), rep("C", 22)))
+y0<-factor(rep("A", 60))
 pred <- c(runif(10, 0.4, 0.9), runif(50, 0, 0.6))
 prob <-data.frame(A=pred, B=1-pred)
 positive_class="A"
 get.auprc(predictor=prob[, positive_class], y, positive_class="A")
 get.auprc(predictor=prob[, positive_class], y, positive_class="B")
+get.auprc(predictor=prob[, positive_class], y0, positive_class="A")
+get.auprc(predictor=prob[, positive_class], y1, positive_class="A")
 }
 \author{
 Shi Huang

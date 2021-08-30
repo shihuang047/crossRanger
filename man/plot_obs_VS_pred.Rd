@@ -10,6 +10,7 @@ plot_obs_VS_pred(
   SampleIDs = NULL,
   prefix = "train",
   target_field = "value",
+  metric = "MAE",
   span = 1,
   outdir = NULL
 )
@@ -24,6 +25,8 @@ plot_obs_VS_pred(
 \item{prefix}{The prefix for the dataset in the training or testing.}
 
 \item{target_field}{A string indicating the target field of metadata for regression.}
+
+\item{metric}{A regression performance metric (i.e., MAE, RMSE, MSE, R_squared, Adj_R_squared, or Separman_rho) showed in the scatter plot.}
 
 \item{span}{Controls the amount of smoothing for the default loess smoother in the scatterplot.
 Smaller numbers produce wigglier lines, larger numbers produce smoother lines.}
@@ -42,7 +45,7 @@ x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
 y<- 1:60
 rf_model<-rf.out.of.bag(x, y)
-plot_obs_VS_pred(y, predicted_y=rf_model$predicted, prefix="train", target_field="age")
+plot_obs_VS_pred(y, predicted_y=rf_model$predicted, prefix="train", target_field="age", outdir=NULL)
 }
 \author{
 Shi Huang

@@ -54,16 +54,16 @@ and apply the model to all the other datasets. The output includes
 accuracy, auc and Kappa statistics.
 }
 \examples{
-df <- data.frame(rbind(t(rmultinom(7, 75, c(.21,.6,.12,.38,.099))),
-            t(rmultinom(8, 75, c(.001,.6,.42,.58,.299))),
-            t(rmultinom(15, 75, c(.011,.6,.22,.28,.289))),
-            t(rmultinom(15, 75, c(.091,.6,.32,.18,.209))),
-            t(rmultinom(15, 75, c(.001,.6,.42,.58,.299)))))
-df0 <- data.frame(t(rmultinom(60, 300,c(.001,.6,.2,.3,.299))))
-metadata<-data.frame(f_s=factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15))),
-                     f_c=factor(c(rep("C", 7), rep("H", 8), rep("C", 7), rep("H", 8),
-                                  rep("C", 7), rep("H", 8), rep("C", 7), rep("H", 8))),
-                     f_d=factor(rep(c(rep("a", 5), rep("b", 5), rep("c", 5)), 4)))
+df <- data.frame(rbind(t(rmultinom(14, 14*5, c(.21,.6,.12,.38,.099))),
+            t(rmultinom(16, 16*5, c(.001,.6,.42,.58,.299))),
+            t(rmultinom(30, 30*5, c(.011,.6,.22,.28,.289))),
+            t(rmultinom(30, 30*5, c(.091,.6,.32,.18,.209))),
+            t(rmultinom(30, 30*5, c(.001,.6,.42,.58,.299)))))
+df0 <- data.frame(t(rmultinom(120, 600,c(.001,.6,.2,.3,.299))))
+metadata<-data.frame(f_s=factor(c(rep("A", 30), rep("B", 30), rep("C", 30), rep("D", 30))),
+                     f_c=factor(c(rep("C", 14), rep("H", 16), rep("C", 14), rep("H", 16),
+                                  rep("C", 14), rep("H", 16), rep("C", 14), rep("H", 16))),
+                     f_d=factor(rep(c(rep("a", 10), rep("b", 10), rep("c", 10)), 4)))
 system.time(rf_clf.by_datasets(df, metadata, s_category='f_s',
             c_category='f_c', positive_class="C"))
 rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c',

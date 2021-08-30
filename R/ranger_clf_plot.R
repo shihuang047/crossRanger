@@ -1,3 +1,4 @@
+#' @importFrom stats median
 #' @importFrom pROC plot.roc ci.se
 #' @importFrom grDevices dev.off hcl pdf
 #' @importFrom graphics plot text
@@ -158,6 +159,7 @@ plot_clf_ROC<-function(y, rf_clf_model, positive_class=NA, prefix="train", outdi
 }
 
 
+
 #' @title plot_clf_probabilities
 #' @param y A factor of classes to be used as the true results
 #' @param rf_clf_model The rf classification model from \code{rf.out.of.bag}
@@ -236,13 +238,15 @@ plot_clf_probabilities<-function(y, rf_clf_model, positive_class=NA, prefix="tra
 #' @author Shi Huang
 #' @export
 plot_clf_feature_selection <- function(x, y, nfolds=5, rf_clf_model, metric="AUROC", positive_class=NA, outdir=NULL){
-  if(class(rf_clf_model)!="rf.out.of.bag" & class(rf_clf_model)!="rf.cross.validation")stop("The rf_clf_model is not rf.out.of.bag/rf.cross.validation.")
-  positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
-  if(rf_clf_model$error.type=="oob"){
-    rf_imp_rank<-rank(-(rf_clf_model$importances)) #rf_all$importances
+  if(class(rf_clf_model)=="rf.cross.validation"){
+    rank_mat <- apply(rf_clf_model$importances, 2, function(x){rank(-x)})
+    rf_imp_rank <- rank(apply(rank_mat, 1, median))
+  }else if(class(rf_clf_model)=="rf.out.of.bag"){
+    rf_imp_rank<-rank(-(rf_clf_model$importances))
   }else{
-    rf_imp_rank<-rank(-(rowMeans(rf_clf_model$importances))) #rf_all$importances
+    stop("The class of input rf model should be rf.out.of.bag or rf.cross.validation.")
   }
+  positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
   max_n<-max(rf_imp_rank, na.rm = TRUE)
   n_total_features<-ncol(x)
   n_features<-c(2, 4, 8, 16, 32, 64, 128, 256, 512, 1024)

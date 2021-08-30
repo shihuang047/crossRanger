@@ -86,16 +86,16 @@ rf_clf.pairwise <- function (df, f, nfolds=3, ntree=5000, verbose=FALSE) {
 #' @return ...
 #' @seealso ranger
 #' @examples
-#' df <- data.frame(rbind(t(rmultinom(7, 75, c(.21,.6,.12,.38,.099))),
-#'             t(rmultinom(8, 75, c(.001,.6,.42,.58,.299))),
-#'             t(rmultinom(15, 75, c(.011,.6,.22,.28,.289))),
-#'             t(rmultinom(15, 75, c(.091,.6,.32,.18,.209))),
-#'             t(rmultinom(15, 75, c(.001,.6,.42,.58,.299)))))
-#' df0 <- data.frame(t(rmultinom(60, 300,c(.001,.6,.2,.3,.299))))
-#' metadata<-data.frame(f_s=factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15))),
-#'                      f_c=factor(c(rep("C", 7), rep("H", 8), rep("C", 7), rep("H", 8),
-#'                                   rep("C", 7), rep("H", 8), rep("C", 7), rep("H", 8))),
-#'                      f_d=factor(rep(c(rep("a", 5), rep("b", 5), rep("c", 5)), 4)))
+#' df <- data.frame(rbind(t(rmultinom(14, 14*5, c(.21,.6,.12,.38,.099))),
+#'             t(rmultinom(16, 16*5, c(.001,.6,.42,.58,.299))),
+#'             t(rmultinom(30, 30*5, c(.011,.6,.22,.28,.289))),
+#'             t(rmultinom(30, 30*5, c(.091,.6,.32,.18,.209))),
+#'             t(rmultinom(30, 30*5, c(.001,.6,.42,.58,.299)))))
+#' df0 <- data.frame(t(rmultinom(120, 600,c(.001,.6,.2,.3,.299))))
+#' metadata<-data.frame(f_s=factor(c(rep("A", 30), rep("B", 30), rep("C", 30), rep("D", 30))),
+#'                      f_c=factor(c(rep("C", 14), rep("H", 16), rep("C", 14), rep("H", 16),
+#'                                   rep("C", 14), rep("H", 16), rep("C", 14), rep("H", 16))),
+#'                      f_d=factor(rep(c(rep("a", 10), rep("b", 10), rep("c", 10)), 4)))
 #' system.time(rf_clf.by_datasets(df, metadata, s_category='f_s',
 #'             c_category='f_c', positive_class="C"))
 #' rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c',
@@ -171,16 +171,16 @@ rf_clf.by_datasets<-function(df, metadata, s_category, c_category, positive_clas
 #' @return ...
 #' @seealso ranger
 #' @examples
-#' df <- data.frame(rbind(t(rmultinom(7, 75, c(.21,.6,.12,.38,.099))),
-#'             t(rmultinom(8, 75, c(.001,.6,.42,.58,.299))),
-#'             t(rmultinom(15, 75, c(.011,.6,.22,.28,.289))),
-#'             t(rmultinom(15, 75, c(.091,.6,.32,.18,.209))),
-#'             t(rmultinom(15, 75, c(.001,.6,.42,.58,.299)))))
-#' df0 <- data.frame(t(rmultinom(60, 300,c(.001,.6,.2,.3,.299))))
-#' metadata<-data.frame(f_s=factor(c(rep("A", 30), rep("B", 30))),
-#'                      f_s1=factor(c(rep(TRUE, 30), rep(FALSE, 30))),
-#'                      f_c=factor(c(rep("C", 15), rep("H", 15), rep("D", 15), rep("P", 15))),
-#'                      age=c(1:30, 2:31)
+#' df <- data.frame(rbind(t(rmultinom(14, 14*5, c(.21,.6,.12,.38,.099))),
+#'             t(rmultinom(16, 16*5, c(.001,.6,.42,.58,.299))),
+#'             t(rmultinom(30, 30*5, c(.011,.6,.22,.28,.289))),
+#'             t(rmultinom(30, 30*5, c(.091,.6,.32,.18,.209))),
+#'             t(rmultinom(30, 30*5, c(.001,.6,.42,.58,.299)))))
+#' df0 <- data.frame(t(rmultinom(120, 600,c(.001,.6,.2,.3,.299))))
+#' metadata<-data.frame(f_s=factor(c(rep("A", 60), rep("B", 60))),
+#'                      f_s1=factor(c(rep(TRUE, 60), rep(FALSE, 60))),
+#'                      f_c=factor(c(rep("C", 30), rep("H", 30), rep("D", 30), rep("P", 30))),
+#'                      age=c(1:60, 2:61)
 #'                      )
 #'
 #' reg_res<-rf_reg.by_datasets(df, metadata, nfolds=5, s_category='f_s', c_category='age')
@@ -203,14 +203,15 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=5,
   # sample size of all datasets
   sample_size<-as.numeric(table(metadata[, s_category]))
   # check the available cores for parallel computation
-  chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
-  if (nzchar(chk) && chk == "TRUE") {
-    # use 2 cores in CRAN
-    nCores <- 2L
-  } else {
+  #chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
+  #if (nzchar(chk) && chk == "TRUE") {
+  #  # use 2 cores in CRAN
+  #  nCores <- 2L
+  #} else {
     # use all cores in devtools::test()
-    nCores <- parallel::detectCores()
-  }
+  #  nCores <- parallel::detectCores()
+  #}
+  nCores <- parallel::detectCores()
   doMC::registerDoMC(nCores)
   # comb function for parallelization using foreach
   comb <- function(x, ...) {
@@ -221,20 +222,22 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=5,
     oper_len=14
     out_list<-list(list())[rep(1, oper_len)]
     oper_names<-c("rf.model", "y", "predicted", "MSE", "RMSE", "nRMSE",
-                  "MAE", "MAPE", "MASE", "R_squared", "Adj_R_squared",
+                  "MAE", "MAPE", "MASE", "R_squared", "Spearman_rho",
                   "importances", "params", "error.type")
   }else if(nfolds!=3){
                   oper_len=15
                   out_list<-list(list())[rep(1, oper_len)]
                   oper_names<-c("rf.model", "y", "predicted", "MSE", "RMSE", "nRMSE",
-                                "MAE", "MAPE", "MASE", "R_squared", "Adj_R_squared",
+                                "MAE", "MAPE", "MASE", "R_squared", "Spearman_rho",
                                 "importances", "params", "error.type", "nfolds")}
+  require("foreach")
   oper<-foreach(i=1:L, .combine='comb', .multicombine=TRUE,
                 .init=out_list) %dopar% {
                              if(nfolds==3){
                                oob<-rf.out.of.bag(x_list[[i]], y_list[[i]],
                                                   verbose=verbose, ntree=ntree,
                                                   imp_pvalues = rf_imp_pvalues)
+                               oob
                              }else{
                                oob<-rf.cross.validation(x_list[[i]], y_list[[i]], nfolds=nfolds,
                                                         verbose=verbose, ntree=ntree,
@@ -260,7 +263,7 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=5,
   result$rf_MAPE<-unlist(oper$MAPE)
   result$rf_MASE<-unlist(oper$MASE)
   result$rf_R_squared<-unlist(oper$R_squared)
-  result$rf_Adj_R_squared<-unlist(oper$Adj_R_squared)
+  result$Spearman_rho<-unlist(oper$Spearman_rho)
   class(result)<-"rf_reg.by_datasets"
   return(result)
 }
@@ -427,49 +430,48 @@ rf_reg.cross_appl<-function(rf_list, x_list, y_list){
   try(if(all(unlist(lapply(y_list, mode))!="numeric")) stop("All elements in the y list should be numeric for regression."))
   perf_summ<-data.frame(matrix(NA, ncol=14, nrow=L*L))
   colnames(perf_summ)<-c("Train_data", "Test_data", "Validation_type", "Sample_size", "Min_acutal_value", "Max_acutal_value", "Min_predicted_value", "Max_predicted_value",
-                         "MSE", "RMSE", "MAE", "MAPE", "R_squared", "Adj_R_squared")
+                         "MSE", "RMSE", "MAE", "MAPE", "Spearman_rho", "R_squared")
+  lapply(1:length(rf_list), function(i) get.reg.performance(rf_list$rf_predicted[[i]], rf_list$y_list[[i]]))
   predicted<-list()
   for(i in 1:L){
     y<-y_list[[i]]
     x<-x_list[[i]]
     try(if(nlevels(y)==1) stop("Less than one level in the subgroup for classification"))
-    oob<-rf_list$rf_model_list[[i]]
+    rf_model<-rf_list$rf_model_list[[i]]
     #---  RF Training performance: MSE, MAE and R_squared
     cat("\nTraining dataset: ", names(x_list)[i] ,"\n\n")
     train_sample_size<-length(y)
-    train_y_min<-range(y)[1] #paste0(range(y), collapse = "-")
+    train_y_min<-range(y)[1]
     train_y_max<-range(y)[2]
-    train_pred_y_min<-range(oob$predictions)[1]
-    train_pred_y_max<-range(oob$predictions)[2]#paste0(range(oob$predictions), collapse = "-")
-    train_MSE<-rf_list$rf_MSE[[i]]
-    train_RMSE<-rf_list$rf_RMSE[[i]]
-    train_MAE<-rf_list$rf_MAE[[i]]
-    train_MAPE<-rf_list$rf_MAPE[[i]]
-    train_R_squared<-rf_list$rf_R_squared[[i]]
-    train_Adj_R_squared<-rf_list$rf_Adj_R_squared[[i]]
-    cat("MSE in the self-validation: ", train_MSE ,"\n")
-    cat("RMSE in the self-validation: ", train_RMSE ,"\n")
-    cat("MAE in the self-validation: ", train_MAE ,"\n")
-    cat("MAE percentage in the self-validation: ", train_MAPE ,"\n")
-    cat("R squared in the self-validation: ", train_R_squared ,"\n")
-    cat("Adjusted R squared in the self-validation: ", train_Adj_R_squared ,"\n")
+    train_pred_y_min<-range(rf_list$rf_predicted[[i]])[1]
+    train_pred_y_max<-range(rf_list$rf_predicted[[i]])[2]
+    train_perf<-get.reg.performance(rf_list$rf_predicted[[i]], y_list[[i]])
+    cat("MSE in the self-validation: ", train_perf[["MSE"]] ,"\n")
+    cat("RMSE in the self-validation: ", train_perf[["RMSE"]] ,"\n")
+    cat("MAE in the self-validation: ", train_perf[["MAE"]] ,"\n")
+    cat("MAE percentage in the self-validation: ", train_perf[["MAPE"]] ,"\n")
+    cat("R squared in the self-validation: ", train_perf[["R_squared"]] ,"\n")
+    cat("Spearman_rho in the self-validation: ", train_perf[["Spearman_rho"]] ,"\n")
     D<-1:L
     T<-D[D!=i]
     a=1+(i-1)*L
     perf_summ[a, 1:3]<-c(names(x_list)[i], names(x_list)[i], "self_validation")
     perf_summ[a, 4:14]<-c(train_sample_size, train_y_min, train_y_max, train_pred_y_min, train_pred_y_max,
-                          train_MSE, train_RMSE, train_MAE, train_MAPE, train_R_squared, train_Adj_R_squared)
-    predicted[[a]]<-data.frame(test_y=y, pred_y=oob$predictions)
+                          train_MSE=train_perf["MSE"],
+                          train_RMSE=train_perf["RMSE"],
+                          train_MAE=train_perf["MAE"],
+                          train_MAPE=train_perf["MAPE"],
+                          train_R_squared=train_perf["R_squared"],
+                          train_Spearman_rho=train_perf["Spearman_rho"])
+    predicted[[a]]<-data.frame(test_y=y, pred_y=rf_list$rf_predicted[[i]])
     names(predicted)[a]<-paste(names(x_list)[i], names(x_list)[i], sep="__VS__")
     loop_num<-1
     for(j in T){
       if(nrow(x_list[[j]])>0){
         newx<-x_list[[j]]
         newy<-y_list[[j]]
-        if(class(oob)=="ranger"){oob_rf.model<-oob
-          }else{
-           oob_rf.model<-oob[[1]]} # pick one out of K rf models in the ranger list
-        pred_newy<-predict(oob_rf.model, newx, type="response")$predictions # ranger only
+        if(class(rf_model)=="list") rf_model  <- rf_model[[1]] # pick one out of K rf models in the ranger list
+        pred_newy<-predict(rf_model, newx, type="response")$predictions # ranger only
         #---  RF test performance: MSE, MAE and R_squared
         cat("Test dataset: ", names(x_list)[j] ,"\n")
         test_sample_size<-length(newy)
@@ -482,25 +484,22 @@ rf_reg.cross_appl<-function(rf_list, x_list, y_list){
         MAE<-function(y, pred_y){ mean(sqrt((y-pred_y)^2))}
         R2<-function(y, pred_y){ 1-(sum((y-pred_y)^2) / sum((y-mean(y))^2)) }
         MAPE<-function(y, pred_y){ mean(sqrt((y-pred_y)^2)/y)}
-        adj.R2<-function(y, pred_y, k){
-          n=length(y);
-          1-(1-R2(y, pred_y)^2)*(n-1)/(n-k-1) # k is # of predictors
-        }
+        Spearman_rho <- function(y, pred_y){cor.test(y, pred_y, method = "spearman")$estimate}
         test_MSE<-MSE(newy, pred_newy)
         test_RMSE<-RMSE(newy, pred_newy)
         test_MAE<-MAE(newy, pred_newy)
         test_MAPE<-MAPE(newy, pred_newy)
         test_R_squared<-R2(newy, pred_newy)
-        test_Adj_R_squared<-adj.R2(newy, pred_newy, k=ncol(newx))
+        test_Spearman_rho<-Spearman_rho(newy, pred_newy)
         cat("MSE in the cross-applications: ", test_MSE ,"\n")
         cat("RMSE in the cross-applications: ", test_RMSE ,"\n")
         cat("MAE in the cross-applications: ", test_MAE ,"\n")
         cat("MAE percentage in the cross-applications: ", test_MAPE ,"\n")
         cat("R squared in the cross-application: ", test_R_squared ,"\n")
-        cat("Adjusted R squared in the cross-application: ", test_Adj_R_squared ,"\n")
+        cat("Adjusted R squared in the cross-application: ", test_Spearman_rho ,"\n")
         perf_summ[a+loop_num, 1:3]<-c(names(x_list)[i], names(x_list)[j], "cross_application")
         perf_summ[a+loop_num, 4:14]<-c(test_sample_size, test_y_min, test_y_max, test_pred_y_min, test_pred_y_max,
-                                       test_MSE, test_RMSE, test_MAE, test_MAPE, test_R_squared, test_Adj_R_squared)
+                                       test_MSE, test_RMSE, test_MAE, test_MAPE, test_R_squared, test_Spearman_rho)
         predicted[[a+loop_num]]<-data.frame(test_y=newy, pred_y=pred_newy)
         names(predicted)[a+loop_num]<-paste(names(x_list)[i], names(x_list)[j], sep="__VS__")
         loop_num<-loop_num+1

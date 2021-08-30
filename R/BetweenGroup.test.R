@@ -64,7 +64,7 @@ BetweenGroup.test <-function(x, y, clr_transform=FALSE, p.adj.method="bonferroni
 
 
 #' @title log.mat
-#' @description Log transformation of a data matrix.
+#' @description Log transformation of a data matrix with pseudo count.
 #' @param mat A data.martrix or data.frame including multiple numeric vectors.
 #' @param base The base in the log-transformation.
 #' @examples

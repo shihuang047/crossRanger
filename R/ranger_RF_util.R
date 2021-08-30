@@ -1,4 +1,4 @@
-#' @importFrom stats model.matrix predict quantile sd
+#' @importFrom stats model.matrix predict quantile sd cor.test
 #' @importFrom Matrix Matrix
 #' @importFrom ranger ranger importance_pvalues
 #' @importFrom PRROC pr.curve roc.curve
@@ -55,7 +55,7 @@
   data<-data.frame(y, x)
   #require(Matrix)
   if(sparse){
-    sparse_data <- Matrix(data.matrix(data), sparse = sparse)
+    sparse_data <- Matrix::Matrix(data.matrix(data), sparse = sparse)
     rf.model <- ranger(dependent.variable.name="y", data=sparse_data, keep.inbag=TRUE, importance='permutation',
                                classification=ifelse(is.factor(y), TRUE, FALSE), num.trees=ntree, verbose=verbose, probability = FALSE)
   }else{
@@ -200,9 +200,8 @@ balanced.folds <- function(y, nfolds=3){
     foldix <- which(folds==fold)
     if(is.factor(y)) y_tr<-factor(result$y[-foldix]) else y_tr<-result$y[-foldix]
     data<-data.frame(y=y_tr, x[-foldix,])
-    require(Matrix)
     if(sparse){
-      sparse_data <- Matrix(data.matrix(data), sparse = TRUE)
+      sparse_data <- Matrix::Matrix(data.matrix(data), sparse = TRUE)
       result$rf.model[[fold]]<- model <- ranger(dependent.variable.name="y", data=sparse_data, classification=ifelse(is.factor(y_tr), TRUE, FALSE),
                                                 keep.inbag=TRUE, importance='permutation', verbose=verbose, num.trees=ntree)
     }else{
@@ -345,6 +344,7 @@ balanced.folds <- function(y, nfolds=3){
   MAE <- mean(sqrt((y-pred_y)^2))
   MAPE <- mean(sqrt((y-pred_y)^2)/y) # <https://en.wikipedia.org/wiki/Mean_absolute_percentage_error>
   MASE <- mean(sqrt((y-pred_y)^2))/mean(sqrt((diff(y))^2)) # <https://en.wikipedia.org/wiki/Mean_absolute_scaled_error>
+  Spearman_rho <- cor.test(y, pred_y, method = "spearman")$estimate
   R2 <- function(y, pred_y){1 - (sum((y-pred_y)^2) / sum((y-mean(y))^2))}
   R_squared <- R2(y, pred_y)
   adj.R2<-function(y, pred_y, k){
@@ -363,6 +363,7 @@ balanced.folds <- function(y, nfolds=3){
   perf$MAE<-MAE
   perf$MAPE<-MAPE
   perf$MASE<-MASE
+  perf$Spearman_rho <- Spearman_rho
   perf$R_squared<-R_squared
   perf$Adj_R_squared<-Adj_R_squared
   return(invisible(perf))
@@ -408,11 +409,15 @@ balanced.folds <- function(y, nfolds=3){
 #' @return The auroc value.
 #' @examples
 #' y<-factor(c(rep("A", 31), rep("B", 29)))
+#' y1<-factor(c(rep("A", 18), rep("B", 20), rep("C", 22)))
+#' y0<-factor(rep("A", 60))
 #' pred <- c(runif(30, 0.5, 0.9), runif(30, 0, 0.6))
 #' prob <-data.frame(A=pred, B=1-pred)
 #' positive_class="A"
 #' get.auroc(predictor=prob[, positive_class], y, positive_class="A")
 #' get.auroc(predictor=prob[, positive_class], y, positive_class="B")
+#' get.auroc(predictor=prob[, positive_class], y0, positive_class="A")
+#' get.auroc(predictor=prob[, positive_class], y1, positive_class="A")
 #' @author Shi Huang
 #' @export
 get.auroc <- function(predictor, y, positive_class) {
@@ -424,9 +429,14 @@ get.auroc <- function(predictor, y, positive_class) {
     factor(f)
   }
   #require(ROCR)
-  y<-pos_class(y, positive_class=positive_class)
-  pred <- prediction(predictor, y)
-  auroc  <- performance(pred, "auc")@y.values[[1]]
+  if(nlevels(factor(y))==1){
+    cat("All y values are identical!")
+    auroc <- NA
+  }else{
+    y<-pos_class(y, positive_class=positive_class)
+    pred <- prediction(predictor, y)
+    auroc  <- performance(pred, "auc")@y.values[[1]]
+  }
   return(auroc)
 }
 
@@ -446,21 +456,30 @@ get.auroc <- function(predictor, y, positive_class) {
 #' @return auprc
 #' @examples
 #' y<-factor(c(rep("A", 10), rep("B", 50)))
+#' y1<-factor(c(rep("A", 18), rep("B", 20), rep("C", 22)))
+#' y0<-factor(rep("A", 60))
 #' pred <- c(runif(10, 0.4, 0.9), runif(50, 0, 0.6))
 #' prob <-data.frame(A=pred, B=1-pred)
 #' positive_class="A"
 #' get.auprc(predictor=prob[, positive_class], y, positive_class="A")
 #' get.auprc(predictor=prob[, positive_class], y, positive_class="B")
+#' get.auprc(predictor=prob[, positive_class], y0, positive_class="A")
+#' get.auprc(predictor=prob[, positive_class], y1, positive_class="A")
 #' @author Shi Huang
 #' @export
 get.auprc<- function(predictor, y, positive_class){
-  df<-data.frame(y, predictor)
-  prob_pos<-df[df$y==positive_class, "predictor"]
-  prob_neg<-df[df$y!=positive_class,"predictor"]
-  pr<-pr.curve(prob_pos, prob_neg, curve=FALSE,  max.compute = T, min.compute = T, rand.compute = T)
-  #rel_auprc<-round((pr$auc.integral-pr$min$auc.integral)/(pr$max$auc.integral-pr$min$auc.integral), 3)
-  auprc<-pr$auc.integral
-  if(pr$auc.integral==pr$rand$auc.integral) cat("Note: ", auprc, "is the auprc of a random classifier!\n")
+  if(nlevels(factor(y))==1){
+    cat("All y values are identical!")
+    auprc <- NA # if y contains all identical values, no threshold can be used for auprc calculation
+  }else{
+    df<-data.frame(y, predictor)
+    prob_pos<-df[df$y==positive_class, "predictor"]
+    prob_neg<-df[df$y!=positive_class,"predictor"]
+    pr<-pr.curve(prob_pos, prob_neg, curve=FALSE,  max.compute = T, min.compute = T, rand.compute = T)
+    #rel_auprc<-round((pr$auc.integral-pr$min$auc.integral)/(pr$max$auc.integral-pr$min$auc.integral), 3)
+    auprc<-pr$auc.integral
+    if(pr$auc.integral==pr$rand$auc.integral) cat("Note: ", auprc, "is the auprc of a random classifier!\n")
+  }
   auprc
 }
 

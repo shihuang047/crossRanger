@@ -12,7 +12,7 @@
 \item{base}{The base in the log-transformation.}
 }
 \description{
-Log transformation of a data matrix.
+Log transformation of a data matrix with pseudo count.
 }
 \examples{
 x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),

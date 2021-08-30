@@ -8,8 +8,9 @@ plot_reg_feature_selection(
   x,
   y,
   rf_reg_model,
+  nfolds = 5,
   metric = "MAE",
-  unit = "unit",
+  unit = NA,
   outdir = NULL
 )
 }
@@ -19,6 +20,8 @@ plot_reg_feature_selection(
 \item{y}{The numeric values for labeling data.}
 
 \item{rf_reg_model}{The rf regression model from \code{rf.out.of.bag}}
+
+\item{nfolds}{The number of folds in the cross-validation for each feature set.}
 
 \item{metric}{The regression performance metric applied.
 This must be one of "MAE", "RMSE", "MSE", "MAPE".}
@@ -32,14 +35,15 @@ Plot the regression performance against the reduced number of features used in t
 }
 \examples{
 set.seed(123)
-x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
-            t(rmultinom(8, 75, c(.201,.4,.12,.18,.099))),
-            t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
-            t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
-            t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
+x <- data.frame(rbind(t(rmultinom(7, 7*10, c(.201,.5,.02,.18,.099, .201,.5,.02,.18,.099))),
+            t(rmultinom(8, 8*10, c(.201,.4,.12,.18,.099, .201,.5,.02,.18,.099))),
+            t(rmultinom(15, 15*10, c(.011,.3,.22,.18,.289, .091,.2,.32,.18,.209))),
+            t(rmultinom(15, 15*10, c(.091,.2,.32,.18,.209, .011,.3,.22,.18,.289))),
+            t(rmultinom(15, 15*10, c(.001,.1,.42,.18,.299, .001,.1,.42,.18,.299)))))
 y<- 1:60
 rf_reg_model<-rf.out.of.bag(x, y)
-plot_reg_feature_selection(x, y, rf_reg_model, metric="MAE", outdir=NULL)
+rf_reg_model<-rf.cross.validation(x, y)
+plot_reg_feature_selection(x, y, rf_reg_model, metric="MAE", outdir="./")
 }
 \author{
 Shi Huang

@@ -22,11 +22,15 @@ calculates the area under the ROC curve
 }
 \examples{
 y<-factor(c(rep("A", 31), rep("B", 29)))
+y1<-factor(c(rep("A", 18), rep("B", 20), rep("C", 22)))
+y0<-factor(rep("A", 60))
 pred <- c(runif(30, 0.5, 0.9), runif(30, 0, 0.6))
 prob <-data.frame(A=pred, B=1-pred)
 positive_class="A"
 get.auroc(predictor=prob[, positive_class], y, positive_class="A")
 get.auroc(predictor=prob[, positive_class], y, positive_class="B")
+get.auroc(predictor=prob[, positive_class], y0, positive_class="A")
+get.auroc(predictor=prob[, positive_class], y1, positive_class="A")
 }
 \author{
 Shi Huang

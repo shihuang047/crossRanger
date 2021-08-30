@@ -5,10 +5,12 @@
 \title{plot_perf_VS_rand}
 \usage{
 plot_perf_VS_rand(
+  x,
   y,
   predicted_y,
   prefix = "train",
   target_field,
+  nfolds,
   metric = "MAE",
   permutation = 100,
   n_features,
@@ -16,7 +18,9 @@ plot_perf_VS_rand(
 )
 }
 \arguments{
-\item{y}{The numeric values for labeling data.}
+\item{x}{The train data.}
+
+\item{y}{The numeric labeling data.}
 
 \item{predicted_y}{The predicted values for y.}
 
@@ -24,7 +28,10 @@ plot_perf_VS_rand(
 
 \item{target_field}{A string indicating the target field of the metadata for regression.}
 
-\item{metric}{The regression performance metric applied, including MAE, RMSE, MSE, R_squared, Adj_R_squared.}
+\item{nfolds}{The number of folds in the cross validation. If nfolds > length(y)
+or nfolds==-1, uses leave-one-out cross-validation. If nfolds was a factor, it means customized folds (e.g., leave-one-group-out cv) were set for CV.}
+
+\item{metric}{The regression performance metric applied, including MAE, RMSE, MSE, R_squared, Adj_R_squared, or Separman_rho.}
 
 \item{permutation}{The permutation times for a random guess of regression performance.}
 
@@ -33,7 +40,7 @@ plot_perf_VS_rand(
 \item{outdir}{The output directory.}
 }
 \description{
-Plot the residuals of observed and predicted values from a ranger model.
+It output a histogram showing the performance of a real regression model and null models.
 }
 \examples{
 set.seed(123)
