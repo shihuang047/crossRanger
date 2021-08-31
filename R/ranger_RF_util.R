@@ -178,6 +178,7 @@ balanced.folds <- function(y, nfolds=3){
     if(nfolds==-1) nfolds <- length(y)
     folds <- balanced.folds(y, nfolds=nfolds)
   }
+  if(any(table(folds)<5)) stop("Less than 5 samples in at least one fold!\n")
   result <- list()
   result$rf.model<-list()
   if(is.factor(y)){
@@ -234,8 +235,10 @@ balanced.folds <- function(y, nfolds=3){
       result$MAE[fold] <- reg_perf$MAE
       result$MAPE[fold] <- reg_perf$MAPE
       result$MASE[fold] <- reg_perf$MASE
+      result$Spearman_rho[fold] <- reg_perf$Spearman_rho
       result$R_squared[fold] <- reg_perf$R_squared
       result$Adj_R_squared[fold] <- reg_perf$Adj_R_squared
+
       cat("Mean squared residuals: ", reg_perf$MSE, "\n")
       cat("Mean absolute error: ", reg_perf$MAE, "\n")
       cat("pseudo R-squared (%explained variance): ", reg_perf$R_squared, "\n")

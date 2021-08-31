@@ -23,7 +23,8 @@ df <- data.frame(rbind(t(rmultinom(14, 14*5, c(.21,.6,.12,.38,.099))),
             t(rmultinom(30, 30*5, c(.011,.6,.22,.28,.289))),
             t(rmultinom(30, 30*5, c(.091,.6,.32,.18,.209))),
             t(rmultinom(30, 30*5, c(.001,.6,.42,.58,.299)))))
-metadata<-data.frame(f_s=factor(c(rep("A", 30), rep("B", 30), rep("A", 30), rep("B", 30))),
+metadata<-data.frame(f_s=factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15),
+                                  rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15))),
                      f_c=factor(c(rep("C", 60), rep("D", 60))),
                      f_d=factor(c(rep("A", 30), rep("B", 30), rep("C", 30), rep("D", 30))),
                      age=c(1:60, 2:61)
@@ -31,7 +32,9 @@ metadata<-data.frame(f_s=factor(c(rep("A", 30), rep("B", 30), rep("A", 30), rep(
 reg_res<-rf_reg.by_datasets(df, metadata, s_category='f_d', c_category='age')
 corr_datasets_by_imps(reg_res$feature_imps_list, plot=TRUE)
 clf_res<-rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c')
-corr_datasets_by_imps(clf_res$feature_imps_list, plot=TRUE)
+feature_imps_list <- lapply(clf_res$feature_imps_list, function(x) x[,"rf_imps"])
+names(feature_imps_list) <- levels(metadata[, 'f_s'])
+corr_datasets_by_imps(feature_imps_list, plot=TRUE)
 }
 \seealso{
 ranger rf_clf.by_datasets rf_reg.by_datasets

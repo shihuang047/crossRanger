@@ -144,30 +144,31 @@ plot_perf_VS_rand<-function(x, y, predicted_y, prefix="train", target_field, nfo
     })
     rand_perf_values
   }
-  rand_perf_values=shuffle_y_perf(x, y, permutation = 100)
-
-  perf_value<-get.reg.performance(predicted_y, y, n_features)[[metric]]
-  perf_values<-data.frame(perf_value, rand_perf_values)
-
   emp_p_value <- function(perf_value, rand_perf_values){
     k<-length(rand_perf_values)
-    #p<-(sum(abs(perf_value >= rand_perf_values))+1)/(k+1)
-    p<-(sum(abs(perf_value >= rand_perf_values)))/(k)
+    p<-(sum(abs(perf_value >= rand_perf_values))+1)/(k+1)
     p
   }
+  rand_perf_values <- shuffle_y_perf(x, y, permutation = 100)
+  perf_value<-get.reg.performance(predicted_y, y, n_features)[[metric]]
+  perf_values<-data.frame(perf_value, rand_perf_values)
   emp_p_value<-emp_p_value(perf_value, rand_perf_values)
+  # histogram
   label = paste(metric, ": ", as.character(round(perf_value, 2)), "\np-value = ", round(emp_p_value, 2), sep="")
   p<-ggplot(perf_values, aes(x=.data$rand_perf_values)) + geom_histogram(alpha=0.5) +
     xlab(metric)+
     ylab("count")+
     geom_vline(data=perf_values, aes(xintercept = .data$perf_value)) +
     annotate(geom="text", x=perf_value, y=Inf, label=label, color="red", vjust=2, hjust=0)+theme_bw()
-  p
   if(!is.null(outdir)){
     ggsave(filename=paste(outdir, prefix, ".", target_field, ".", metric,
                           "_vs_rand.histogram.pdf",sep=""), plot=p, height=4, width=4)
   }
-  p
+  res <- list()
+  res$emp_p_value <- emp_p_value
+  res$perf_values <- perf_values
+  res$plot <- p
+  res
 }
 
 #' @title plot_train_vs_test

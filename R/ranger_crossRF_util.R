@@ -219,31 +219,30 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=5,
            function(i) c(x[[i]], lapply(list(...), function(y) y[[i]])))
   }
   if(nfolds==3){
-    oper_len=14
+    oper_len=15
     out_list<-list(list())[rep(1, oper_len)]
     oper_names<-c("rf.model", "y", "predicted", "MSE", "RMSE", "nRMSE",
-                  "MAE", "MAPE", "MASE", "R_squared", "Spearman_rho",
+                  "MAE", "MAPE", "MASE", "Spearman_rho", "R_squared", "Adj_R_squared",
                   "importances", "params", "error.type")
   }else if(nfolds!=3){
-                  oper_len=15
+                  oper_len=16
                   out_list<-list(list())[rep(1, oper_len)]
                   oper_names<-c("rf.model", "y", "predicted", "MSE", "RMSE", "nRMSE",
-                                "MAE", "MAPE", "MASE", "R_squared", "Spearman_rho",
+                                "MAE", "MAPE", "MASE", "Spearman_rho", "R_squared", "Adj_R_squared",
                                 "importances", "params", "error.type", "nfolds")}
   require("foreach")
   oper<-foreach(i=1:L, .combine='comb', .multicombine=TRUE,
                 .init=out_list) %dopar% {
                              if(nfolds==3){
-                               oob<-rf.out.of.bag(x_list[[i]], y_list[[i]],
+                               out<-rf.out.of.bag(x_list[[i]], y_list[[i]],
                                                   verbose=verbose, ntree=ntree,
                                                   imp_pvalues = rf_imp_pvalues)
-                               oob
                              }else{
-                               oob<-rf.cross.validation(x_list[[i]], y_list[[i]], nfolds=nfolds,
+                               out<-rf.cross.validation(x_list[[i]], y_list[[i]], nfolds=nfolds,
                                                         verbose=verbose, ntree=ntree,
                                                         imp_pvalues = rf_imp_pvalues)
                              }
-                  oob
+                  out
                 }
   names(oper)<-oper_names
   result<-list()
@@ -253,8 +252,10 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=5,
   result$sample_size<-sample_size
   result$rf_model_list<-oper$rf.model; names(result$rf_model_list)<-result$datasets
   result$rf_predicted<-oper$predicted; names(result$rf_predicted)<-result$datasets
-  result$feature_imps_list<-oper$importances
-  if(nfolds!=3) result$feature_imps_list<-lapply(result$feature_imps_list, rowMeans)
+  if(nfolds==3){
+    result$feature_imps_list<-oper$importances
+  }else{
+    result$feature_imps_list<-lapply(oper$importances, rowMeans)}
   names(result$feature_imps_list)<-result$datasets
   result$rf_MSE<-unlist(oper$MSE)
   result$rf_RMSE<-unlist(oper$RMSE)
@@ -262,8 +263,9 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=5,
   result$rf_MAE<-unlist(oper$MAE)
   result$rf_MAPE<-unlist(oper$MAPE)
   result$rf_MASE<-unlist(oper$MASE)
-  result$rf_R_squared<-unlist(oper$R_squared)
   result$Spearman_rho<-unlist(oper$Spearman_rho)
+  result$rf_R_squared<-unlist(oper$R_squared)
+  result$rf_Adj_R_squared<-unlist(oper$Adj_R_squared)
   class(result)<-"rf_reg.by_datasets"
   return(result)
 }

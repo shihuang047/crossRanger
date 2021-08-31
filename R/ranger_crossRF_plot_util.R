@@ -1,4 +1,5 @@
 #' @importFrom corrplot corrplot
+#' @importFrom grDevices colorRampPalette
 #' @importFrom stats cor
 #' @importFrom utils write.table
 #' @importFrom plyr ldply
@@ -20,7 +21,8 @@
 #'             t(rmultinom(30, 30*5, c(.011,.6,.22,.28,.289))),
 #'             t(rmultinom(30, 30*5, c(.091,.6,.32,.18,.209))),
 #'             t(rmultinom(30, 30*5, c(.001,.6,.42,.58,.299)))))
-#' metadata<-data.frame(f_s=factor(c(rep("A", 30), rep("B", 30), rep("A", 30), rep("B", 30))),
+#' metadata<-data.frame(f_s=factor(c(rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15),
+#'                                   rep("A", 15), rep("B", 15), rep("C", 15), rep("D", 15))),
 #'                      f_c=factor(c(rep("C", 60), rep("D", 60))),
 #'                      f_d=factor(c(rep("A", 30), rep("B", 30), rep("C", 30), rep("D", 30))),
 #'                      age=c(1:60, 2:61)
@@ -28,23 +30,52 @@
 #' reg_res<-rf_reg.by_datasets(df, metadata, s_category='f_d', c_category='age')
 #' corr_datasets_by_imps(reg_res$feature_imps_list, plot=TRUE)
 #' clf_res<-rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c')
-#' corr_datasets_by_imps(clf_res$feature_imps_list, plot=TRUE)
+#' feature_imps_list <- lapply(clf_res$feature_imps_list, function(x) x[,"rf_imps"])
+#' names(feature_imps_list) <- levels(metadata[, 'f_s'])
+#' corr_datasets_by_imps(feature_imps_list, plot=TRUE)
 #' @author Shi Huang
 #' @export
 corr_datasets_by_imps<-function(feature_imps_list, ranked=TRUE, plot=FALSE){
+  cor.mtest <- function(mat, ...) {
+    mat <- as.matrix(mat)
+    n <- ncol(mat)
+    p.mat<- matrix(NA, n, n)
+    diag(p.mat) <- 0
+    for (i in 1:(n - 1)) {
+      for (j in (i + 1):n) {
+        tmp <- cor.test(mat[, i], mat[, j], ...)
+        p.mat[i, j] <- p.mat[j, i] <- tmp$p.value
+      }
+    }
+    colnames(p.mat) <- rownames(p.mat) <- colnames(mat)
+    p.mat
+  }
   if(ranked){
     ranked_list<-lapply(feature_imps_list, function(x) rank(-x))
-    corr_mat<-stats::cor(do.call(cbind, ranked_list))
+    imp_rank_mat <- do.call(cbind, ranked_list)
+    corr_mat<-stats::cor(imp_rank_mat)
+    # matrix of the p-value of the correlation
+    p_mat <- cor.mtest(imp_rank_mat)
   }else{
-    corr_mat<-stats::cor(do.call(cbind, feature_imps_list))
+    imp_mat <- do.call(cbind, feature_imps_list)
+    corr_mat<-stats::cor(imp_mat)
+    p_mat <- cor.mtest(imp_mat)
   }
+
   if(plot){
     #require(corrplot)
-    corrplot(corr =corr_mat, order="AOE", type="upper") # tl.pos = "d"
-    corrplot(corr = corr_mat, add=TRUE, type="lower", method="number",
-             order="AOE",diag=TRUE, tl.pos="n", cl.pos="n")
+    col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
+    corrplot(corr = corr_mat, method="color", col=col(200),
+             type="upper", addCoef.col = "black",
+             tl.col="black", tl.srt=45,
+             p.mat = p_mat, sig.level = 0.05, insig = "pch",
+             diag = FALSE
+             )
   }
-  corr_mat
+  res <-list()
+  res$corr_mat <- corr_mat
+  res$p_mat <- p_mat
+  res
 }
 
 #' @title plot_clf_res_list
@@ -177,6 +208,7 @@ plot_reg_res_list<-function(reg_res_list, outdir=NULL, plot_height=NULL){
   rf_RMSE<-reg_res_list$rf_RMSE
   rf_MAE<-reg_res_list$rf_MAE
   rf_MAPE<-reg_res_list$rf_MAPE
+  rf_Spearman_rho<-reg_res_list$rf_Spearman_rho
   rf_R_squared<-reg_res_list$rf_R_squared
   rf_Adj_R_squared<-reg_res_list$rf_Adj_R_squared
   feature_imps_list<-reg_res_list$feature_imps_list
@@ -184,7 +216,7 @@ plot_reg_res_list<-function(reg_res_list, outdir=NULL, plot_height=NULL){
   prev_df<-do.call(cbind, lapply(reg_res_list$x_list, function(x) apply(x, 2, function(a) sum(a==0)/length(a))))
   # ggplot
   summ<-data.frame(datasets=datasets, sample_size=sample_size,
-                   MSE=rf_MSE, RMSE=rf_RMSE, MAE=rf_MAE, MAPE=rf_MAPE,
+                   MSE=rf_MSE, RMSE=rf_RMSE, MAE=rf_MAE, MAPE=rf_MAPE, Spearman_rho=rf_Spearman_rho,
                    R_squared=rf_R_squared, Adj_R_squared=rf_Adj_R_squared)
   names(summ)[1:2]<-c("Data_sets", "Sample_size")
   #summ_m<-reshape2::melt(summ)
