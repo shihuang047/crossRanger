@@ -263,7 +263,7 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=5,
   result$rf_MAE<-unlist(oper$MAE)
   result$rf_MAPE<-unlist(oper$MAPE)
   result$rf_MASE<-unlist(oper$MASE)
-  result$Spearman_rho<-unlist(oper$Spearman_rho)
+  result$rf_Spearman_rho<-unlist(oper$Spearman_rho)
   result$rf_R_squared<-unlist(oper$R_squared)
   result$rf_Adj_R_squared<-unlist(oper$Adj_R_squared)
   class(result)<-"rf_reg.by_datasets"
