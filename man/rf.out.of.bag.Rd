@@ -61,8 +61,7 @@ y0<-factor(c(rep("old", 30), rep("young", 30)))
 rf.out.of.bag(x, y0, imp_pvalues=FALSE)
 rf.out.of.bag(x, y0, imp_pvalues=TRUE)
 y<- 1:60
-rf.out.of.bag(x, y)
-rf.out.of.bag(x, y, imp_pvalues=TRUE)
+rf.out.of.bag(x, y, imp_pvalues=FALSE)
 }
 \references{
 Wright, M. N. & Ziegler, A. (2017). ranger: A fast implementation of random forests for

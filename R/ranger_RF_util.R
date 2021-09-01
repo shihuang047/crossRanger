@@ -46,8 +46,7 @@
 #' rf.out.of.bag(x, y0, imp_pvalues=FALSE)
 #' rf.out.of.bag(x, y0, imp_pvalues=TRUE)
 #' y<- 1:60
-#' rf.out.of.bag(x, y)
-#' rf.out.of.bag(x, y, imp_pvalues=TRUE)
+#' rf.out.of.bag(x, y, imp_pvalues=FALSE)
 #' @author Shi Huang
 #' @export
 "rf.out.of.bag" <-function(x, y, ntree=500, verbose=FALSE, sparse = FALSE, imp_pvalues=FALSE){
@@ -59,7 +58,7 @@
     rf.model <- ranger(dependent.variable.name="y", data=sparse_data, keep.inbag=TRUE, importance='permutation',
                                classification=ifelse(is.factor(y), TRUE, FALSE), num.trees=ntree, verbose=verbose, probability = FALSE)
   }else{
-    rf.model<-ranger(y~., data=data, keep.inbag=TRUE, importance='permutation',
+    rf.model<-ranger(dependent.variable.name="y", data=data, keep.inbag=TRUE, importance='permutation',
                              classification=ifelse(is.factor(y), TRUE, FALSE), num.trees=ntree, verbose=verbose, probability = FALSE)
   }
   result <- list()
@@ -206,7 +205,7 @@ balanced.folds <- function(y, nfolds=3){
       result$rf.model[[fold]]<- model <- ranger(dependent.variable.name="y", data=sparse_data, classification=ifelse(is.factor(y_tr), TRUE, FALSE),
                                                 keep.inbag=TRUE, importance='permutation', verbose=verbose, num.trees=ntree)
     }else{
-      result$rf.model[[fold]]<- model <- ranger(y~., data=data, keep.inbag=TRUE, importance='permutation',
+      result$rf.model[[fold]]<- model <- ranger(dependent.variable.name="y", data=data, keep.inbag=TRUE, importance='permutation',
                                                 classification=ifelse(is.factor(y_tr), TRUE, FALSE), num.trees=ntree, verbose=verbose)
     }
     newx <- x[foldix,]
