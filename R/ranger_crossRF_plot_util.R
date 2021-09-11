@@ -340,6 +340,59 @@ rf_clf.comps.summ<-function(df, f, comp_group, clr_transform=TRUE, nfolds=3, ver
 }
 
 
+#' @title plot_cross_appl
+#' @description The heatmap indicating ML performance (e.g., MAE) in the self-validation and cross-applications.
+#' @param cross_appl_res The output object from \code{rf_clf.cross_appl} or \code{rf_reg.cross_appl}.
+#' @param metric The classification performance metric applied.
+#' @param plot_height The height (inches) of heatmap.
+#' @param plot_width The width (inches) of heatmap
+#' @param outdir The outputh directory, default is NULL.
+#' @return A heatmap showing ML performance.
+#' @examples
+#' df <- data.frame(rbind(t(rmultinom(14, 14*5, c(.21,.6,.12,.38,.099))),
+#'             t(rmultinom(16, 16*5, c(.001,.6,.42,.58,.299))),
+#'             t(rmultinom(30, 30*5, c(.011,.6,.22,.28,.289))),
+#'             t(rmultinom(30, 30*5, c(.091,.6,.32,.18,.209))),
+#'             t(rmultinom(30, 30*5, c(.001,.6,.42,.58,.299)))))
+#' df0 <- data.frame(t(rmultinom(120, 600,c(.001,.6,.2,.3,.299))))
+#' metadata<-data.frame(f_s=factor(rep(c("A", "B"), 60)),
+#'                      f_s1=factor(c(rep(TRUE, 60), rep(FALSE, 60))),
+#'                      f_c=factor(c(rep("C", 30), rep("H", 30), rep("D", 30), rep("P", 30))),
+#'                      age=c(1:60, 2:61)
+#'                      )
+#'
+#' table(metadata[, c('f_s', 'f_c')])
+#' clf_res<-rf_clf.by_datasets(df, metadata, nfolds=5, s_category='f_c', c_category='f_s')
+
+#' clf_cross_appl_res <- rf_clf.cross_appl(clf_res$rf_model_list, x_list=clf_res$x_list, y_list=clf_res$y_list)
+#' plot_cross_appl(clf_cross_appl_res, metric="AUROC")
+#' reg_res<-rf_reg.by_datasets(df, metadata, nfolds=5, s_category='f_c', c_category='age')
+#' reg_cross_appl_res <- rf_reg.cross_appl(reg_res, x_list=reg_res$x_list, y_list=reg_res$y_list)
+#' plot_cross_appl(reg_cross_appl_res)
+#'@export
+plot_cross_appl<-function(cross_appl_res, metric="MAE", outdir=NULL, plot_width=8, plot_height=7){
+  if(!class(cross_appl_res)%in%c('rf_reg.cross_appl', 'rf_clf.cross_appl'))
+    stop("The class of cross_appl_res should be 'rf_reg.cross_appl' or 'rf_clf.cross_appl'")
+  perf_summ<-cross_appl_res$perf_summ
+  # The heatmap indicating ML performance (e.g., MAE) in the self-validation and cross-applications
+  require(viridis)
+  p<-ggplot(perf_summ, aes(x=as.factor(Test_data), y=as.factor(Train_data), z=get(metric))) +
+    xlab("Test data")+ylab("Train data")+
+    geom_tile(aes(fill = get(metric), color = Validation_type, width=0.9, height=0.9), size=1) + #
+    scale_color_manual(values=c("white","grey80"))+
+    geom_text(aes(label = round(get(metric), 2)), color = "white") +
+    scale_fill_viridis()+
+    labs(fill=metric) +
+    theme_bw() + theme_classic() +
+    theme(axis.line = element_blank(), axis.text.x = element_text(angle = 90),
+          axis.ticks = element_blank())
+  if(!is.null(outdir)){
+    sink(paste(outdir,"crossRF_reg_perf_summ.xls",sep="")); write.table(perf_summ,quote=FALSE,sep="\t", row.names = F);sink()
+    ggsave(filename=paste(outpath, metric, "_cross_appl_matrix.heatmap.pdf",sep=""),
+           plot=p, width=plot_width, height=plot_height)
+  }
+  p
+}
 
 #' @title id_non_spcf_markers
 #' @description Non-specific features across datasets (at least present in two of datasets): Last update: 20190130

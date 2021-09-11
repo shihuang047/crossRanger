@@ -22,16 +22,18 @@ perform cross-datasets application of the rf models. The inputs are precalculate
 rf regression models, x_list and y_list.
 }
 \examples{
-df <- data.frame(rbind(t(rmultinom(7, 75, c(.21,.6,.12,.38,.099))),
-            t(rmultinom(8, 75, c(.001,.6,.42,.58,.299))),
-            t(rmultinom(15, 75, c(.011,.6,.22,.28,.289))),
-            t(rmultinom(15, 75, c(.091,.6,.32,.18,.209))),
-            t(rmultinom(15, 75, c(.001,.6,.42,.58,.299)))))
-df0 <- data.frame(t(rmultinom(60, 300,c(.001,.6,.2,.3,.299))))
-metadata<-data.frame(f_s=factor(c(rep("A", 30), rep("B", 30))),
-                     f_c=factor(c(rep("C", 15), rep("D", 15), rep("E", 15), rep("F", 15))),
-                     age=c(1:30, 2:31)
+df <- data.frame(rbind(t(rmultinom(14, 14*5, c(.21,.6,.12,.38,.099))),
+            t(rmultinom(16, 16*5, c(.001,.6,.42,.58,.299))),
+            t(rmultinom(30, 30*5, c(.011,.6,.22,.28,.289))),
+            t(rmultinom(30, 30*5, c(.091,.6,.32,.18,.209))),
+            t(rmultinom(30, 30*5, c(.001,.6,.42,.58,.299)))))
+df0 <- data.frame(t(rmultinom(120, 600,c(.001,.6,.2,.3,.299))))
+metadata<-data.frame(f_s=factor(c(rep("A", 60), rep("B", 60))),
+                     f_s1=factor(c(rep(TRUE, 60), rep(FALSE, 60))),
+                     f_c=factor(c(rep("C", 30), rep("H", 30), rep("D", 30), rep("P", 30))),
+                     age=c(1:60, 2:61)
                      )
+
 table(metadata[, 'f_c'])
 reg_res<-rf_reg.by_datasets(df, metadata, s_category='f_c', c_category='age')
 rf_reg.cross_appl(reg_res, x_list=reg_res$x_list, y_list=reg_res$y_list)

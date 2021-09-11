@@ -11,8 +11,7 @@ rf.cross.validation(
   ntree = 500,
   verbose = FALSE,
   sparse = FALSE,
-  imp_pvalues = FALSE,
-  ...
+  imp_pvalues = FALSE
 )
 }
 \arguments{
