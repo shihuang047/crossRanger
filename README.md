@@ -92,7 +92,7 @@ Train_data Test_data   Validation_type  Accuracy       AUC       Kappa Sensitivi
 15 0.5714286 0.5714286 0.5714286  0.4666667     0.26666667            0.4666667         0.5982143
 16 0.0000000 0.0000000       NaN  0.4666667     0.00000000            0.1333333         0.3750000
 ```
-
+![cross_appl_MAE](cross_appl_MAE_plot.png)
 ## References ##
 * Breiman, L. (2001). Random forests. Mach Learn, 45:5-32. https://doi.org/10.1023/A:1010933404324.
 * Wright, M. N. & Ziegler, A. (2017). ranger: A fast implementation of random forests for high dimensional data in C++ and R. J Stat Softw 77:1-17. https://doi.org/10.18637/jss.v077.i01.
