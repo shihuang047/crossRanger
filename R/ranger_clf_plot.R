@@ -209,6 +209,55 @@ plot_clf_probabilities<-function(y, rf_clf_model, positive_class=NA, prefix="tra
   }
 }
 
+#' @title plot_imp_scores
+#' @param rf_clf_model The rf classification model from \code{rf.out.of.bag}
+#' @param positive_class an optional character string for the factor level that corresponds to a "positive" result (if that makes sense for your data).
+#' If there are only two factor levels, the first level will be used as the "positive" result.
+#' @param prefix The prefix of data set.
+#' @param outdir The output directory.
+#' @examples
+#' set.seed(123)
+#' x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
+#'             t(rmultinom(8, 75, c(.201,.4,.12,.18,.099))),
+#'             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
+#'             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
+#'             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
+#' y<-factor(c(rep("1", 20), rep("A", 20), rep("C", 20)))
+#' rf_clf_model<-rf.out.of.bag(x, y)
+#' rf_clf_model<-rf.cross.validation(x, y, nfolds=5)
+#' positive_class="1"
+#' plot_clf_probabilities(y, rf_clf_model, positive_class, outdir='./')
+#' @author Shi Huang
+#' @export
+plot_imp_scores<-function(rf_clf_model, positive_class=NA, prefix="train", outdir=NULL){
+  if(class(rf_clf_model)!="rf.out.of.bag" & class(rf_clf_model)!="rf.cross.validation")stop("The rf_clf_model is not rf.out.of.bag/rf.cross.validation.")
+  positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
+  l<-levels(y); l_sorted<-sort(levels(y))
+  Mycolor <- rep(c("#D55E00", "#0072B2"), length.out=length(l))
+  if(identical(order(l), order(l_sorted))){
+    Mycolor=Mycolor; l_ordered=l
+  }else{Mycolor=rev(Mycolor); l_ordered=l_sorted}
+  y_prob<-data.frame(y, predictor=rf_clf_model$probabilities[,positive_class])
+  p<-ggplot(y_prob, aes(x=.data$y, y=.data$predictor)) +
+    geom_violin()+
+    geom_jitter(position=position_jitter(width=0.2),alpha=0.1) +
+    geom_boxplot(outlier.shape = NA, width=0.4, alpha=0.01)+
+    geom_hline(yintercept=0.5, linetype="dashed")+
+    ylim(0, 1)+
+    theme_bw()+
+    #ggtitle(paste("Wilcoxon Rank Sum Test:\n P=",p_mf,sep=""))+
+    xlab("") +
+    ylab(paste("Probability of ", positive_class))+
+    theme(legend.position="none")+
+    theme(axis.line = element_line(color="black"),
+          strip.background = element_rect(colour = "white"),
+          panel.border = element_blank())+
+    scale_color_manual(values = Mycolor, labels=l_ordered)
+  if(!is.null(outdir)){
+    ggsave(filename=paste(outdir,prefix,".probability_",positive_class,".boxplot.pdf",sep=""), plot=p, width=3, height=4)
+  }
+}
+
 #' @title plot_clf_feature_selection
 #' @description Plot the classification performance against the gradually reduced number of features used in the modeling.
 #' @param x The data frame or data matrix for model training.
@@ -234,7 +283,7 @@ plot_clf_probabilities<-function(y, rf_clf_model, positive_class=NA, prefix="tra
 #' summ<-plot_clf_feature_selection(x, y, nfolds=s, rf_model, metric="AUROC", outdir=NULL)
 #' res<-replicate(10, plot_clf_feature_selection(x, y,
 #' nfolds=5, rf_model, metric="AUROC", outdir=NULL))
-#' do.call(rbind, res["AUROC",])
+#' do.call(rbind, res["top_n_perf", ])
 #' @author Shi Huang
 #' @export
 plot_clf_feature_selection <- function(x, y, nfolds=5, rf_clf_model, metric="AUROC", positive_class=NA, outdir=NULL){
@@ -261,8 +310,8 @@ plot_clf_feature_selection <- function(x, y, nfolds=5, rf_clf_model, metric="AUR
     x_n<-x[, idx]
     y_n<-y
     top_n_rf_list[[i]] <- top_n_rf <- rf.cross.validation(x_n, y_n, nfolds=nfolds, ntree=500)
-    top_n_AUROC<-plot_clf_ROC(y_n, top_n_rf)$auc
-    top_n_AUPRC<-plot_clf_PRC(y_n, top_n_rf)$auc.integral
+    top_n_AUROC<-plot_clf_ROC(y_n, top_n_rf, positive_class=positive_class)$auc
+    top_n_AUPRC<-plot_clf_PRC(y_n, top_n_rf, positive_class=positive_class)$auc.integral
     top_n_conf<-caret::confusionMatrix(data=top_n_rf$predicted, top_n_rf$y, positive=positive_class)
     top_n_perf[i, 1]<-n_features[i]
     top_n_perf[i, 2]<-top_n_AUROC
@@ -294,6 +343,7 @@ plot_clf_feature_selection <- function(x, y, nfolds=5, rf_clf_model, metric="AUR
   res <- list()
   res$top_n_perf <- top_n_perf
   res$top_n_rf <-top_n_rf_list
+  res$plot <- p
   res
 }
 
