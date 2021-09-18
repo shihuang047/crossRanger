@@ -48,7 +48,7 @@ plot_clf_feature_selection(x, y, nfolds=5, rf_model, metric="AUROC", outdir=NULL
 summ<-plot_clf_feature_selection(x, y, nfolds=s, rf_model, metric="AUROC", outdir=NULL)
 res<-replicate(10, plot_clf_feature_selection(x, y,
 nfolds=5, rf_model, metric="AUROC", outdir=NULL))
-do.call(rbind, res["AUROC",])
+do.call(rbind, res["top_n_perf", ])
 }
 \author{
 Shi Huang
