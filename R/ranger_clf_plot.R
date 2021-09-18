@@ -209,11 +209,14 @@ plot_clf_probabilities<-function(y, rf_clf_model, positive_class=NA, prefix="tra
   }
 }
 
-#' @title plot_imp_scores
-#' @param rf_clf_model The rf classification model from \code{rf.out.of.bag}
-#' @param positive_class an optional character string for the factor level that corresponds to a "positive" result (if that makes sense for your data).
-#' If there are only two factor levels, the first level will be used as the "positive" result.
-#' @param prefix The prefix of data set.
+#' @title plot_topN_imp_scores
+#' @param rf_clf_model The rf model from \code{rf.out.of.bag} or \code{rf.cross.validation}
+#' @param topN A number indicating how many top important feature need to visualize in the barplot.
+#' @param feature_md an optional data.frame including feature IDs and feature annotations.
+#' @param feature_id_col The Feature_ID column in the feature metadata.
+#' @param bar_color The column name in the feature metadata for coloring the bar plot.
+#' @param plot_width plotting parameter.
+#' @param plot_height plotting parameter.
 #' @param outdir The output directory.
 #' @examples
 #' set.seed(123)
@@ -223,39 +226,64 @@ plot_clf_probabilities<-function(y, rf_clf_model, positive_class=NA, prefix="tra
 #'             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
 #'             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
 #' y<-factor(c(rep("1", 20), rep("A", 20), rep("C", 20)))
-#' rf_clf_model<-rf.out.of.bag(x, y)
-#' rf_clf_model<-rf.cross.validation(x, y, nfolds=5)
-#' positive_class="1"
-#' plot_clf_probabilities(y, rf_clf_model, positive_class, outdir='./')
+#' feature_md <- data.frame(Feature_ID=c("X1", "X2", "X3", "X4", "X5"),
+#'                          Taxon=c("AA", "Bd", "CC", "CC", "AA"))
+#' rf_model<-rf.out.of.bag(x, y)
+#' rf_model<-rf.cross.validation(x, y, nfolds=5)
+#' plot_topN_imp_scores(rf_model, topN=4, feature_md, outdir=NULL, bar_color="Taxon")
 #' @author Shi Huang
 #' @export
-plot_imp_scores<-function(rf_clf_model, positive_class=NA, prefix="train", outdir=NULL){
-  if(class(rf_clf_model)!="rf.out.of.bag" & class(rf_clf_model)!="rf.cross.validation")stop("The rf_clf_model is not rf.out.of.bag/rf.cross.validation.")
-  positive_class<-ifelse(is.na(positive_class), levels(y)[1], positive_class)
-  l<-levels(y); l_sorted<-sort(levels(y))
-  Mycolor <- rep(c("#D55E00", "#0072B2"), length.out=length(l))
-  if(identical(order(l), order(l_sorted))){
-    Mycolor=Mycolor; l_ordered=l
-  }else{Mycolor=rev(Mycolor); l_ordered=l_sorted}
-  y_prob<-data.frame(y, predictor=rf_clf_model$probabilities[,positive_class])
-  p<-ggplot(y_prob, aes(x=.data$y, y=.data$predictor)) +
-    geom_violin()+
-    geom_jitter(position=position_jitter(width=0.2),alpha=0.1) +
-    geom_boxplot(outlier.shape = NA, width=0.4, alpha=0.01)+
-    geom_hline(yintercept=0.5, linetype="dashed")+
-    ylim(0, 1)+
-    theme_bw()+
-    #ggtitle(paste("Wilcoxon Rank Sum Test:\n P=",p_mf,sep=""))+
-    xlab("") +
-    ylab(paste("Probability of ", positive_class))+
-    theme(legend.position="none")+
-    theme(axis.line = element_line(color="black"),
-          strip.background = element_rect(colour = "white"),
-          panel.border = element_blank())+
-    scale_color_manual(values = Mycolor, labels=l_ordered)
-  if(!is.null(outdir)){
-    ggsave(filename=paste(outdir,prefix,".probability_",positive_class,".boxplot.pdf",sep=""), plot=p, width=3, height=4)
+plot_topN_imp_scores<-function(rf_model, topN=4, feature_md=NULL, feature_id_col="Feature_ID", bar_color=NA,
+                               outdir=NULL, plot_height=8, plot_width=5){
+  if(class(rf_model)!="rf.out.of.bag" & class(rf_model)!="rf.cross.validation")
+    stop("The rf_model is not rf.out.of.bag/rf.cross.validation.")
+  if(class(rf_model)=="rf.cross.validation"){
+    imps<-data.frame(rf_model$importances,
+                     Imps=apply(rf_model$importances, 1, median),
+                     ImpsSD=apply(rf_model$importances, 1, sd),
+                     ImpsSE=apply(rf_model$importances, 1, sd)/sqrt(ncol(rf_model$importances))
+                     )
+  }else{
+    imps=data.frame(Imps=rf_model$importances, ImpsSD=0, ImpsSE=0)
   }
+  imps_df<-data.frame(Feature_ID=rownames(imps), imps, Rank=rank(-imps$Imps))
+  # add feature metadata
+  merge_feature_md<-function(df, feature_md, df_id_col=1, fmd_id_col=1){
+    matched_idx<-which(feature_md[, fmd_id_col] %in% df[, df_id_col])
+    uniq_features_len<-length(unique(df[, df_id_col]))
+    if(uniq_features_len  > length(matched_idx)){
+      warning("# of features has no matching IDs in the feature metadata file: ", uniq_features_len-length(matched_idx), "\n")
+    }
+    feature_md_matched<-feature_md[matched_idx,]
+    out<-merge(df, feature_md_matched, by.x=df_id_col, by.y=fmd_id_col)
+    out
+  }
+  if(!is.null(feature_md)){
+    imps_df<- merge_feature_md(imps_df, feature_md, df_id_col = "Feature_ID", fmd_id_col = feature_id_col)
+  }
+  top_n_imps_df<-imps_df[1:topN, ]
+  top_n_imps_df<-top_n_imps_df[order(top_n_imps_df$Imps, decreasing = T), ]
+  # bar plot
+  p <- ggplot(top_n_imps_df, aes(x=reorder(Feature_ID, Imps), y=Imps)) +
+    geom_bar(stat="identity", alpha=0.5) +
+    scale_fill_viridis(discrete=TRUE) +
+    ylab("RF importance score") +
+    xlab("Feature ID") +
+    ylim(0, max(top_n_imps_df$Imps, na.rm=T)) +
+    theme_minimal() +
+    coord_flip()
+  if(!is.na(bar_color)){
+    p <-p + geom_bar(data=top_n_imps_df, aes(fill=get(bar_color)), stat="identity", alpha=0.5) + labs(fill=bar_color)
+  }
+  if(!is.null(outdir)){
+    ggsave(filename=paste(outdir, "Top_", topN,".imps.barplot.pdf",sep=""), plot=p, width=plot_width, height=plot_height)
+  }
+
+  res <- list()
+  res$imps_df <- imps_df
+  res$plot <- p
+  res
+
 }
 
 #' @title plot_clf_feature_selection

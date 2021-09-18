@@ -245,6 +245,7 @@ balanced.folds <- function(y, nfolds=3){
   }
   result$importances <- matrix(0, nrow=ncol(x), ncol=nfolds)
   colnames(result$importances) <- sort(unique(folds))
+  rownames(result$importances) <- colnames(x)
   for(fold in sort(unique(folds))){
     if(imp_pvalues==FALSE){
       result$importances[,fold] <- result$rf.model[[fold]]$variable.importance
