@@ -348,8 +348,8 @@ plot_clf_feature_selection <- function(x, y, nfolds=5, rf_clf_model, metric="AUR
     top_n_perf[i, 5]<-top_n_conf$overall[2]# kappa conf$byClass["F1"]
     top_n_perf[i, 6]<-top_n_conf$byClass["F1"]
   }
-  all_AUROC<-plot_clf_ROC(y, rf_clf_model)$auc
-  all_AUPRC<-plot_clf_PRC(y, rf_clf_model)$auc.integral
+  all_AUROC<-plot_clf_ROC(y, rf_clf_model, positive_class=positive_class)$auc
+  all_AUPRC<-plot_clf_PRC(y, rf_clf_model, positive_class=positive_class)$auc.integral
   all_conf<-caret::confusionMatrix(data=rf_clf_model$predicted, rf_clf_model$y, positive=positive_class)
   top_n_perf[length(n_features)+1, ]<-c(max_n, all_AUROC, all_AUPRC, all_conf$overall[1],
                                         all_conf$overall[2], all_conf$byClass["F1"])
