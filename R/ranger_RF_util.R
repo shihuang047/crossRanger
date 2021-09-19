@@ -170,6 +170,7 @@ balanced.folds <- function(y, nfolds=3){
 #' @author Shi Huang
 #' @export
 "rf.cross.validation" <- function(x, y, nfolds=3, ntree=500, verbose=FALSE, sparse = FALSE, imp_pvalues=FALSE){
+  if(length(y)!=dim(x)[1]) stop("The target varible doesn't match the shape of train data matrix, please check!")
   if(is.factor(nfolds)){
     folds = factor(nfolds) # it means the customized folds were set
     nfolds = nlevels(nfolds) # how many folds in this customized vector
@@ -181,11 +182,11 @@ balanced.folds <- function(y, nfolds=3){
   result <- list()
   result$rf.model<-list()
   if(is.factor(y)){
-    result$y <- as.factor(y)
+    result$y <- y <- factor(y)
     result$predicted <- y
-    result$probabilities <- matrix(0, nrow=length(result$y), ncol=length(levels(result$y)))
+    result$probabilities <- matrix(0, nrow=length(y), ncol=length(levels(y)))
     rownames(result$probabilities) <- rownames(x)
-    colnames(result$probabilities) <- levels(result$y)
+    colnames(result$probabilities) <- levels(y)
     result$confusion.matrix<-t(sapply(levels(y), function(level) table(y[y==level])))
     result$errs <- numeric(length(unique(folds))); names(result$errs) = sort(unique(folds))
   }else{
