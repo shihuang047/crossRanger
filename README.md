@@ -1,5 +1,5 @@
 # crossRanger
-*The multi-dataset random forests (RF) analysis of microbiome data*
+*This package provide functionalities to perform random forests (RF) meta-analysis of microbiome data*
 
 ***
 ## Introduction
