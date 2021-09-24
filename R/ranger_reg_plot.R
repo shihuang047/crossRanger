@@ -5,6 +5,7 @@
 #' @importFrom gridExtra arrangeGrob
 #' @importFrom reshape2 melt
 #' @importFrom utils write.table
+#' @importFrom gtools rdirichlet
 
 
 #' @title plot_obs_VS_pred
@@ -247,34 +248,41 @@ plot_train_vs_test<-function(train_y, predicted_train_y, test_y, predicted_test_
 #' @param outdir The output directory.
 #' @examples
 #' set.seed(123)
-#' x <- data.frame(rbind(t(rmultinom(7, 7*10, c(.201,.5,.02,.18,.099, .201,.5,.02,.18,.099))),
-#'             t(rmultinom(8, 8*10, c(.201,.4,.12,.18,.099, .201,.5,.02,.18,.099))),
-#'             t(rmultinom(15, 15*10, c(.011,.3,.22,.18,.289, .091,.2,.32,.18,.209))),
-#'             t(rmultinom(15, 15*10, c(.091,.2,.32,.18,.209, .011,.3,.22,.18,.289))),
-#'             t(rmultinom(15, 15*10, c(.001,.1,.42,.18,.299, .001,.1,.42,.18,.299)))))
+#' require("gtools")
+#' n_features <- 100
+#' prob_vec <- rdirichlet(5, sample(n_features))
+#' x <- data.frame(rbind(t(rmultinom(7, 7*n_features, prob_vec[1, ])),
+#'             t(rmultinom(8, 8*n_features, prob_vec[2, ])),
+#'             t(rmultinom(15, 15*n_features, prob_vec[3, ])),
+#'             t(rmultinom(15, 15*n_features, prob_vec[4, ])),
+#'             t(rmultinom(15, 15*n_features, prob_vec[5, ]))))
 #' y<- 1:60
 #' rf_reg_model<-rf.out.of.bag(x, y)
 #' rf_reg_model<-rf.cross.validation(x, y)
-#' plot_reg_feature_selection(x, y, rf_reg_model, metric="MAE", outdir="./")
+#' fs_summ <- plot_reg_feature_selection(x, y, rf_reg_model, metric="MAE", outdir=NULL)
 #' @author Shi Huang
 #' @export
-plot_reg_feature_selection <- function(x, y, rf_reg_model, nfolds=5, metric="MAE", unit=NA, outdir=NULL){
+plot_reg_feature_selection <- function(x, y, rf_reg_model, nfolds=5, metric="MAE",
+                                       unit=NA, outdir=NULL){
   if(class(rf_reg_model)=="rf.cross.validation"){
-    rank_mat <- apply(rf_reg_model$importances, 2, function(x){rank(-x)})
-    rf_imp_rank <- rank(apply(rank_mat, 1, median))
+    rank_mat <- apply(rf_reg_model$importances, 2, function(x){rank(-x, na.last = "keep")})
+    rf_imp_rank <- rank(apply(rank_mat, 1, median), na.last = "keep")
     }else if(class(rf_reg_model)=="rf.out.of.bag"){
-      rf_imp_rank<-rank(-(rf_reg_model$importances))
+      rf_imp_rank<-rank(-(rf_reg_model$importances), na.last = "keep")
     }else{
       stop("The class of input rf model should be rf.out.of.bag or rf.cross.validation.")
     }
-  top_n_rf_list <-list()
   max_n<-max(rf_imp_rank, na.rm = TRUE)
   n_total_features<-ncol(x)
   n_features<-c(2, 4, 8, 16, 32, 64, 128, 256, 512, 1024)
-  n_features<-n_features[1:which.min(abs(n_features-n_total_features))]
+  min_dist_idx <- which.min(abs(n_features-n_total_features))
+  maginal_idx <- ifelse(n_features[min_dist_idx]>n_total_features, min_dist_idx-1, min_dist_idx)
+  n_features<-n_features[1:maginal_idx]
   top_n_perf<-matrix(NA, ncol=6, nrow=length(n_features)+1)
   colnames(top_n_perf)<-c("n_features", "MSE", "RMSE", "MAE", "MAPE", "Spearman_rho")
   rownames(top_n_perf)<-top_n_perf[,1]<-c(n_features, max_n)
+  top_n_rf_list <-vector(mode="list", length = length(n_features))
+  names(top_n_rf_list) <- n_features
   for(i in 1:length(n_features)){
     idx<-which(rf_imp_rank<=n_features[i])
     #top_n_features<-names(rf_imp_rank[idx])
@@ -293,6 +301,12 @@ plot_reg_feature_selection <- function(x, y, rf_reg_model, nfolds=5, metric="MAE
   all_rf_perf<-get.reg.performance(rf_reg_model$predicted, y)
   top_n_perf[length(n_features)+1, ]<-as.numeric(c(max_n, all_rf_perf[c("MSE", "RMSE", "MAE", "MAPE", "Spearman_rho")]))
   top_n_perf<-data.frame(top_n_perf)
+  if(metric=="Spearman_rho"){
+    best_idx <- which.max(top_n_perf[, metric])
+    }else{
+    best_idx <- which.min(top_n_perf[, metric])
+    }
+  best_n_features <- top_n_perf$n_features[best_idx]
   breaks<-top_n_perf$n_features
   y_label <- ifelse(is.na(unit), metric, paste(metric, " (", unit ,")", sep=""))
   p<-ggplot(top_n_perf, aes(x=.data$n_features, y=get(metric))) +
@@ -300,6 +314,9 @@ plot_reg_feature_selection <- function(x, y, rf_reg_model, nfolds=5, metric="MAE
     ylab(y_label)+
     scale_x_continuous(trans = "log", breaks=breaks)+
     geom_point() + geom_line()+
+    geom_vline(xintercept = best_n_features, linetype="dashed", color="blue")+
+    geom_text(aes(x=best_n_features, y=top_n_perf[best_idx, metric], label=best_n_features),
+              color="blue", vjust=-1)+
     theme_bw()+
     theme(axis.line = element_line(color="black"),
           axis.title = element_text(size=18),
@@ -310,6 +327,7 @@ plot_reg_feature_selection <- function(x, y, rf_reg_model, nfolds=5, metric="MAE
   }
   res <- list()
   res$top_n_perf <- top_n_perf
+  res$best_n_features <- best_n_features
   res$top_n_rf <-top_n_rf_list
   res
 }

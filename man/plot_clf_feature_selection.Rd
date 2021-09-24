@@ -9,6 +9,7 @@ plot_clf_feature_selection(
   y,
   nfolds = 5,
   rf_clf_model,
+  log10_n_features = FALSE,
   metric = "AUROC",
   positive_class = NA,
   outdir = NULL
@@ -36,16 +37,19 @@ Plot the classification performance against the gradually reduced number of feat
 }
 \examples{
 set.seed(123)
-x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
-            t(rmultinom(8, 75, c(.201,.4,.12,.18,.099))),
-            t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
-            t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
-            t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
+require("gtools")
+n_features <- 100
+prob_vec <- rdirichlet(5, sample(n_features))
+x <- data.frame(rbind(t(rmultinom(7, 7*n_features, prob_vec[1, ])),
+            t(rmultinom(8, 8*n_features, prob_vec[2, ])),
+            t(rmultinom(15, 15*n_features, prob_vec[3, ])),
+            t(rmultinom(15, 15*n_features, prob_vec[4, ])),
+            t(rmultinom(15, 15*n_features, prob_vec[5, ]))))
 y<-factor(c(rep("A", 30), rep("C", 30)))
 s<-factor(rep(c("B1", "B2", "B3", "B4"), 15))
 rf_model<-rf.cross.validation(x, y, nfolds=5)
-plot_clf_feature_selection(x, y, nfolds=5, rf_model, metric="AUROC", outdir=NULL)
-summ<-plot_clf_feature_selection(x, y, nfolds=s, rf_model, metric="AUROC", outdir=NULL)
+summ <- plot_clf_feature_selection(x, y, nfolds=5, rf_model, metric="AUROC", outdir=NULL)
+summ <- plot_clf_feature_selection(x, y, nfolds=s, rf_model, metric="AUROC", outdir=NULL)
 res<-replicate(10, plot_clf_feature_selection(x, y,
 nfolds=5, rf_model, metric="AUROC", outdir=NULL))
 do.call(rbind, res["top_n_perf", ])

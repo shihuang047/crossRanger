@@ -8,6 +8,8 @@
 #' @importFrom PRROC roc.curve pr.curve
 #' @importFrom gridExtra arrangeGrob
 #' @importFrom reshape2 melt
+#' @importFrom gtools rdirichlet
+#' @import viridis
 
 #' @title plot_clf_pROC
 #' @param y A factor of classes to be used as the true results
@@ -191,7 +193,7 @@ plot_clf_probabilities<-function(y, rf_clf_model, positive_class=NA, prefix="tra
   y_prob<-data.frame(y, predictor=rf_clf_model$probabilities[,positive_class])
   p<-ggplot(y_prob, aes(x=.data$y, y=.data$predictor)) +
     geom_violin()+
-    geom_jitter(position=position_jitter(width=0.2),alpha=0.1) +
+    geom_jitter(position=position_jitter(width=0.2), alpha=0.1) +
     geom_boxplot(outlier.shape = NA, width=0.4, alpha=0.01)+
     geom_hline(yintercept=0.5, linetype="dashed")+
     ylim(0, 1)+
@@ -238,15 +240,21 @@ plot_topN_imp_scores<-function(rf_model, topN=4, feature_md=NULL, feature_id_col
   if(class(rf_model)!="rf.out.of.bag" & class(rf_model)!="rf.cross.validation")
     stop("The rf_model is not rf.out.of.bag/rf.cross.validation.")
   if(class(rf_model)=="rf.cross.validation"){
-    imps<-data.frame(rf_model$importances,
+    rank_mat <- apply(rf_model$importances, 2, function(x){rank(-x, na.last = "keep")})
+    rf_imp_rank <- rank(apply(rank_mat, 1, median), na.last = "keep")
+    imps_df<-data.frame(Feature_ID=rownames(rf_model$importances),
+                     rf_model$importances,
                      Imps=apply(rf_model$importances, 1, median),
                      ImpsSD=apply(rf_model$importances, 1, sd),
-                     ImpsSE=apply(rf_model$importances, 1, sd)/sqrt(ncol(rf_model$importances))
-                     )
+                     ImpsSE=apply(rf_model$importances, 1, sd)/sqrt(ncol(rf_model$importances)),
+                     Rank=rf_imp_rank)
   }else{
-    imps=data.frame(Imps=rf_model$importances, ImpsSD=0, ImpsSE=0)
+    imps_df<-data.frame(Feature_ID=rownames(rf_model$importances),
+                    Imps=rf_model$importances,
+                    ImpsSD=0,
+                    ImpsSE=0,
+                    Rank=rank(-rf_model$importances, na.last = "keep"))
   }
-  imps_df<-data.frame(Feature_ID=rownames(imps), imps, Rank=rank(-imps$Imps))
   # add feature metadata
   merge_feature_md<-function(df, feature_md, df_id_col=1, fmd_id_col=1){
     matched_idx<-which(feature_md[, fmd_id_col] %in% df[, df_id_col])
@@ -299,27 +307,31 @@ plot_topN_imp_scores<-function(rf_model, topN=4, feature_md=NULL, feature_id_col
 #' @param outdir The output directory.
 #' @examples
 #' set.seed(123)
-#' x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
-#'             t(rmultinom(8, 75, c(.201,.4,.12,.18,.099))),
-#'             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
-#'             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
-#'             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
+#' require("gtools")
+#' n_features <- 100
+#' prob_vec <- rdirichlet(5, sample(n_features))
+#' x <- data.frame(rbind(t(rmultinom(7, 7*n_features, prob_vec[1, ])),
+#'             t(rmultinom(8, 8*n_features, prob_vec[2, ])),
+#'             t(rmultinom(15, 15*n_features, prob_vec[3, ])),
+#'             t(rmultinom(15, 15*n_features, prob_vec[4, ])),
+#'             t(rmultinom(15, 15*n_features, prob_vec[5, ]))))
 #' y<-factor(c(rep("A", 30), rep("C", 30)))
 #' s<-factor(rep(c("B1", "B2", "B3", "B4"), 15))
 #' rf_model<-rf.cross.validation(x, y, nfolds=5)
-#' plot_clf_feature_selection(x, y, nfolds=5, rf_model, metric="AUROC", outdir=NULL)
-#' summ<-plot_clf_feature_selection(x, y, nfolds=s, rf_model, metric="AUROC", outdir=NULL)
+#' summ <- plot_clf_feature_selection(x, y, nfolds=5, rf_model, metric="AUROC", outdir=NULL)
+#' summ <- plot_clf_feature_selection(x, y, nfolds=s, rf_model, metric="AUROC", outdir=NULL)
 #' res<-replicate(10, plot_clf_feature_selection(x, y,
 #' nfolds=5, rf_model, metric="AUROC", outdir=NULL))
 #' do.call(rbind, res["top_n_perf", ])
 #' @author Shi Huang
 #' @export
-plot_clf_feature_selection <- function(x, y, nfolds=5, rf_clf_model, metric="AUROC", positive_class=NA, outdir=NULL){
+plot_clf_feature_selection <- function(x, y, nfolds=5, rf_clf_model, #log10_n_features=FALSE,
+                                       metric="AUROC", positive_class=NA, outdir=NULL){
   if(class(rf_clf_model)=="rf.cross.validation"){
-    rank_mat <- apply(rf_clf_model$importances, 2, function(x){rank(-x)})
-    rf_imp_rank <- rank(apply(rank_mat, 1, median))
+    rank_mat <- apply(rf_clf_model$importances, 2, function(x){rank(-x, na.last = "keep")})
+    rf_imp_rank <- rank(apply(rank_mat, 1, median), na.last = "keep")
   }else if(class(rf_clf_model)=="rf.out.of.bag"){
-    rf_imp_rank<-rank(-(rf_clf_model$importances))
+    rf_imp_rank<-rank(-(rf_clf_model$importances), na.last = "keep")
   }else{
     stop("The class of input rf model should be rf.out.of.bag or rf.cross.validation.")
   }
@@ -327,11 +339,14 @@ plot_clf_feature_selection <- function(x, y, nfolds=5, rf_clf_model, metric="AUR
   max_n<-max(rf_imp_rank, na.rm = TRUE)
   n_total_features<-ncol(x)
   n_features<-c(2, 4, 8, 16, 32, 64, 128, 256, 512, 1024)
-  n_features<-n_features[1:which.min(abs(n_features-n_total_features))]
+  min_dist_idx <- which.min(abs(n_features-n_total_features))
+  maginal_idx <- ifelse(n_features[min_dist_idx]>n_total_features, min_dist_idx-1, min_dist_idx)
+  n_features<-n_features[1:maginal_idx]
   top_n_perf<-matrix(NA, ncol=6, nrow=length(n_features)+1)
   colnames(top_n_perf)<-c("n_features", "AUROC", "AUPRC", "Accuracy", "Kappa", "F1")
   rownames(top_n_perf)<-top_n_perf[,1]<-c(n_features, max_n)
-  top_n_rf_list <-list()
+  top_n_rf_list <-vector(mode="list", length = length(n_features))
+  names(top_n_rf_list) <- n_features
   for(i in 1:length(n_features)){
     idx<-which(rf_imp_rank<=n_features[i])
     #top_n_features<-names(rf_imp_rank[idx])
@@ -348,18 +363,23 @@ plot_clf_feature_selection <- function(x, y, nfolds=5, rf_clf_model, metric="AUR
     top_n_perf[i, 5]<-top_n_conf$overall[2]# kappa conf$byClass["F1"]
     top_n_perf[i, 6]<-top_n_conf$byClass["F1"]
   }
+
   all_AUROC<-plot_clf_ROC(y, rf_clf_model, positive_class=positive_class)$auc
   all_AUPRC<-plot_clf_PRC(y, rf_clf_model, positive_class=positive_class)$auc.integral
   all_conf<-caret::confusionMatrix(data=rf_clf_model$predicted, rf_clf_model$y, positive=positive_class)
   top_n_perf[length(n_features)+1, ]<-c(max_n, all_AUROC, all_AUPRC, all_conf$overall[1],
                                         all_conf$overall[2], all_conf$byClass["F1"])
   top_n_perf<-data.frame(top_n_perf)
+  best_idx <- which.max(top_n_perf[, metric])
+  best_n_features <- top_n_perf$n_features[best_idx]
   breaks<-top_n_perf$n_features
   p<-ggplot(top_n_perf, aes(x=.data$n_features, y=get(metric))) +
     xlab("# of features used")+
     ylab(metric)+
-    #scale_x_continuous(trans = "log", breaks=breaks)+
+    scale_x_continuous(trans = "log10", breaks=breaks)+
     geom_point() + geom_line()+ ylim(0.5, 1)+
+    geom_vline(xintercept = best_n_features, linetype="dashed", color="blue")+
+    geom_text(aes(x=best_n_features, y=top_n_perf[best_idx, metric], label=best_n_features), color="blue", vjust=-1)+
     theme_bw()+
     theme(axis.line = element_line(color="black"),
           axis.title = element_text(size=18),
@@ -370,6 +390,7 @@ plot_clf_feature_selection <- function(x, y, nfolds=5, rf_clf_model, metric="AUR
   }
   res <- list()
   res$top_n_perf <- top_n_perf
+  res$best_n_features <- best_n_features
   res$top_n_rf <-top_n_rf_list
   res$plot <- p
   res

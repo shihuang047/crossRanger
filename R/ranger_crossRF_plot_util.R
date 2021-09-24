@@ -5,6 +5,7 @@
 #' @importFrom plyr ldply
 #' @importFrom rlang .data
 #' @import ggplot2
+#' @import viridis
 #' @importFrom gridExtra arrangeGrob
 #' @importFrom reshape2 melt
 

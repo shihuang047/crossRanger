@@ -35,15 +35,18 @@ Plot the regression performance against the reduced number of features used in t
 }
 \examples{
 set.seed(123)
-x <- data.frame(rbind(t(rmultinom(7, 7*10, c(.201,.5,.02,.18,.099, .201,.5,.02,.18,.099))),
-            t(rmultinom(8, 8*10, c(.201,.4,.12,.18,.099, .201,.5,.02,.18,.099))),
-            t(rmultinom(15, 15*10, c(.011,.3,.22,.18,.289, .091,.2,.32,.18,.209))),
-            t(rmultinom(15, 15*10, c(.091,.2,.32,.18,.209, .011,.3,.22,.18,.289))),
-            t(rmultinom(15, 15*10, c(.001,.1,.42,.18,.299, .001,.1,.42,.18,.299)))))
+require("gtools")
+n_features <- 100
+prob_vec <- rdirichlet(5, sample(n_features))
+x <- data.frame(rbind(t(rmultinom(7, 7*n_features, prob_vec[1, ])),
+            t(rmultinom(8, 8*n_features, prob_vec[2, ])),
+            t(rmultinom(15, 15*n_features, prob_vec[3, ])),
+            t(rmultinom(15, 15*n_features, prob_vec[4, ])),
+            t(rmultinom(15, 15*n_features, prob_vec[5, ]))))
 y<- 1:60
 rf_reg_model<-rf.out.of.bag(x, y)
 rf_reg_model<-rf.cross.validation(x, y)
-plot_reg_feature_selection(x, y, rf_reg_model, metric="MAE", outdir="./")
+fs_summ <- plot_reg_feature_selection(x, y, rf_reg_model, metric="MAE", outdir=NULL)
 }
 \author{
 Shi Huang
