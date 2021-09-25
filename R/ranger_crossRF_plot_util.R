@@ -348,7 +348,7 @@ rf_clf.comps.summ<-function(df, f, comp_group, clr_transform=TRUE, nfolds=3, ver
 #' @param plot_height The height (inches) of heatmap.
 #' @param plot_width The width (inches) of heatmap
 #' @param outdir The outputh directory, default is NULL.
-#' @return A heatmap showing ML performance.
+#' @return A heat map showing ML performance in self-validation and cross-applications.
 #' @examples
 #' df <- data.frame(rbind(t(rmultinom(14, 14*5, c(.21,.6,.12,.38,.099))),
 #'             t(rmultinom(16, 16*5, c(.001,.6,.42,.58,.299))),

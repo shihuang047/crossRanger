@@ -247,6 +247,7 @@ balanced.folds <- function(y, nfolds=3){
   result$importances <- matrix(0, nrow=ncol(x), ncol=nfolds)
   colnames(result$importances) <- sort(unique(folds))
   rownames(result$importances) <- colnames(x)
+  if(imp_pvalues) result$importance_pvalues <- result$importances
   for(fold in sort(unique(folds))){
     if(imp_pvalues==FALSE){
       result$importances[,fold] <- result$rf.model[[fold]]$variable.importance
@@ -278,7 +279,6 @@ balanced.folds <- function(y, nfolds=3){
     probs <- sweep(votes, 1, apply(votes, 1, sum), '/')
     rownames(probs) <- rownames(x)
     colnames(probs) <- model$forest$class.values
-
     return(invisible(probs))
 }
 
