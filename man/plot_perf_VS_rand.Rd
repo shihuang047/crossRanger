@@ -13,7 +13,7 @@ plot_perf_VS_rand(
   nfolds,
   metric = "MAE",
   permutation = 100,
-  n_features,
+  n_features = NA,
   outdir = NULL
 )
 }
@@ -29,7 +29,8 @@ plot_perf_VS_rand(
 \item{target_field}{A string indicating the target field of the metadata for regression.}
 
 \item{nfolds}{The number of folds in the cross validation. If nfolds > length(y)
-or nfolds==-1, uses leave-one-out cross-validation. If nfolds was a factor, it means customized folds (e.g., leave-one-group-out cv) were set for CV.}
+or nfolds==-1, uses leave-one-out cross-validation. If nfolds was a factor, it means customized folds
+(e.g., leave-one-group-out cv) were set for CV.}
 
 \item{metric}{The regression performance metric applied, including MAE, RMSE, MSE, R_squared, Adj_R_squared, or Separman_rho.}
 
@@ -40,7 +41,8 @@ or nfolds==-1, uses leave-one-out cross-validation. If nfolds was a factor, it m
 \item{outdir}{The output directory.}
 }
 \description{
-It output a histogram showing the performance of a real regression model and null models.
+This outputs a histogram and a p-value showing if the performance of a real regression model
+significantly better than null models.
 }
 \examples{
 set.seed(123)
@@ -51,7 +53,7 @@ x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
 y<- 1:60
 rf_model<-rf.out.of.bag(x, y)
-p<-plot_perf_VS_rand(y=y, predicted_y=rf_model$predicted, prefix="train",
+p<-plot_perf_VS_rand(x=x, y=y, predicted_y=rf_model$predicted, prefix="train", nfolds=5,
 permutation=100, metric="MAE", target_field="age", n_features=5)
 p
 }

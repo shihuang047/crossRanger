@@ -145,6 +145,7 @@ balanced.folds <- function(y, nfolds=3){
 #' @param sparse A boolean value indicates if the input matrix transformed into sparse matrix for rf modeling.
 #' @param verbose A boolean value indicates if showing computation status and estimated runtime.
 #' @param imp_pvalues If compute both importance score and pvalue for each feature.
+#' @param ... Other parameters applicable to `ranger`.
 #' @return Object of class \code{rf.cross.validation} with elements including a \code{ranger} object and mutiple metrics for model evaluations.
 #' @seealso ranger
 #' @examples
@@ -169,7 +170,7 @@ balanced.folds <- function(y, nfolds=3){
 #' rf.cross.validation(x, y_n, nfolds=s, imp_pvalues=FALSE)
 #' @author Shi Huang
 #' @export
-"rf.cross.validation" <- function(x, y, nfolds=3, ntree=500, verbose=FALSE, sparse = FALSE, imp_pvalues=FALSE){
+"rf.cross.validation" <- function(x, y, nfolds=3, ntree=500, verbose=FALSE, sparse = FALSE, imp_pvalues=FALSE, ...){
   if(length(y)!=dim(x)[1]) stop("The target varible doesn't match the shape of train data matrix, please check!")
   if(is.factor(nfolds)){
     folds = factor(nfolds) # it means the customized folds were set
@@ -178,7 +179,7 @@ balanced.folds <- function(y, nfolds=3){
     if(nfolds==-1) nfolds <- length(y)
     folds <- balanced.folds(y, nfolds=nfolds)
   }
-  if(any(table(folds)<5)) stop("Less than 5 samples in at least one fold!\n")
+  if(any(table(folds)<3)) stop("Less than 3 samples in at least one fold!\n")
   result <- list()
   result$rf.model<-list()
   if(is.factor(y)){
@@ -204,10 +205,10 @@ balanced.folds <- function(y, nfolds=3){
     if(sparse){
       sparse_data <- Matrix::Matrix(data.matrix(data), sparse = TRUE)
       result$rf.model[[fold]]<- model <- ranger(dependent.variable.name="y", data=sparse_data, classification=ifelse(is.factor(y_tr), TRUE, FALSE),
-                                                keep.inbag=TRUE, importance='permutation', verbose=verbose, num.trees=ntree)
+                                                keep.inbag=TRUE, importance='permutation', verbose=verbose, num.trees=ntree, ...)
     }else{
       result$rf.model[[fold]]<- model <- ranger(dependent.variable.name="y", data=data, keep.inbag=TRUE, importance='permutation',
-                                                classification=ifelse(is.factor(y_tr), TRUE, FALSE), num.trees=ntree, verbose=verbose)
+                                                classification=ifelse(is.factor(y_tr), TRUE, FALSE), num.trees=ntree, verbose=verbose, ...)
     }
     newx <- x[foldix,]
     if(length(foldix)==1) newx <- matrix(newx, nrow=1)

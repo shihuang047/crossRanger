@@ -12,7 +12,7 @@ rf_clf.by_datasets(
   positive_class = NA,
   rf_imp_pvalues = FALSE,
   clr_transform = TRUE,
-  nfolds = 3,
+  nfolds = 1,
   verbose = FALSE,
   ntree = 500,
   p.adj.method = "BH",

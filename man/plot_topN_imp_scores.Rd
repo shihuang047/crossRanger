@@ -16,6 +16,8 @@ plot_topN_imp_scores(
 )
 }
 \arguments{
+\item{rf_model}{The rf model from \code{rf.out.of.bag} or \code{rf.cross.validation}}
+
 \item{topN}{A number indicating how many top important feature need to visualize in the barplot.}
 
 \item{feature_md}{an optional data.frame including feature IDs and feature annotations.}
@@ -29,8 +31,6 @@ plot_topN_imp_scores(
 \item{plot_height}{plotting parameter.}
 
 \item{plot_width}{plotting parameter.}
-
-\item{rf_clf_model}{The rf model from \code{rf.out.of.bag} or \code{rf.cross.validation}}
 }
 \description{
 plot_topN_imp_scores

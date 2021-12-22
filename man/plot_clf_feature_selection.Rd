@@ -9,7 +9,6 @@ plot_clf_feature_selection(
   y,
   nfolds = 5,
   rf_clf_model,
-  log10_n_features = FALSE,
   metric = "AUROC",
   positive_class = NA,
   outdir = NULL

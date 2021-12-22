@@ -24,7 +24,7 @@ plot_cross_appl(
 \item{plot_height}{The height (inches) of heatmap.}
 }
 \value{
-A heatmap showing ML performance.
+A heat map showing ML performance in self-validation and cross-applications.
 }
 \description{
 The heatmap indicating ML performance (e.g., MAE) in the self-validation and cross-applications.
@@ -44,9 +44,14 @@ metadata<-data.frame(f_s=factor(rep(c("A", "B"), 60)),
 
 table(metadata[, c('f_s', 'f_c')])
 clf_res<-rf_clf.by_datasets(df, metadata, nfolds=5, s_category='f_c', c_category='f_s')
-clf_cross_appl_res <- rf_clf.cross_appl(clf_res$rf_model_list, x_list=clf_res$x_list, y_list=clf_res$y_list)
+clf_cross_appl_res <- rf_clf.cross_appl(clf_res$rf_model_list,
+                                        x_list=clf_res$x_list,
+                                        y_list=clf_res$y_list)
 plot_cross_appl(clf_cross_appl_res, metric="AUROC")
+
 reg_res<-rf_reg.by_datasets(df, metadata, nfolds=5, s_category='f_c', c_category='age')
-reg_cross_appl_res <- rf_reg.cross_appl(reg_res, x_list=reg_res$x_list, y_list=reg_res$y_list)
-plot_cross_appl(reg_cross_appl_res)
+reg_cross_appl_res <- rf_reg.cross_appl(reg_res,
+                                        x_list=reg_res$x_list,
+                                        y_list=reg_res$y_list)
+plot_cross_appl(reg_cross_appl_res, metric="MAE")
 }

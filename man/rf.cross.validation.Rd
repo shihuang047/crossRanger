@@ -11,7 +11,8 @@ rf.cross.validation(
   ntree = 500,
   verbose = FALSE,
   sparse = FALSE,
-  imp_pvalues = FALSE
+  imp_pvalues = FALSE,
+  ...
 )
 }
 \arguments{
@@ -29,6 +30,8 @@ or nfolds==-1, uses leave-one-out cross-validation. If nfolds was a factor, it m
 \item{sparse}{A boolean value indicates if the input matrix transformed into sparse matrix for rf modeling.}
 
 \item{imp_pvalues}{If compute both importance score and pvalue for each feature.}
+
+\item{...}{Other parameters applicable to `ranger`.}
 }
 \value{
 Object of class \code{rf.cross.validation} with elements including a \code{ranger} object and mutiple metrics for model evaluations.

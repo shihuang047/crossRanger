@@ -10,8 +10,8 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: FALSE
 Imports: 
-  ranger, stats, utils, foreach, doMC, compositions, grDevices, PRROC, rlang,
-  Matrix, ggplot2, caTools, ROCR, pROC, caret, corrplot, gridExtra, plyr, reshape2
+  ranger, stats, utils, foreach, doMC, compositions, grDevices, PRROC, rlang, gtools,
+  Matrix, ggplot2, caTools, ROCR, pROC, caret, corrplot, gridExtra, plyr, reshape2, viridis
 Suggests: 
     testthat
 RoxygenNote: 7.1.2

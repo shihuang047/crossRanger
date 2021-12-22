@@ -99,11 +99,13 @@ plot_residuals <- function(y, predicted_y, SampleIDs=NULL, prefix="train", targe
 }
 
 #' @title plot_perf_VS_rand
-#' @description It output a histogram showing the performance of a real regression model and null models.
+#' @description This outputs a histogram and a p-value showing if the performance of a real regression model
+#' significantly better than null models.
 #' @param x The train data.
 #' @param y The numeric labeling data.
 #' @param nfolds The number of folds in the cross validation. If nfolds > length(y)
-#' or nfolds==-1, uses leave-one-out cross-validation. If nfolds was a factor, it means customized folds (e.g., leave-one-group-out cv) were set for CV.
+#' or nfolds==-1, uses leave-one-out cross-validation. If nfolds was a factor, it means customized folds
+#' (e.g., leave-one-group-out cv) were set for CV.
 #' @param predicted_y The predicted values for y.
 #' @param n_features The number of features in the training data.
 #' @param prefix The prefix for the dataset in the training or testing.
@@ -120,13 +122,13 @@ plot_residuals <- function(y, predicted_y, SampleIDs=NULL, prefix="train", targe
 #'             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
 #' y<- 1:60
 #' rf_model<-rf.out.of.bag(x, y)
-#' p<-plot_perf_VS_rand(y=y, predicted_y=rf_model$predicted, prefix="train",
+#' p<-plot_perf_VS_rand(x=x, y=y, predicted_y=rf_model$predicted, prefix="train", nfolds=5,
 #' permutation=100, metric="MAE", target_field="age", n_features=5)
 #' p
 #' @author Shi Huang
 #' @export
 plot_perf_VS_rand<-function(x, y, predicted_y, prefix="train", target_field, nfolds,
-                            metric="MAE", permutation=100, n_features, outdir=NULL){
+                            metric="MAE", permutation=100, n_features=NA, outdir=NULL){
   # rand_perf <- function(y, permutation.=permutation, metric.=metric,
   #                       n_features.=n_features){
   #   set.seed(123)
@@ -236,6 +238,83 @@ plot_train_vs_test<-function(train_y, predicted_train_y, test_y, predicted_test_
   invisible(p)
 }
 
+
+#' @title plot_test_perf_VS_rand
+#' @description This outputs a histogram and a p-value showing if the performance of a real regression model
+#' significantly better than null models.
+#' @param rf_model A trained rf model object, which should be generated from /code{rf.cross.validation} or /code{rf.out.of.bag}.
+#' @param newy The data label of new data.
+#' @param newx A data.matrix or data.frame with the new data for rf model testing.
+#' @param n_features The number of features in the training data.
+#' @param prefix The prefix for the dataset in the training or testing.
+#' @param target_field A string indicating the target field of the metadata for machine-learning analysis.
+#' @param metric The regression performance metric applied, including MAE, RMSE, MSE, R_squared, Adj_R_squared, or Separman_rho.
+#' @param permutation The permutation times for a random guess of regression performance.
+#' @param outdir The output directory.
+#' @examples
+#' set.seed(123)
+#' x <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
+#'             t(rmultinom(8, 75, c(.201,.4,.12,.18,.099))),
+#'             t(rmultinom(15, 75, c(.011,.3,.22,.18,.289))),
+#'             t(rmultinom(15, 75, c(.091,.2,.32,.18,.209))),
+#'             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
+#' y<- 1:60
+#'
+#' newx <- data.frame(rbind(t(rmultinom(7, 75, c(.201,.5,.02,.18,.099))),
+#'             t(rmultinom(8, 75, c(.201,.4,.12,.18,.099))),
+#'             t(rmultinom(15, 75, c(.001,.1,.42,.18,.299)))))
+#' newy<- 4:33
+#' rf_model<-rf.out.of.bag(x, y)
+#' p<-plot_perf_VS_rand(x=x, y=y, predicted_y=rf_model$predicted, prefix="train", nfolds=5,
+#' permutation=100, metric="MAE", target_field="age", n_features=5)
+#' p
+#' p_test<-plot_test_perf_VS_rand(rf_model, newx, newy, permutation=100,
+#'                                metric="MAE", target_field="age", n_features=5)
+#' p_test
+#' @author Shi Huang
+#' @export
+plot_test_perf_VS_rand<-function(rf_model, newx, newy, prefix="test", target_field="",
+                            metric="MAE", permutation=1000, n_features=NA, outdir=NULL){
+
+  shuffle_y_test_perf <- function(rf_model, newx, newy, permutation.=permutation, metric.=metric,
+                             n_features.=n_features){
+    set.seed(123)
+    rand_y_mat <-replicate(permutation, sample(newy, replace = FALSE))
+    rand_perf_values <- apply(rand_y_mat, 2, function(rand_y){
+      predicted_newy <- predict(rf_model$rf.model, newx, type="response")$predictions
+      perf <- get.reg.performance(rand_y, predicted_newy)[[metric]]
+    })
+    rand_perf_values
+  }
+  emp_p_value <- function(perf_value, rand_perf_values){
+    k<-length(rand_perf_values)
+    p<-(sum(abs(perf_value >= rand_perf_values))+1)/(k+1)
+    p
+  }
+  rand_perf_values <- shuffle_y_test_perf(rf_model, newx, newy)
+  predicted_newy <- predict(rf_model$rf.model, newx, type="response")$predictions
+  perf_value<-get.reg.performance(predicted_newy, newy)[[metric]]
+  perf_values<-data.frame(perf_value, rand_perf_values)
+  emp_p_value<-emp_p_value(perf_value, rand_perf_values)
+  # histogram
+  label = paste(metric, ": ", as.character(round(perf_value, 2)), "\np-value = ", round(emp_p_value, 2), sep="")
+  p<-ggplot(perf_values, aes(x=.data$rand_perf_values)) + geom_histogram(alpha=0.5) +
+    xlab(metric)+
+    ylab("count")+
+    geom_vline(data=perf_values, aes(xintercept = .data$perf_value)) +
+    annotate(geom="text", x=perf_value, y=Inf, label=label, color="red", vjust=2, hjust=0)+theme_bw()
+  if(!is.null(outdir)){
+    ggsave(filename=paste(outdir, prefix, ".", target_field, ".", metric,
+                          "_vs_rand.histogram.pdf",sep=""), plot=p, height=4, width=4)
+  }
+  res <- list()
+  res$emp_p_value <- emp_p_value
+  res$perf_values <- perf_values
+  res$plot <- p
+  res
+}
+
+
 #' @title plot_reg_feature_selection
 #' @description Plot the regression performance against the reduced number of features used in the modeling.
 #' @param x The data frame or data matrix for model training.
@@ -258,7 +337,7 @@ plot_train_vs_test<-function(train_y, predicted_train_y, test_y, predicted_test_
 #'             t(rmultinom(15, 15*n_features, prob_vec[5, ]))))
 #' y<- 1:60
 #' rf_reg_model<-rf.out.of.bag(x, y)
-#' rf_reg_model<-rf.cross.validation(x, y, nfolds=5)
+#' rf_reg_model<-rf.cross.validation(x, y)
 #' fs_summ <- plot_reg_feature_selection(x, y, rf_reg_model, metric="MAE", outdir=NULL)
 #' @author Shi Huang
 #' @export
@@ -266,9 +345,9 @@ plot_reg_feature_selection <- function(x, y, rf_reg_model, nfolds=5, metric="MAE
                                        unit=NA, outdir=NULL){
   if(class(rf_reg_model)=="rf.cross.validation"){
     rank_mat <- apply(rf_reg_model$importances, 2, function(x){rank(-x, na.last = "keep")})
-    rf_imp_rank <- rank(apply(rank_mat, 1, median), na.last = "keep", ties.method = "min")
+    rf_imp_rank <- rank(apply(rank_mat, 1, median), na.last = "keep")
     }else if(class(rf_reg_model)=="rf.out.of.bag"){
-      rf_imp_rank<-rank(-(rf_reg_model$importances), na.last = "keep", ties.method = "min")
+      rf_imp_rank<-rank(-(rf_reg_model$importances), na.last = "keep")
     }else{
       stop("The class of input rf model should be rf.out.of.bag or rf.cross.validation.")
     }
@@ -390,8 +469,11 @@ calc_rel_predicted<-function(train_y, predicted_train_y, train_SampleIDs=NULL,
       relTrain_data<-train_relTrain_data<-data.frame(SampleIDs=train_SampleIDs, relTrain_data)
     }
   }
-  sink(paste(outdir, train_prefix,".Relative_",train_target_field,".results.xls",sep=""));cat("\t");
-  write.table(relTrain_data,quote=FALSE,sep="\t", row.names = FALSE);sink(NULL)
+  if(!is.null(outdir)){
+    sink(paste(outdir, train_prefix,".Relative_",train_target_field,".results.xls",sep=""))
+    cat("\t")
+    write.table(relTrain_data,quote=FALSE,sep="\t", row.names = FALSE);sink(NULL)
+  }
 
   if(!is.null(test_y) & !is.null(predicted_test_y)){
     test_fitted<-predict(spl_train, test_y)$y
@@ -409,9 +491,12 @@ calc_rel_predicted<-function(train_y, predicted_train_y, train_SampleIDs=NULL,
     relTrain_data<-rbind(train_relTrain_data, test_relTrain_data)
     DataSet <- factor(c(rep(train_prefix,length(train_relTrain)), rep(test_prefix,length(test_relTrain)) ))
     relTrain_data<-data.frame(relTrain_data, DataSet)
-    sink(paste(outdir, train_prefix,"-",test_prefix,".Relative_",train_target_field,".results.xls",sep=""));
-    cat("\t");
-    write.table(relTrain_data,quote=FALSE,sep="\t", row.names = FALSE);sink(NULL)
+
+    if(!is.null(outdir)){
+      sink(paste(outdir, train_prefix,"-",test_prefix,".Relative_",train_target_field,".results.xls",sep=""));
+      cat("\t");
+      write.table(relTrain_data,quote=FALSE,sep="\t", row.names = FALSE);sink(NULL)
+    }
   }
     return(relTrain_data)
 }

@@ -24,10 +24,10 @@ utils::globalVariables(c("i"))
 #' @export
 rf_clf.pairwise <- function (df, f, nfolds=3, ntree=5000, verbose=FALSE) {
   ## TODO: check the class of inputs
-  rf_compare_levels <- function(df, f, i=1, j=2, nfolds=3, ntree=500, verbose=FALSE) {
+  rf_compare_levels <- function(df, f, i=1, j=2, nfolds=1, ntree=500, verbose=FALSE) {
     df_ij <- df[which(as.integer(f) == i | as.integer(f) == j), ]
     f_ij <- factor(f[which(as.integer(f) == i | as.integer(f) == j)])
-    if(nfolds==3){
+    if(nfolds==1){
       oob<-rf.out.of.bag(df_ij, f_ij, verbose=verbose, ntree=ntree)
     }else{
       oob<-rf.cross.validation(df_ij, f_ij, nfolds=nfolds, verbose=verbose, ntree=ntree)
@@ -105,7 +105,7 @@ rf_clf.pairwise <- function (df, f, nfolds=3, ntree=5000, verbose=FALSE) {
 #' @author Shi Huang
 #' @export
 rf_clf.by_datasets<-function(df, metadata, s_category, c_category, positive_class=NA,
-                             rf_imp_pvalues=FALSE, clr_transform=TRUE, nfolds=3, verbose=FALSE, ntree=500,
+                             rf_imp_pvalues=FALSE, clr_transform=TRUE, nfolds=1, verbose=FALSE, ntree=500,
                              p.adj.method = "BH", q_cutoff=0.05){
   ## TODO: check the class of inputs
   y_list<-split(factor(metadata[, c_category]), factor(metadata[, s_category]))
@@ -126,7 +126,7 @@ rf_clf.by_datasets<-function(df, metadata, s_category, c_category, positive_clas
     x<-x_list[[i]]
     y<-factor(y_list[[i]])
     # 2. AUC of random forest model
-    if(nfolds==3){
+    if(nfolds==1){
       oob<-rf.out.of.bag(x, y, verbose=verbose, ntree=ntree, imp_pvalues = rf_imp_pvalues)
       rf_imps=oob$importances
     }else{
@@ -211,20 +211,20 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=5,
     # use all cores in devtools::test()
   #  nCores <- parallel::detectCores()
   #}
-  nCores <- parallel::detectCores()
+  nCores <- parallel::detectCores()-2
   doMC::registerDoMC(nCores)
   # comb function for parallelization using foreach
   comb <- function(x, ...) {
     lapply(seq_along(x),
            function(i) c(x[[i]], lapply(list(...), function(y) y[[i]])))
   }
-  if(nfolds==3){
+  if(nfolds==1){
     oper_len=15
     out_list<-list(list())[rep(1, oper_len)]
     oper_names<-c("rf.model", "y", "predicted", "MSE", "RMSE", "nRMSE",
                   "MAE", "MAPE", "MASE", "Spearman_rho", "R_squared", "Adj_R_squared",
                   "importances", "params", "error.type")
-  }else if(nfolds!=3){
+  }else if(nfolds!=1){
                   oper_len=16
                   out_list<-list(list())[rep(1, oper_len)]
                   oper_names<-c("rf.model", "y", "predicted", "MSE", "RMSE", "nRMSE",
@@ -233,7 +233,7 @@ rf_reg.by_datasets<-function(df, metadata, s_category, c_category, nfolds=5,
   require("foreach")
   oper<-foreach(i=1:L, .combine='comb', .multicombine=TRUE,
                 .init=out_list) %dopar% {
-                             if(nfolds==3){
+                             if(nfolds==1){
                                out<-rf.out.of.bag(x_list[[i]], y_list[[i]],
                                                   verbose=verbose, ntree=ntree,
                                                   imp_pvalues = rf_imp_pvalues)

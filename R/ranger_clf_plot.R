@@ -212,7 +212,7 @@ plot_clf_probabilities<-function(y, rf_clf_model, positive_class=NA, prefix="tra
 }
 
 #' @title plot_topN_imp_scores
-#' @param rf_clf_model The rf model from \code{rf.out.of.bag} or \code{rf.cross.validation}
+#' @param rf_model The rf model from \code{rf.out.of.bag} or \code{rf.cross.validation}
 #' @param topN A number indicating how many top important feature need to visualize in the barplot.
 #' @param feature_md an optional data.frame including feature IDs and feature annotations.
 #' @param feature_id_col The Feature_ID column in the feature metadata.
@@ -272,7 +272,7 @@ plot_topN_imp_scores<-function(rf_model, topN=4, feature_md=NULL, feature_id_col
   top_n_imps_df<-imps_df[1:topN, ]
   top_n_imps_df<-top_n_imps_df[order(top_n_imps_df$Imps, decreasing = T), ]
   # bar plot
-  p <- ggplot(top_n_imps_df, aes(x=reorder(Feature_ID, Imps), y=Imps)) +
+  p <- ggplot(top_n_imps_df, aes(x=reorder(top_n_imps_df$Feature_ID, top_n_imps_df$Imps), y=top_n_imps_df$Imps)) +
     geom_bar(stat="identity", alpha=0.5) +
     scale_fill_viridis(discrete=TRUE) +
     ylab("RF importance score") +
