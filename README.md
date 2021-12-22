@@ -50,7 +50,7 @@ rf.out.of.bag(x=df, y=metadata$f_s, imp_pvalues=FALSE)
 res_list<-rf_clf.by_datasets(df, metadata, s_category='f_s', c_category='f_c', positive_class="C")
 summary(res_list)
 ```
-* Apply RF models on the same responsive variable to other stratified ones
+*  Apply RF models to other datasets
 ``` r 
 cross_rf<-rf_clf.cross_appl(rf_model_list=res_list$rf_model_list, 
                             x_list=res_list$x_list, 
