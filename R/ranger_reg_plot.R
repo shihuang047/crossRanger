@@ -258,7 +258,7 @@ plot_train_vs_test<-function(train_y, predicted_train_y, test_y, predicted_test_
 #'             t(rmultinom(15, 15*n_features, prob_vec[5, ]))))
 #' y<- 1:60
 #' rf_reg_model<-rf.out.of.bag(x, y)
-#' rf_reg_model<-rf.cross.validation(x, y)
+#' rf_reg_model<-rf.cross.validation(x, y, nfolds=5)
 #' fs_summ <- plot_reg_feature_selection(x, y, rf_reg_model, metric="MAE", outdir=NULL)
 #' @author Shi Huang
 #' @export
@@ -266,9 +266,9 @@ plot_reg_feature_selection <- function(x, y, rf_reg_model, nfolds=5, metric="MAE
                                        unit=NA, outdir=NULL){
   if(class(rf_reg_model)=="rf.cross.validation"){
     rank_mat <- apply(rf_reg_model$importances, 2, function(x){rank(-x, na.last = "keep")})
-    rf_imp_rank <- rank(apply(rank_mat, 1, median), na.last = "keep")
+    rf_imp_rank <- rank(apply(rank_mat, 1, median), na.last = "keep", ties.method = "min")
     }else if(class(rf_reg_model)=="rf.out.of.bag"){
-      rf_imp_rank<-rank(-(rf_reg_model$importances), na.last = "keep")
+      rf_imp_rank<-rank(-(rf_reg_model$importances), na.last = "keep", ties.method = "min")
     }else{
       stop("The class of input rf model should be rf.out.of.bag or rf.cross.validation.")
     }
