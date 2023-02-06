@@ -201,7 +201,7 @@ balanced.folds <- function(y, nfolds=3){
     cat("The # of folds: ", fold, "\n") # if(verbose)
     foldix <- which(folds==fold)
     if(is.factor(y)) y_tr<-factor(result$y[-foldix]) else y_tr<-result$y[-foldix]
-    data<-data.frame(y=y_tr, x[-foldix,])
+    data<-data.frame(y=y_tr, x[-foldix,], check.names = FALSE)
     if(sparse){
       sparse_data <- Matrix::Matrix(data.matrix(data), sparse = TRUE)
       result$rf.model[[fold]]<- model <- ranger(dependent.variable.name="y", data=sparse_data, classification=ifelse(is.factor(y_tr), TRUE, FALSE),
@@ -320,7 +320,7 @@ balanced.folds <- function(y, nfolds=3){
   # get aggregated class votes for each sample using only OOB trees
   n_classes <- length(model$forest$class.values) #model$forest$levels
   votes <- matrix(0, nrow=nrow(newx), ncol=n_classes)
-  rf.pred <- predict(model, data.frame(newx), type="response", predict.all=TRUE)
+  rf.pred <- predict(model, data.frame(newx, check.names = FALSE), type="response", predict.all=TRUE)
   for(i in 1:nrow(newx)){
     votes[i,] <- table(factor(rf.pred$predictions[i,], levels=seq_along(model$forest$class.values)))
   }

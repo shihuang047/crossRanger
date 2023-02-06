@@ -1,4 +1,4 @@
-#' @importFrom foreach foreach %dopar%
+#' @import foreach
 #' @importFrom parallel detectCores
 #' @importFrom doMC registerDoMC
 #' @importFrom rlang .data
@@ -56,7 +56,7 @@ BetweenGroup.test <-function(x, y, clr_transform=FALSE, p.adj.method="bonferroni
     #  descriptive statistics of each feature (column) for samples (rows) grouped by y
     desc_stats_by_group_df<-desc_stats_by_group(x, y, clr_transform=clr_transform, positive_class=positive_class)
     #-------------------------------Enrichment
-    Enr_all<-Enr_by_q_cutoff(test_output, desc_stats_by_group_df, positive_class, q_cutoff=0.05)
+    Enr_all<-Enr_by_q_cutoff(test_output, desc_stats_by_group_df, positive_class, q_cutoff=q_cutoff)
     #-------------------------------
     output1<-data.frame(desc_stats_all_df, desc_stats_by_group_df, test_output,  Enr_all)
     output1
