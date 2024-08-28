@@ -78,12 +78,16 @@ BetweenGroup.test <-function(x, y, clr_transform=FALSE, p.adj.method="bonferroni
 #' @author Shi Huang
 #' @export
 log.mat<-function(mat, base=2){
-  if (any(mat == 0)) {
-    v <- as.vector(mat)
-    minval <- min(v[v > 0])/2
-    mat <- mat + minval
+  if(any(mat == 0)) {
+    if(sum(mat == 0) == length(unlist(mat))) {
+      mat <- mat + 1e-5
+    }
+    else{
+      v <- as.vector(mat)
+      minval <- min(v[v > 0])/2
+      mat <- mat + minval
+    }
   }
-  #mat[mat==0]<-0.000001
   out<-log(mat, base)
   return(out)
 }
@@ -174,7 +178,7 @@ desc_stats_all<-function(x, y, positive_class=NA, clr_transform=FALSE){
 }
 
 
-#' @title desc_stats_by_group
+#' @title desc_stats_by_group_using_mean_logfc
 #' @description The descriptive statistics summary of all features by grouping of compositional microbiome data.
 #' @param x A data.martrix or data.frame including multiple numeric vectors.
 #' @param y A factor with two or more levels.
@@ -196,17 +200,48 @@ desc_stats_by_group<-function(x, y, clr_transform=FALSE, positive_class=NA){
   OccRate<-function(x) sum(x!=0)/length(x)
   log10_median<-function(x, base=10) log.mat(stats::median(x), base=10)
   log10_mean<-function(x, base=10) log.mat(stats::median(x), base=10)
+
   mean_logfc<-function(x, y, base=2, positive_class.=positive_class){
     if(nlevels(y)>2) levels(y)[levels(y)!=positive_class] <- "Others"
     logMeanAbd<-log.mat(t(apply(x,2,function(x) tapply(x, y, mean))), base=base)
     out<-logMeanAbd[, positive_class]-logMeanAbd[, colnames(logMeanAbd)!=positive_class]
     out
   }
+
+  median_logfc <- function(x, y, base=2, positive_class.=positive_class){
+    if(nlevels(y)>2) levels(y)[levels(y)!=positive_class] <- "Others"
+    logMedianAbd<-log.mat(t(apply(x,2,function(x) tapply(x, y, median))), base=base)
+    out<-logMedianAbd[, positive_class]-logMedianAbd[, colnames(logMedianAbd)!=positive_class]
+    out
+  }
+
+  new_quantile <- function(x) {
+    quantile(x, probs = seq(0, 1, 0.1))
+  }
+  generalized_logfc <- function(x, y, base=2, positive_class.=positive_class){
+    if(nlevels(y)>2) levels(y)[levels(y)!=positive_class] <- "Others"
+    QuantileAbd <- apply(x,2,function(x) tapply(x, y, new_quantile))
+    results <- rep(0, ncol(x))
+    names(results) <- colnames(x)
+    for(i in 1:length(QuantileAbd)) {
+      QuantileAbd[[i]] <- do.call(data.frame, QuantileAbd[[i]])
+      logQuantileAbd <- log.mat(QuantileAbd[[i]], base = base)
+      out<-logQuantileAbd[, positive_class]-logQuantileAbd[, colnames(logQuantileAbd)!=positive_class]
+      out<-mean(out)
+      results[i] <- out
+    }
+
+    results
+  }
+
   func_by_group_list<-c("mean", "sd", "median", "log10_median", "OccRate")
   tmp<-apply(x,2,function(x) tapply(x, y, function(x) c(mean(x), stats::sd(x), stats::median(x), log10_median(x), OccRate(x))));
   desc_stats_by_group_df<-t(sapply(tmp, unlist));
   colnames(desc_stats_by_group_df)<-unlist(lapply(levels(y), function(x) paste(func_by_group_list, x, sep="__")))
-  desc_stats_by_group_df<-data.frame(desc_stats_by_group_df, mean_logfc=mean_logfc(x, y))
+  desc_stats_by_group_df<-data.frame(desc_stats_by_group_df,
+                                     mean_logfc=mean_logfc(x, y),
+                                     median_logfc = median_logfc(x, y),
+                                     generalized_logfc = generalized_logfc(x, y))
   if(clr_transform){
     clr_x<-compositions::clr(x)
     func_by_group_list<-c("clr_mean", "clr_sd", "clr_median")
@@ -244,7 +279,7 @@ Enr_by_q_cutoff<-function(test_output, desc_stats_by_group_df, positive_class=NA
   IfSig<-as.factor(ifelse(test_output[, "non.param.test_p.adj"]< q_cutoff, "Sig", "NotSig"))
   Enr0<-factor(ifelse(desc_stats_by_group_df$mean_logfc>0, paste(positive_class, "enriched", sep="_"), paste(positive_class, "depleted", sep="_")))
   IfSigEnr<-interaction(IfSig, Enr0)
-  Enr<-mapvalues(IfSigEnr,
+  Enr<-plyr::mapvalues(IfSigEnr,
                        c(paste("NotSig.",positive_class,"_depleted",sep=""),
                          paste("NotSig.",positive_class,"_enriched",sep=""),
                          paste("Sig.",positive_class,"_depleted",sep=""),
