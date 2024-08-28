@@ -225,12 +225,11 @@ desc_stats_by_group<-function(x, y, clr_transform=FALSE, positive_class=NA){
     names(results) <- colnames(x)
     for(i in 1:length(QuantileAbd)) {
       QuantileAbd[[i]] <- do.call(data.frame, QuantileAbd[[i]])
-      logQuantileAbd <- log.mat(QuantileAbd[[i]], base = base)
-      out<-logQuantileAbd[, positive_class]-logQuantileAbd[, colnames(logQuantileAbd)!=positive_class]
+      logQuantileAbd <- lapply(QuantileAbd[[i]], function(x) log.mat(x, base = base))
+      out<-logQuantileAbd[[positive_class]]-logQuantileAbd[[which(names(logQuantileAbd)!=positive_class)]]
       out<-mean(out)
       results[i] <- out
     }
-
     results
   }
 
