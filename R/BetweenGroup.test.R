@@ -216,7 +216,9 @@ desc_stats_by_group<-function(x, y, clr_transform=FALSE, positive_class=NA){
   }
 
   new_quantile <- function(x) {
-    quantile(x, probs = seq(0, 1, 0.1))
+    r <- quantile(x, probs = seq(0, 1, 0.1))
+    r[r < min(x[x>0])] <- 0
+    return (r)
   }
   generalized_logfc <- function(x, y, base=2, positive_class.=positive_class){
     if(nlevels(y)>2) levels(y)[levels(y)!=positive_class] <- "Others"
