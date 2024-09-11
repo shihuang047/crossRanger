@@ -216,17 +216,19 @@ desc_stats_by_group<-function(x, y, clr_transform=FALSE, positive_class=NA){
   }
 
   new_quantile <- function(x) {
-    quantile(x, probs = seq(0, 1, 0.1))
+    r <- quantile(x, probs = seq(0.1, 0.9, 0.1))
+    r[r < min(x[x>0])] <- 0
+    return (r)
   }
+
   generalized_logfc <- function(x, y, base=2, positive_class.=positive_class){
     if(nlevels(y)>2) levels(y)[levels(y)!=positive_class] <- "Others"
-    QuantileAbd <- apply(x,2,function(x) tapply(x, y, new_quantile))
+    logQuantileAbd <- apply(x,2,function(x) tapply(log.mat(x, base = base), y, new_quantile))
     results <- rep(0, ncol(x))
     names(results) <- colnames(x)
-    for(i in 1:length(QuantileAbd)) {
-      QuantileAbd[[i]] <- do.call(data.frame, QuantileAbd[[i]])
-      logQuantileAbd <- lapply(QuantileAbd[[i]], function(x) log.mat(x, base = base))
-      out<-logQuantileAbd[[positive_class]]-logQuantileAbd[[which(names(logQuantileAbd)!=positive_class)]]
+    for(i in 1:length(logQuantileAbd)) {
+      logQuantileAbd_i <- logQuantileAbd[[i]]
+      out<- logQuantileAbd_i[[positive_class]]-logQuantileAbd_i[[which(names(logQuantileAbd_i)!=positive_class)]]
       out<-mean(out)
       results[i] <- out
     }
