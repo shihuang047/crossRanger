@@ -216,8 +216,8 @@ desc_stats_by_group<-function(x, y, clr_transform=FALSE, positive_class=NA){
   }
 
   new_quantile <- function(x) {
-    r <- quantile(x, probs = seq(0.1, 0.9, 0.1))
-    r[r < min(x[x>0])] <- 0
+    r <- quantile(x, probs = seq(0.05, 0.95, 0.05))
+    #r[r < min(x)] <- 0
     return (r)
   }
 
