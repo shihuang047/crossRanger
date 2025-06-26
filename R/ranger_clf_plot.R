@@ -269,6 +269,7 @@ plot_topN_imp_scores<-function(rf_model, topN=4, feature_md=NULL, feature_id_col
   if(!is.null(feature_md)){
     imps_df<- merge_feature_md(imps_df, feature_md, df_id_col = "Feature_ID", fmd_id_col = feature_id_col)
   }
+  imps_df <- imps_df[order(imps_df$Rank), ]
   top_n_imps_df<-imps_df[1:topN, ]
   top_n_imps_df<-top_n_imps_df[order(top_n_imps_df$Imps, decreasing = T), ]
   # bar plot
