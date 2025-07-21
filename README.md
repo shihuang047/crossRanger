@@ -1,10 +1,9 @@
 # crossRanger
-*This package provide functionalities to perform random forests (RF) meta-analysis of microbiome data*
 
-***
+**crossRanger: A Flexible Random Forest Toolkit for Microbiome Meta-Analysis**
+
+
 ## Introduction
-
-crossRanger: A Flexible Random Forest Toolkit for Microbiome Meta-Analysis
 
 crossRanger is an R package that extends the ranger engine (a fast implementation of random forests [ranger](https://github.com/imbs-hl/ranger) ) to enable classification or regression on a single target variable across multiple microbiome datasets. It supports:
 
