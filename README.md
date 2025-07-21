@@ -3,18 +3,46 @@
 
 ***
 ## Introduction
-crossRanger: this package enables random forests classification or regression on a single target variable for the multiple datasets and allows users to apply the prebuilt random forests model from one dataset to predict the target variable in other datasets.
 
-[ranger](https://github.com/imbs-hl/ranger) is a fast implementation of random forests (Breiman 2001) or recursive partitioning, particularly suited for high dimensional data. Classification, regression, and survival forests are supported. To meet the meta-analysis requirements we further use `ranger` as a core RF implementation function to develop this package for microbiome-centric analyses. 
+crossRanger: A Flexible Random Forest Toolkit for Microbiome Meta-Analysis
 
-This R package basically provides a variety of functions for the RF analyses  within a single or across multiple microbiome datasets. Specifically, this package allows 
-* RF classification or regression on a single target variable in a single microbiome dataset with CV approaches
-* RF classification or regression on a single target variable (such as diseased status or age) stratified by another covariate (such as sex or body sites) for a single microbiome dataset
-* RF classification or regression on a single covariate for multiple microbiome datasets (such as microbiome studies focused on the same phenotype)
-* The prediction performance comparisons across multiple RF models (including AUROC, AUPRC, and accuracy etc. for classification models; MAE, MSE, RMSE, MAPE, R squared etc. for regression models)
-* the application of multiple RF models to each other and output the prediction performance (such as application of an RF regression model on aging on the female to male cohort and vice versa)
-* to output the univariate associations in the microbiome with a single covariate (e.g Wilcoxon rank-sum test on the clr-transformed relative abundance of each microbial feature in microbiome data)
-* to visualize the results above and produce publication-quality figures
+crossRanger is an R package that extends the ranger engine (a fast implementation of random forests [ranger](https://github.com/imbs-hl/ranger) ) to enable classification or regression on a single target variable across multiple microbiome datasets. It supports:
+
+* Building and validating models within or across studies.
+
+* Transferring pre-trained models to new datasets.
+
+* Streamlining meta-analyses of microbiome–phenotype relationships.
+
+**Key Features**
+
+1. Unified Random Forest Framework
+
+* Supports classification (e.g., disease status) and regression (e.g., age) tasks.
+
+* Handles high-dimensional microbiome data (e.g., taxa, pathways) efficiently.
+
+2. Cross-Dataset Analysis
+
+* Train a model on one dataset and predict the same target in others.
+
+* Compare performance metrics (e.g., AUROC, RMSE) across studies.
+
+3. Stratified Analysis
+
+Account for covariates like sex or body site via stratified modeling.
+
+4. Performance Evaluation
+
+* Classification: AUROC, AUPRC, accuracy.
+
+* Regression: MAE, MSE, R², MAPE.
+
+5. Downstream Tools
+
+* Identify microbial associations (e.g., Wilcoxon tests on CLR-transformed abundances).
+
+* Generate publication-ready visualizations.
 
 ## Authors ##
 Shi Huang, UC San Diego 
